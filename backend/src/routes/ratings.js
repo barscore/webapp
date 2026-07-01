@@ -16,6 +16,18 @@ async function assertBarExists(barId) {
   if (!data) throw new AppError(404, 'NOT_FOUND', 'Bar not found');
 }
 
+// Admin security switch: block new/updated ratings when disabled from the panel.
+async function assertRatingsEnabled() {
+  const { data } = await supabase
+    .from('app_settings')
+    .select('ratings_enabled')
+    .eq('id', 1)
+    .maybeSingle();
+  if (data && data.ratings_enabled === false) {
+    throw new AppError(503, 'RATINGS_DISABLED', 'Le valutazioni sono temporaneamente disabilitate');
+  }
+}
+
 /** GET /bars/:id/ratings — paginated list. */
 ratings.get('/', async (c) => {
   const barId = c.req.param('id');
@@ -43,6 +55,7 @@ ratings.post('/', requireAuth, async (c) => {
   const barId = c.req.param('id');
   const user = c.get('user');
   const body = createRatingSchema.parse(await c.req.json());
+  await assertRatingsEnabled();
   await assertBarExists(barId);
 
   const { data, error } = await supabase
@@ -65,6 +78,7 @@ ratings.put('/:rid', requireAuth, async (c) => {
   const rid = c.req.param('rid');
   const user = c.get('user');
   const body = updateRatingSchema.parse(await c.req.json());
+  await assertRatingsEnabled();
 
   const { data: existing } = await supabase
     .from('ratings')

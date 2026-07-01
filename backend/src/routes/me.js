@@ -14,7 +14,7 @@ me.get('/', async (c) => {
 
   const { data: profile, error } = await supabase
     .from('profiles')
-    .select('id, username, avatar_url, role, created_at')
+    .select('id, username, avatar_url, created_at')
     .eq('id', user.id)
     .maybeSingle();
   if (error) throw new AppError(500, 'INTERNAL_ERROR', 'Could not load profile');
@@ -25,7 +25,17 @@ me.get('/', async (c) => {
     .select('id', { count: 'exact', head: true })
     .eq('user_id', user.id);
 
-  return c.json({ profile: { ...profile, email: user.email, ratings_count: count ?? 0 } });
+  // Each rating earns 10 ice cubes (accumulating points), derived from the
+  // rating count — never stored, so it can't drift.
+  const ratingsCount = count ?? 0;
+  return c.json({
+    profile: {
+      ...profile,
+      email: user.email,
+      ratings_count: ratingsCount,
+      ice_cubes: ratingsCount * 10,
+    },
+  });
 });
 
 /** GET /me/ratings — the caller's own ratings, with the rated bar attached. */

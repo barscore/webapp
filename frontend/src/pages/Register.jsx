@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
+import { supabase } from '../services/supabase.js';
 import { AuthShell, Field } from './Login.jsx';
 import GoogleButton from '../components/GoogleButton.jsx';
 
@@ -12,6 +13,19 @@ export default function Register() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  // Admin security switch: registrations can be closed from the admin panel.
+  const [open, setOpen] = useState(true);
+
+  useEffect(() => {
+    supabase
+      .from('app_settings')
+      .select('registration_open')
+      .eq('id', 1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setOpen(data.registration_open);
+      });
+  }, []);
 
   async function handleSubmit(e) {
     e.preventDefault();
@@ -25,6 +39,22 @@ export default function Register() {
     } finally {
       setBusy(false);
     }
+  }
+
+  if (!open) {
+    return (
+      <AuthShell title="Registrazioni chiuse">
+        <p className="text-center text-sm text-ember-muted">
+          La creazione di nuovi account è momentaneamente disabilitata. Riprova più tardi.
+        </p>
+        <p className="mt-4 text-center text-sm text-ember-muted">
+          Hai già un account?{' '}
+          <Link to="/login" className="text-ember-primary underline">
+            Accedi
+          </Link>
+        </p>
+      </AuthShell>
+    );
   }
 
   return (

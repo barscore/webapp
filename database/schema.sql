@@ -19,6 +19,12 @@ CREATE TABLE public.profiles (
   username      TEXT UNIQUE NOT NULL CHECK (char_length(username) BETWEEN 3 AND 30),
   avatar_url    TEXT,
   role          TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'moderator', 'admin')),
+  -- Moderation state (managed from the admin panel):
+  banned          BOOLEAN NOT NULL DEFAULT FALSE,
+  suspended_until TIMESTAMPTZ,
+  moderation_note TEXT,
+  moderated_by    UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  moderated_at    TIMESTAMPTZ,
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
@@ -255,6 +261,24 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- =============================================
+-- get_leaderboard — all users ranked by ice cubes (10 per rating)
+-- =============================================
+CREATE OR REPLACE FUNCTION get_leaderboard(limit_count INTEGER DEFAULT 100)
+RETURNS TABLE (
+  id UUID, username TEXT, avatar_url TEXT, ice_cubes BIGINT
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT p.id, p.username, p.avatar_url, (COUNT(r.id) * 10)::BIGINT AS ice_cubes
+  FROM public.profiles p
+  LEFT JOIN public.ratings r ON r.user_id = p.id
+  GROUP BY p.id, p.username, p.avatar_url
+  ORDER BY ice_cubes DESC, p.username ASC
+  LIMIT limit_count;
+END;
+$$ LANGUAGE plpgsql;
+
+-- =============================================
 -- bookmarks — account-scoped saved bars ("Salvati")
 -- =============================================
 CREATE TABLE public.bookmarks (
@@ -275,3 +299,24 @@ CREATE POLICY "bookmarks_insert_own" ON public.bookmarks
   FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "bookmarks_delete_own" ON public.bookmarks
   FOR DELETE USING (auth.uid() = user_id);
+
+-- =============================================
+-- app_settings — singleton (id = 1) global switches for the admin panel
+-- (security settings + emergency read-only kill switch).
+-- =============================================
+CREATE TABLE public.app_settings (
+  id                SMALLINT PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  registration_open BOOLEAN NOT NULL DEFAULT TRUE,   -- allow new sign-ups
+  ratings_enabled   BOOLEAN NOT NULL DEFAULT TRUE,   -- allow new/updated ratings
+  maintenance_mode  BOOLEAN NOT NULL DEFAULT FALSE,  -- read-only kill switch (blocks non-admin writes)
+  maintenance_reason TEXT,                            -- why the site is down (shown to users)
+  maintenance_eta   TIMESTAMPTZ,                      -- estimated back-online time
+  updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_by        UUID REFERENCES public.profiles(id) ON DELETE SET NULL
+);
+INSERT INTO public.app_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING;
+
+ALTER TABLE public.app_settings ENABLE ROW LEVEL SECURITY;
+-- Public read so the frontend can gate registration / show a maintenance banner
+-- with the anon key. Writes go through the backend service-role key only.
+CREATE POLICY "app_settings_select_all" ON public.app_settings FOR SELECT USING (TRUE);

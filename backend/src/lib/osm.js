@@ -81,16 +81,17 @@ function mapElement(el) {
 }
 
 /**
- * Find bars/pubs/biergartens within `radiusKm` of (lat, lng) via Overpass.
- * Returns a list of normalized POIs (not persisted).
+ * Find bars/pubs/biergartens/nightclubs within `radiusKm` of (lat, lng) via
+ * Overpass. Nightclubs (discoteche) come back tagged `amenity=nightclub` so the
+ * client can distinguish them from bars. Returns normalized POIs (not persisted).
  */
 export async function findNearbyBars(lat, lng, radiusKm = 2) {
   const radiusM = Math.round(radiusKm * 1000);
   const query = `
     [out:json][timeout:15];
     (
-      node["amenity"~"^(bar|pub|biergarten)$"](around:${radiusM},${lat},${lng});
-      way["amenity"~"^(bar|pub|biergarten)$"](around:${radiusM},${lat},${lng});
+      node["amenity"~"^(bar|pub|biergarten|nightclub)$"](around:${radiusM},${lat},${lng});
+      way["amenity"~"^(bar|pub|biergarten|nightclub)$"](around:${radiusM},${lat},${lng});
     );
     out center tags;`;
 

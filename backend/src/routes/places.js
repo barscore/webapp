@@ -27,8 +27,11 @@ const nearbyCache = new Map(); // key -> { at, places }
 const inflight = new Map(); // key -> Promise (dedupe concurrent upstream fetches)
 
 // ~1.1km grid at the equator — coarse enough to share cache across nearby
-// clicks, fine enough not to miss bars for the given radius.
-const cacheKey = (lat, lng, r) => `${lat.toFixed(2)},${lng.toFixed(2)},${r}`;
+// clicks, fine enough not to miss bars for the given radius. The `v` prefix is a
+// schema version: bump it whenever the Overpass query changes (e.g. adding
+// nightclubs) so old cached results without the new POIs are ignored.
+const CACHE_VERSION = 'v2';
+const cacheKey = (lat, lng, r) => `${CACHE_VERSION}:${lat.toFixed(2)},${lng.toFixed(2)},${r}`;
 
 function loadCacheFromDisk() {
   try {

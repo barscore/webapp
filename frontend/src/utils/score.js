@@ -23,6 +23,19 @@ export function scoreMeta(bar) {
   return { score: s.toFixed(1), variant: 'arancione', color: 'text-ember-primary', hasReviews: true };
 }
 
+// Discoteche (OSM amenity=nightclub) share the map with bars but use their own
+// pin art. Same score bands as bars: verde/arancione/grigio → alto/medio/
+// nonvalutato.
+export function isDisco(bar) {
+  return bar?.amenity === 'nightclub';
+}
+
+export const DISCO_ICON_URL = {
+  verde: '/icons/disco-alto.png',
+  arancione: '/icons/disco-medio.png',
+  grigio: '/icons/disco-nonvalutato.png',
+};
+
 // Stable client-side identity for a bar. Persisted bars have a DB uuid; OSM-only
 // bars (not yet rated) are addressed by their OpenStreetMap type + id until the
 // first visit materializes them (see BarDetail + POST /bars/resolve).

@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { usePins } from '../utils/pins.js';
-import { scoreMeta, barKey } from '../utils/score.js';
+import { scoreMeta, barKey, isDisco, DISCO_ICON_URL } from '../utils/score.js';
 
 // Re-centers the map imperatively when center changes.
 function Recenter({ center }) {
@@ -37,14 +37,36 @@ export default function Map({ bars = [], center, zoom = 14, userPos, selectedKey
         popupAnchor: [0, -34],
         className: active ? 'rabar-pin rabar-pin-active' : 'rabar-pin',
       });
+    // Discoteche use dedicated pin art (41×52, tip at bottom) per score band.
+    // Height matches the bar pins (40 / 58); width follows the 41:52 aspect so
+    // disco markers read the same size as bars.
+    const makeDisco = (url, active) =>
+      L.icon({
+        iconUrl: url,
+        iconSize: active ? [46, 58] : [32, 40],
+        iconAnchor: active ? [23, 55] : [16, 38],
+        popupAnchor: [0, -34],
+        className: active ? 'rabar-pin rabar-pin-active rabar-disco' : 'rabar-pin rabar-disco',
+      });
+    const disco = {
+      verde: makeDisco(DISCO_ICON_URL.verde),
+      arancione: makeDisco(DISCO_ICON_URL.arancione),
+      grigio: makeDisco(DISCO_ICON_URL.grigio),
+    };
     return {
       verde: make(pins.verde),
       arancione: make(pins.arancione),
       grigio: make(pins.grigio),
+      disco,
       active: {
         verde: make(pins.verde, true),
         arancione: make(pins.arancione, true),
         grigio: make(pins.grigio, true),
+        disco: {
+          verde: makeDisco(DISCO_ICON_URL.verde, true),
+          arancione: makeDisco(DISCO_ICON_URL.arancione, true),
+          grigio: makeDisco(DISCO_ICON_URL.grigio, true),
+        },
       },
     };
   }, [pins]);
@@ -84,11 +106,14 @@ export default function Map({ bars = [], center, zoom = 14, userPos, selectedKey
           const { variant } = scoreMeta(bar);
           const key = barKey(bar);
           const isActive = key === selectedKey;
+          const icon = isDisco(bar)
+            ? (isActive ? icons.active.disco[variant] : icons.disco[variant])
+            : (isActive ? icons.active[variant] : icons[variant]);
           return (
             <Marker
               key={key}
               position={[bar.lat, bar.lng]}
-              icon={isActive ? icons.active[variant] : icons[variant]}
+              icon={icon}
               zIndexOffset={isActive ? 1000 : 0}
               eventHandlers={{ click: () => onSelect?.(bar) }}
             />

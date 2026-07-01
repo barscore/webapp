@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Map from '../components/Map.jsx';
 import BarRow from '../components/BarRow.jsx';
@@ -8,8 +8,11 @@ import Icon from '../components/Icon.jsx';
 import NavTabs from '../components/NavTabs.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import Toast from '../components/Toast.jsx';
-import BarSheet from '../components/BarSheet.jsx';
 import SuggestModal from '../components/SuggestModal.jsx';
+
+// Lazy: BarSheet pulls in recharts (radar chart, ~350KB min) — loading it on
+// first bar tap keeps the landing bundle small.
+const BarSheet = lazy(() => import('../components/BarSheet.jsx'));
 import { placesApi, eventsApi, meApi } from '../services/api.js';
 import { barKey } from '../utils/score.js';
 import { openUntil23 } from '../utils/hours.js';
@@ -27,7 +30,7 @@ const DEFAULT_ZOOM = Number(import.meta.env.VITE_DEFAULT_ZOOM) || 14;
 // Instant-paint cache: last nearby result per rounded coord+radius, in
 // localStorage. Overpass is slow, so we show the previous result immediately and
 // refresh in the background — the user sees bars in ~0ms on repeat visits.
-// `v2` schema version: bump when the nearby payload changes (e.g. nightclubs
+// `v3` schema version: bump when the nearby payload changes (e.g. nightclubs
 // added) so stale localStorage entries without the new POIs are ignored.
 const nearbyKey = (lat, lng, r) => `rabar:nearby:v3:${lat.toFixed(2)},${lng.toFixed(2)},${r}`;
 function readNearbyCache(lat, lng, r) {
@@ -234,7 +237,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
         ) : searchActive ? (
           <EmptyState
             title="Nessun risultato"
-            hint={`Non trovi il tuo bar di fiducia? Avvisaci e lo aggiungiamo alla mappa.`}
+            hint="Non trovi il tuo bar di fiducia? Avvisaci e lo aggiungiamo alla mappa."
             ctaLabel="Avvisaci"
             ctaIcon="pin"
             onCta={onSuggest}
@@ -699,11 +702,13 @@ export default function Home() {
       </section>
 
       {selected && (
-        <BarSheet
-          seed={selected}
-          onClose={closeSheet}
-          onChanged={() => setReloadKey((k) => k + 1)}
-        />
+        <Suspense fallback={null}>
+          <BarSheet
+            seed={selected}
+            onClose={closeSheet}
+            onChanged={() => setReloadKey((k) => k + 1)}
+          />
+        </Suspense>
       )}
 
       {suggestOpen && (

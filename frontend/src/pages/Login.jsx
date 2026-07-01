@@ -5,6 +5,8 @@ import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import GoogleButton from '../components/GoogleButton.jsx';
 
+// Email/password sign-in + Google OAuth. Auth is Supabase end to end (no
+// custom backend endpoint) — see hooks/useAuth.js.
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();

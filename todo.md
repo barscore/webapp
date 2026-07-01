@@ -6,3 +6,7 @@ start:  npm run dev
 - osm sulla mappa licenza tile (cha controllare)
 - disaster recovery
 - banner annunci adsense (con tunnel cloudflare)
+
+
+
+cloudflared-linux-amd64.deb

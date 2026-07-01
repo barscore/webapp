@@ -28,7 +28,8 @@ export const barsApi = {
 
 // Free OSM-backed discovery (Overpass + Nominatim, proxied by the backend).
 export const placesApi = {
-  nearby: (params) => api.get('/places/nearby', { params }).then((r) => r.data.places),
+  nearby: (params, config) =>
+    api.get('/places/nearby', { params, ...config }).then((r) => r.data.places),
   search: (q) => api.get('/places/search', { params: { q } }).then((r) => r.data.results),
   // Global bar search (whole planet), enriched with ratings. Optional lat/lng
   // only sets distance_km on the results.

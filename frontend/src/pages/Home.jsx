@@ -84,25 +84,19 @@ function SearchPanel({ query, setQuery, autoFocus = false }) {
 // Radius stepper — only in the "Vicino a me" section.
 function RadiusControl({ radius, setRadius }) {
   return (
-    <div className="flex items-center gap-2 px-1 text-xs text-ember-muted">
+    <div className="flex items-center gap-3 px-1 text-xs text-ember-muted">
       <Icon name="funnel" size={14} className="text-ember-primary" />
-      Raggio {radius} km
-      <div className="ml-auto flex items-center gap-1">
-        <button
-          onClick={() => setRadius((r) => Math.max(1, r - 1))}
-          aria-label="Riduci raggio"
-          className="rounded-full bg-white/5 p-1.5 text-ember-cream hover:bg-white/10"
-        >
-          <Icon name="minus" size={14} />
-        </button>
-        <button
-          onClick={() => setRadius((r) => Math.min(20, r + 1))}
-          aria-label="Aumenta raggio"
-          className="rounded-full bg-white/5 p-1.5 text-ember-cream hover:bg-white/10"
-        >
-          <Icon name="plus" size={14} />
-        </button>
-      </div>
+      <span className="whitespace-nowrap tabular-nums">Raggio {radius} km</span>
+      <input
+        type="range"
+        min="1"
+        max="100"
+        step="1"
+        value={radius}
+        onChange={(e) => setRadius(Number(e.target.value))}
+        aria-label="Raggio di ricerca in km"
+        className="ml-auto w-32 accent-ember-primary"
+      />
     </div>
   );
 }
@@ -291,6 +285,7 @@ export default function Home() {
   // Load bars whenever center / radius / manual reload changes.
   useEffect(() => {
     let cancelled = false;
+    const controller = new AbortController();
     // Instant paint: show last cached result for this area right away, so the
     // user never stares at a spinner while Overpass churns. Still refresh below.
     const cached = readNearbyCache(center[0], center[1], radius);
@@ -301,22 +296,35 @@ export default function Home() {
       setLoading(true);
     }
     setError('');
-    // All bars come straight from OpenStreetMap (Overpass), enriched server-side
-    // with community ratings (avg_overall/total_ratings) and distance.
-    placesApi
-      .nearby({ lat: center[0], lng: center[1], radius_km: radius })
-      .then((data) => {
-        if (cancelled) return;
-        setBars(data);
-        writeNearbyCache(center[0], center[1], radius, data);
-      })
-      .catch(() => {
-        // Keep showing stale cache on failure; only error when we have nothing.
-        if (!cancelled && !cached?.length) setError('Impossibile caricare i bar');
-      })
-      .finally(() => !cancelled && setLoading(false));
+    // Debounce: rapid radius +/- clicks (or map drags) must not each fire an
+    // Overpass query — public mirrors rate-limit (429) heavy concurrent calls,
+    // self-inflicting the "Impossibile caricare i bar" error. Wait for the value
+    // to settle, then fire ONE request and abort it if superseded.
+    const t = setTimeout(() => {
+      // All bars come straight from OpenStreetMap (Overpass), enriched server-side
+      // with community ratings (avg_overall/total_ratings) and distance.
+      placesApi
+        .nearby(
+          { lat: center[0], lng: center[1], radius_km: radius },
+          { signal: controller.signal },
+        )
+        .then((data) => {
+          if (cancelled) return;
+          setBars(data);
+          writeNearbyCache(center[0], center[1], radius, data);
+        })
+        .catch((err) => {
+          // Ignore aborts (superseded request); keep stale cache on real failure,
+          // only surface an error when we have nothing to show.
+          if (cancelled || err.code === 'ERR_CANCELED') return;
+          if (!cached?.length) setError('Impossibile caricare i bar');
+        })
+        .finally(() => !cancelled && setLoading(false));
+    }, 350);
     return () => {
       cancelled = true;
+      controller.abort();
+      clearTimeout(t);
     };
   }, [center, radius, reloadKey]);
 
@@ -449,7 +457,7 @@ export default function Home() {
     radius,
     setRadius,
     onReload: () => setReloadKey((k) => k + 1),
-    onWiden: () => setRadius((r) => Math.min(20, r + 3)),
+    onWiden: () => setRadius((r) => Math.min(100, r + 3)),
     onExplore: () => setTab('vicini'),
     onSelect,
   };

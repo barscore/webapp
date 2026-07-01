@@ -3,7 +3,7 @@ import { z } from 'zod';
 export const nearbyQuerySchema = z.object({
   lat: z.coerce.number().min(-90).max(90).optional(),
   lng: z.coerce.number().min(-180).max(180).optional(),
-  radius_km: z.coerce.number().positive().max(50).optional().default(2),
+  radius_km: z.coerce.number().positive().max(100).optional().default(2),
 });
 
 export const createBarSchema = z.object({

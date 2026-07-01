@@ -30,7 +30,7 @@ const inflight = new Map(); // key -> Promise (dedupe concurrent upstream fetche
 // clicks, fine enough not to miss bars for the given radius. The `v` prefix is a
 // schema version: bump it whenever the Overpass query changes (e.g. adding
 // nightclubs) so old cached results without the new POIs are ignored.
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const cacheKey = (lat, lng, r) => `${CACHE_VERSION}:${lat.toFixed(2)},${lng.toFixed(2)},${r}`;
 
 function loadCacheFromDisk() {
@@ -135,7 +135,7 @@ async function enrichWithRatings(osmPlaces, lat, lng) {
 const nearbySchema = z.object({
   lat: z.coerce.number().min(-90).max(90),
   lng: z.coerce.number().min(-180).max(180),
-  radius_km: z.coerce.number().positive().max(20).optional().default(2),
+  radius_km: z.coerce.number().positive().max(100).optional().default(2),
 });
 
 const searchSchema = z.object({

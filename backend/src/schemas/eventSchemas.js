@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const nearbyEventsQuerySchema = z.object({
   lat: z.coerce.number().min(-90).max(90).optional(),
   lng: z.coerce.number().min(-180).max(180).optional(),
-  radius_km: z.coerce.number().positive().max(50).optional().default(2),
+  radius_km: z.coerce.number().positive().max(100).optional().default(2),
 });
 
 // Events are added by hand for a venue. `bar_id` ties the event to a locale and

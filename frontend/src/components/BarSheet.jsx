@@ -9,10 +9,14 @@ import EmptyState from './EmptyState.jsx';
 import { barsApi, ratingsApi } from '../services/api.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { useBookmarks } from '../hooks/useBookmarks.js';
+import { useSheetDrag, useIsMobile } from '../hooks/useSheetDrag.js';
 import { shareBar } from '../utils/share.js';
 import { barKey } from '../utils/score.js';
 
 const PAGE_SIZE = 10;
+
+// Snap heights (dvh) for the mobile bar sheet: as-is / fullscreen.
+const BAR_STOPS = [88, 100];
 
 // Same detail data flow as the /bar/:id page, rendered as a bottom sheet that
 // slides up over the Home menu. `seed` is the bar from the list/map (may be an
@@ -26,6 +30,9 @@ function parseOsmToken(id) {
 export default function BarSheet({ seed, onClose, onChanged }) {
   const { isAuthenticated, user } = useAuth();
   const { has, toggle } = useBookmarks();
+  const isMobile = useIsMobile();
+  const { height, dragging, grabberProps, contentProps } = useSheetDrag(BAR_STOPS, BAR_STOPS[0]);
+  const full = isMobile && height >= 99;
 
   const [bar, setBar] = useState(null);
   const [ratings, setRatings] = useState([]);
@@ -107,11 +114,29 @@ export default function BarSheet({ seed, onClose, onChanged }) {
       <section
         role="dialog"
         aria-modal="true"
-        className="rabar-sheet-in absolute inset-x-3 bottom-3 top-16 z-[1500] flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#0f1116]/95 shadow-[0_-10px_50px_rgba(0,0,0,0.6)] backdrop-blur-xl md:inset-x-auto md:left-5 md:top-24 md:bottom-6 md:w-[372px]"
+        className={`rabar-sheet-in absolute z-[1500] flex flex-col overflow-hidden border border-white/10 bg-[#0f1116]/95 shadow-[0_-10px_50px_rgba(0,0,0,0.6)] backdrop-blur-xl ${
+          isMobile
+            ? full
+              ? 'inset-0 rounded-none'
+              : 'inset-x-3 bottom-3 rounded-3xl'
+            : 'inset-x-3 bottom-3 top-16 rounded-3xl md:inset-x-auto md:left-5 md:top-24 md:bottom-6 md:w-[372px]'
+        }`}
+        style={
+          isMobile && !full
+            ? { height: `${height}dvh`, transition: dragging ? 'none' : 'height 0.25s ease' }
+            : undefined
+        }
       >
-        {/* Grabber + close */}
-        <div className="relative flex items-center justify-center pb-1 pt-2.5">
-          <span className="h-1.5 w-10 rounded-full bg-white/25" />
+        {/* Grabber (drag to resize / fullscreen) + close */}
+        <div className="relative flex items-center justify-center">
+          <div
+            {...(isMobile ? grabberProps : {})}
+            role="separator"
+            aria-label="Trascina per ridimensionare"
+            className="flex touch-none justify-center px-8 pb-2 pt-3"
+          >
+            <span className="h-1.5 w-10 rounded-full bg-white/25" />
+          </div>
           <button
             type="button"
             onClick={onClose}
@@ -122,7 +147,10 @@ export default function BarSheet({ seed, onClose, onChanged }) {
           </button>
         </div>
 
-        <div className="no-scrollbar flex-1 overflow-y-auto px-4 pb-4">
+        <div
+          {...(isMobile ? contentProps : {})}
+          className={`no-scrollbar flex-1 overflow-y-auto px-4 pb-4 ${isMobile ? 'touch-none' : ''}`}
+        >
           {loading && !bar && (
             <p className="flex items-center gap-2 py-6 text-sm text-ember-muted">
               <Icon name="reload" size={16} className="animate-spin" /> Caricamento…

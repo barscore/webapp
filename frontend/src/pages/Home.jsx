@@ -12,6 +12,10 @@ import { placesApi } from '../services/api.js';
 import { barKey } from '../utils/score.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { useBookmarks } from '../hooks/useBookmarks.js';
+import { useSheetDrag } from '../hooks/useSheetDrag.js';
+
+// Snap heights (dvh) for the mobile sheet: collapsed / expanded / fullscreen.
+const SHEET_STOPS = [44, 84, 100];
 
 const DEFAULT_LAT = Number(import.meta.env.VITE_DEFAULT_LAT) || 45.4654;
 const DEFAULT_LNG = Number(import.meta.env.VITE_DEFAULT_LNG) || 9.1859;
@@ -173,7 +177,14 @@ export default function Home() {
   const [query, setQuery] = useState('');
   const [tab, setTab] = useState('vicini');
   const [menuOpen, setMenuOpen] = useState(false);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const {
+    height: sheetH,
+    dragging,
+    setHeight: setSheetH,
+    grabberProps,
+    contentProps,
+  } = useSheetDrag(SHEET_STOPS, SHEET_STOPS[0]);
+  const sheetFull = sheetH >= 99;
   const [selected, setSelected] = useState(null);
   const [focus, setFocus] = useState(null);
   const [toast, setToast] = useState(null);
@@ -273,7 +284,7 @@ export default function Home() {
 
   function onTab(id) {
     setTab(id);
-    setSheetOpen(true);
+    setSheetH((h) => (h < 84 ? 84 : h));
   }
 
   function onSelect(bar) {
@@ -319,15 +330,23 @@ export default function Home() {
       {/* Legibility gradient behind the top controls */}
       <div className="pointer-events-none absolute inset-x-0 top-0 z-[500] h-32 bg-gradient-to-b from-black/60 via-black/25 to-transparent" />
 
-      {/* Logo — top left */}
-      <div className="absolute left-4 top-4 z-[1200] drop-shadow-lg">
+      {/* Logo — top left (fades out when the mobile sheet is fullscreen) */}
+      <div
+        className={`absolute left-4 top-4 z-[1200] drop-shadow-lg transition-all duration-300 ease-out ${
+          sheetFull ? 'max-md:pointer-events-none max-md:-translate-y-6 max-md:opacity-0' : ''
+        }`}
+      >
         <Link to="/" aria-label="rabar home">
           <Logo size="sm" />
         </Link>
       </div>
 
-      {/* Account + repositioning — top right (same layout on mobile & desktop) */}
-      <div className="absolute right-4 top-4 z-[1300] flex flex-col items-end gap-2">
+      {/* Account + repositioning — top right (fades out when sheet is fullscreen) */}
+      <div
+        className={`absolute right-4 top-4 z-[1300] flex flex-col items-end gap-2 transition-all duration-300 ease-out ${
+          sheetFull ? 'max-md:pointer-events-none max-md:-translate-y-6 max-md:opacity-0' : ''
+        }`}
+      >
         <div ref={accountRef} className="relative">
           <GlassButton
             label={isAuthenticated ? 'Account' : 'Accedi'}
@@ -373,20 +392,26 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Mobile: bottom sheet with tab bar */}
+      {/* Mobile: bottom sheet with tab bar. Drag the grabber to resize;
+          it snaps to collapsed / expanded / fullscreen. */}
       <section
-        className="absolute inset-x-3 bottom-3 z-[1100] flex flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#0f1116]/95 shadow-[0_10px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl transition-[max-height] duration-300 md:hidden"
-        style={{ maxHeight: sheetOpen ? '84dvh' : '44dvh' }}
+        className={`absolute z-[1100] flex flex-col overflow-hidden border border-white/10 bg-[#0f1116]/95 shadow-[0_10px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl md:hidden ${
+          sheetFull ? 'inset-0 rounded-none' : 'inset-x-3 bottom-3 rounded-3xl'
+        }`}
+        style={{
+          height: sheetFull ? undefined : `${sheetH}dvh`,
+          transition: dragging ? 'none' : 'height 0.28s ease',
+        }}
       >
-        <button
-          type="button"
-          onClick={() => setSheetOpen((o) => !o)}
-          aria-label={sheetOpen ? 'Riduci' : 'Espandi'}
-          className="mx-auto flex w-full justify-center pb-1 pt-2.5"
+        <div
+          {...grabberProps}
+          role="separator"
+          aria-label="Trascina per ridimensionare"
+          className="flex w-full touch-none justify-center pb-1 pt-2.5"
         >
           <span className="h-1.5 w-10 rounded-full bg-white/25" />
-        </button>
-        <div className="no-scrollbar flex-1 overflow-y-auto px-4 pb-2">
+        </div>
+        <div {...contentProps} className="no-scrollbar flex-1 touch-none overflow-y-auto px-4 pb-2">
           <SheetBody {...sheetProps} />
         </div>
         <div className="border-t border-white/5 px-3 pb-3 pt-2">

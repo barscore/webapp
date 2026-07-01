@@ -64,10 +64,13 @@ function mapElement(el) {
   const lat = el.lat ?? el.center?.lat;
   const lng = el.lon ?? el.center?.lon;
   if (lat == null || lng == null) return null;
+  // Drop venues with no name from the map — nameless OSM POIs are noise.
+  const name = tags.name?.trim();
+  if (!name) return null;
   return {
     osm_node_id: el.id,
     osm_type: el.type, // node | way | relation
-    name: tags.name || 'Senza nome',
+    name,
     amenity: tags.amenity,
     address: formatAddress(tags),
     city: tags['addr:city'] || null,
@@ -75,6 +78,9 @@ function mapElement(el) {
     lng,
     phone: tags.phone || tags['contact:phone'] || null,
     website: tags.website || tags['contact:website'] || null,
+    // Raw OSM opening_hours string. The client hides bars that close before
+    // 23:00 local time (time-dependent, so NOT baked into the nearby cache).
+    opening_hours: tags.opening_hours || null,
     // OSM occasionally carries an `image` tag (often a Wikimedia/Commons URL).
     cover_image_url: tags.image || null,
   };

@@ -57,6 +57,38 @@ export const meApi = {
   ratings: () => api.get('/me/ratings').then((r) => r.data.ratings),
 };
 
+// Public ice-cube leaderboard (all users, ranked).
+export const leaderboardApi = {
+  list: () => api.get('/leaderboard').then((r) => r.data.leaderboard),
+};
+
+// Admin panel. Every call is admin-only (backend enforces requireRole('admin')).
+export const adminApi = {
+  stats: () => api.get('/admin/stats').then((r) => r.data.stats),
+
+  // Users
+  users: (params) => api.get('/admin/users', { params }).then((r) => r.data),
+  banUser: (id, reason) =>
+    api.post(`/admin/users/${id}/ban`, { reason }).then((r) => r.data),
+  suspendUser: (id, hours, reason) =>
+    api.post(`/admin/users/${id}/suspend`, { hours, reason }).then((r) => r.data),
+  unbanUser: (id) => api.post(`/admin/users/${id}/unban`).then((r) => r.data),
+  setRole: (id, role) =>
+    api.put(`/admin/users/${id}/role`, { role }).then((r) => r.data),
+  deleteUser: (id) => api.delete(`/admin/users/${id}`).then((r) => r.data),
+
+  // Ratings
+  ratings: (params) => api.get('/admin/ratings', { params }).then((r) => r.data),
+  deleteRating: (id) => api.delete(`/admin/ratings/${id}`).then((r) => r.data),
+
+  // Settings + emergency
+  settings: () => api.get('/admin/settings').then((r) => r.data.settings),
+  updateSettings: (patch) =>
+    api.put('/admin/settings', patch).then((r) => r.data.settings),
+  purgeUserRatings: (id) =>
+    api.post(`/admin/emergency/purge-user-ratings/${id}`).then((r) => r.data),
+};
+
 export const ratingsApi = {
   list: (barId, params) =>
     api.get(`/bars/${barId}/ratings`, { params }).then((r) => r.data),

@@ -10,3 +10,12 @@ coverage/
 
 # Overpass disk cache
 backend/.cache/
+
+# Env files in any form/location — a stray file named "env " (trailing space)
+# once slipped past ".env" and leaked secrets. Never commit env files.
+env
+env\ 
+*.env
+.env.*
+!.env.example
+!*/.env.example

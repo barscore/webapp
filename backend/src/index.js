@@ -3,12 +3,15 @@ import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
-import { errorHandler } from './middleware/errorHandler.js';
+import { errorHandler, AppError } from './middleware/errorHandler.js';
+import { supabase } from './lib/supabase.js';
 import barRoutes from './routes/bars.js';
 import placeRoutes from './routes/places.js';
 import bookmarkRoutes from './routes/bookmarks.js';
 import eventRoutes from './routes/events.js';
 import meRoutes from './routes/me.js';
+import leaderboardRoutes from './routes/leaderboard.js';
+import adminRoutes from './routes/admin.js';
 import healthRoutes from './routes/health.js';
 
 const app = new Hono();
@@ -35,12 +38,33 @@ app.use(
   }),
 );
 
+// Emergency read-only kill switch. When maintenance_mode is on, block every
+// write (POST/PUT/DELETE) except on /admin, so an admin can still turn it back
+// off. GET/OPTIONS always pass; the app stays browsable.
+app.use('*', async (c, next) => {
+  const method = c.req.method;
+  if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') return next();
+  if (c.req.path.startsWith('/admin')) return next();
+
+  const { data } = await supabase
+    .from('app_settings')
+    .select('maintenance_mode')
+    .eq('id', 1)
+    .maybeSingle();
+  if (data?.maintenance_mode) {
+    throw new AppError(503, 'MAINTENANCE', 'Sito in manutenzione — scritture disabilitate');
+  }
+  return next();
+});
+
 app.route('/health', healthRoutes);
 app.route('/bars', barRoutes);
 app.route('/places', placeRoutes);
 app.route('/bookmarks', bookmarkRoutes);
 app.route('/events', eventRoutes);
 app.route('/me', meRoutes);
+app.route('/leaderboard', leaderboardRoutes);
+app.route('/admin', adminRoutes);
 
 app.notFound((c) =>
   c.json({ error: 'Not found', code: 'NOT_FOUND', statusCode: 404 }, 404),

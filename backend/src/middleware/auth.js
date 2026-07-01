@@ -16,8 +16,28 @@ export async function requireAuth(c, next) {
     throw new AppError(401, 'UNAUTHORIZED', 'Invalid or expired access token');
   }
 
-  // Role lives in the profiles table; loaded lazily by requireRole.
-  c.set('user', { id: data.user.id, email: data.user.email });
+  // Enforce moderation state: banned users are locked out entirely; suspended
+  // users are locked out until suspended_until passes. Role stays lazy
+  // (loaded by requireRole), but we already touch profiles here for the ban
+  // check, so cache it on context to save requireRole a round-trip.
+  const { data: prof } = await supabase
+    .from('profiles')
+    .select('role, banned, suspended_until')
+    .eq('id', data.user.id)
+    .maybeSingle();
+
+  if (prof?.banned) {
+    throw new AppError(403, 'BANNED', 'Account bannato');
+  }
+  if (prof?.suspended_until && new Date(prof.suspended_until) > new Date()) {
+    throw new AppError(
+      403,
+      'SUSPENDED',
+      `Account sospeso fino al ${new Date(prof.suspended_until).toLocaleString('it-IT')}`,
+    );
+  }
+
+  c.set('user', { id: data.user.id, email: data.user.email, role: prof?.role });
   await next();
 }
 
@@ -28,18 +48,23 @@ export function requireRole(...roles) {
     const user = c.get('user');
     if (!user) throw new AppError(401, 'UNAUTHORIZED', 'Not authenticated');
 
-    const { data, error } = await supabase
-      .from('profiles')
-      .select('role')
-      .eq('id', user.id)
-      .maybeSingle();
+    // requireAuth already loaded the role; fall back to a fetch if missing.
+    let role = user.role;
+    if (role === undefined) {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (error) throw new AppError(500, 'INTERNAL_ERROR', 'Could not verify role');
+      role = data?.role;
+    }
 
-    if (error) throw new AppError(500, 'INTERNAL_ERROR', 'Could not verify role');
-    if (!data || !roles.includes(data.role)) {
+    if (!role || !roles.includes(role)) {
       throw new AppError(403, 'FORBIDDEN', 'Insufficient permissions');
     }
 
-    c.set('user', { ...user, role: data.role });
+    c.set('user', { ...user, role });
     await next();
   };
 }

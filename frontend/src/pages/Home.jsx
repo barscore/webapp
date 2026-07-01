@@ -9,8 +9,9 @@ import NavTabs from '../components/NavTabs.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import Toast from '../components/Toast.jsx';
 import BarSheet from '../components/BarSheet.jsx';
-import { placesApi, eventsApi } from '../services/api.js';
+import { placesApi, eventsApi, meApi } from '../services/api.js';
 import { barKey } from '../utils/score.js';
+import { openUntil23 } from '../utils/hours.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { useBookmarks } from '../hooks/useBookmarks.js';
 import { useSheetDrag, useIsMobile } from '../hooks/useSheetDrag.js';
@@ -27,7 +28,7 @@ const DEFAULT_ZOOM = Number(import.meta.env.VITE_DEFAULT_ZOOM) || 14;
 // refresh in the background — the user sees bars in ~0ms on repeat visits.
 // `v2` schema version: bump when the nearby payload changes (e.g. nightclubs
 // added) so stale localStorage entries without the new POIs are ignored.
-const nearbyKey = (lat, lng, r) => `rabar:nearby:v2:${lat.toFixed(2)},${lng.toFixed(2)},${r}`;
+const nearbyKey = (lat, lng, r) => `rabar:nearby:v3:${lat.toFixed(2)},${lng.toFixed(2)},${r}`;
 function readNearbyCache(lat, lng, r) {
   try {
     return JSON.parse(localStorage.getItem(nearbyKey(lat, lng, r)));
@@ -101,9 +102,27 @@ function RadiusControl({ radius, setRadius }) {
   );
 }
 
+// Toggle: show only bars rated by the community (drop the unrated).
+function RatedFilter({ ratedOnly, setRatedOnly }) {
+  return (
+    <button
+      type="button"
+      onClick={() => setRatedOnly((v) => !v)}
+      aria-pressed={ratedOnly}
+      className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition ${
+        ratedOnly
+          ? 'border-ember-primary/60 bg-ember-primary/10 text-ember-primary'
+          : 'border-white/10 text-ember-muted hover:text-ember-cream'
+      }`}
+    >
+      <Icon name={ratedOnly ? 'check' : 'star'} size={13} /> Solo valutati
+    </button>
+  );
+}
+
 // Inner content of the sheet / desktop panel. Module-level so the search input
 // keeps focus across re-renders.
-function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, radius, setRadius, onReload, onWiden, onExplore, onSelect, events, eventsLoading, eventsError }) {
+function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, radius, setRadius, ratedOnly, setRatedOnly, onReload, onWiden, onExplore, onSelect, events, eventsLoading, eventsError }) {
   // Eventi tab: zone events, soonest first. Separate data path (no map pins,
   // no bar rows) so it doesn't share the bars list flow below.
   if (tab === 'eventi') {
@@ -172,7 +191,14 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
             </span>
             <span className="text-xs text-ember-muted">· {list.length}</span>
           </div>
-          {tab === 'vicini' && !searchActive && <RadiusControl radius={radius} setRadius={setRadius} />}
+          {tab === 'vicini' && !searchActive && (
+            <>
+              <RadiusControl radius={radius} setRadius={setRadius} />
+              <div className="px-1">
+                <RatedFilter ratedOnly={ratedOnly} setRatedOnly={setRatedOnly} />
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -230,13 +256,15 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
 
 export default function Home() {
   const navigate = useNavigate();
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, isAdmin, user, logout } = useAuth();
   const { has, count, savedBars } = useBookmarks();
   const isMobile = useIsMobile();
 
   const [center, setCenter] = useState([DEFAULT_LAT, DEFAULT_LNG]);
   const [userPos, setUserPos] = useState(null);
   const [radius, setRadius] = useState(2);
+  const [ratedOnly, setRatedOnly] = useState(false);
+  const [profile, setProfile] = useState(null);
   const [bars, setBars] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -345,6 +373,23 @@ export default function Home() {
     };
   }, [tab, center, radius, reloadKey]);
 
+  // Load the caller's profile (username, ice cubes, ratings…) for the account
+  // card. Refetch on reloadKey so ice cubes update right after a new rating.
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setProfile(null);
+      return;
+    }
+    let cancelled = false;
+    meApi
+      .profile()
+      .then((p) => !cancelled && setProfile(p))
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, reloadKey]);
+
   // Close the account menu on outside click.
   useEffect(() => {
     if (!menuOpen) return;
@@ -368,8 +413,13 @@ export default function Home() {
     // Saved bars come from the account (all of them, even outside the radius);
     // signed-out users fall back to filtering the nearby set by local ids.
     if (tab === 'salvati') list = isAuthenticated ? savedBars : list.filter((b) => has(b.id));
+    // Only show bars open at least until 23:00 local time. Venues whose
+    // opening_hours are missing/unknown are kept (see openUntil23).
+    list = list.filter((b) => openUntil23(b.opening_hours));
+    // Optional filter: only bars rated by the community (drop the unrated).
+    if (ratedOnly) list = list.filter((b) => (b.total_ratings ?? 0) > 0);
     return [...list].sort((a, b) => (a.distance_km ?? 1e9) - (b.distance_km ?? 1e9));
-  }, [searchActive, searchResults, bars, tab, has, isAuthenticated, savedBars]);
+  }, [searchActive, searchResults, bars, tab, has, isAuthenticated, savedBars, ratedOnly]);
 
   // Fire the global bar search (debounced) whenever the query changes.
   useEffect(() => {
@@ -456,6 +506,8 @@ export default function Home() {
     setQuery,
     radius,
     setRadius,
+    ratedOnly,
+    setRatedOnly,
     onReload: () => setReloadKey((k) => k + 1),
     onWiden: () => setRadius((r) => Math.min(100, r + 3)),
     onExplore: () => setTab('vicini'),
@@ -505,10 +557,50 @@ export default function Home() {
             <Icon name="user" size={22} />
           </GlassButton>
           {menuOpen && isAuthenticated && (
-            <div className="absolute right-0 z-[1400] mt-2 w-48 overflow-hidden rounded-2xl border border-white/10 bg-ember-card shadow-xl">
-              <div className="flex items-center gap-2 border-b border-white/5 px-3 py-2.5 text-sm text-ember-cream">
-                <Icon name="user" size={16} className="text-ember-primary" />@{user.username}
+            <div className="absolute right-0 z-[1400] mt-2 w-64 overflow-hidden rounded-2xl border border-white/10 bg-ember-card shadow-xl">
+              {/* Own profile card — no need to open Impostazioni to see this. */}
+              <div className="border-b border-white/5 px-3 py-3">
+                <div className="flex items-center gap-2 text-sm font-semibold text-ember-cream">
+                  <Icon name="user" size={16} className="text-ember-primary" />@{user.username}
+                </div>
+                {profile?.email && (
+                  <div className="mt-1 truncate text-xs text-ember-muted">{profile.email}</div>
+                )}
+                <div className="mt-2 flex items-center gap-3 text-xs text-ember-muted">
+                  <span className="flex items-center gap-1">
+                    <Icon name="review" size={13} className="text-ember-primary" />
+                    {profile ? profile.ratings_count : '…'} valutazioni
+                  </span>
+                  {profile?.created_at && (
+                    <span>dal {new Date(profile.created_at).toLocaleDateString('it-IT')}</span>
+                  )}
+                </div>
+                {/* Ice cubes → tap to open the leaderboard. */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    navigate('/classifica');
+                  }}
+                  className="mt-2 flex w-full items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-sm text-ember-cream transition hover:border-ember-primary/50"
+                >
+                  <img src="/icons/ice.png" alt="" width={18} height={18} className="shrink-0 object-contain" />
+                  <span className="font-display font-bold tabular-nums">
+                    {profile ? profile.ice_cubes : '…'}
+                  </span>
+                  <span className="text-xs text-ember-muted">ice cubes</span>
+                  <Icon name="arrow-left" size={13} className="ml-auto rotate-180 text-ember-muted" />
+                </button>
               </div>
+              {isAdmin && (
+                <Link
+                  to="/admin"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex w-full items-center gap-2 border-b border-white/5 px-3 py-2.5 text-left text-sm font-semibold text-ember-primary hover:bg-white/5"
+                >
+                  <Icon name="filters" size={16} className="text-ember-primary" /> Pannello admin
+                </Link>
+              )}
               <Link
                 to="/impostazioni"
                 onClick={() => setMenuOpen(false)}

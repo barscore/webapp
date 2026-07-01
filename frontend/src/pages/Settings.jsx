@@ -7,8 +7,6 @@ import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import Toast from '../components/Toast.jsx';
 
-const ROLE_LABELS = { user: 'Utente', moderator: 'Moderatore', admin: 'Amministratore' };
-
 // Account settings: read-only account details + credential changes (email /
 // password) via supabase-js. Credential updates never go through the backend.
 export default function Settings() {
@@ -97,11 +95,6 @@ export default function Settings() {
           <dl className="space-y-2 text-sm">
             <Detail icon="user" label="Username" value={profile ? `@${profile.username}` : '…'} />
             <Detail icon="link" label="Email" value={profile?.email || '…'} />
-            <Detail
-              icon="star"
-              label="Ruolo"
-              value={profile ? ROLE_LABELS[profile.role] || profile.role : '…'}
-            />
             <Detail
               icon="review"
               label="Valutazioni"

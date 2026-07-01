@@ -1,0 +1,176 @@
+import { Hono } from 'hono';
+import { z } from 'zod';
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { findNearbyBars, geocode } from '../lib/osm.js';
+import { supabase } from '../lib/supabase.js';
+import { AppError } from '../middleware/errorHandler.js';
+
+// Free OSM-backed discovery: find bars + geocode addresses. No API key.
+const places = new Hono();
+
+// --- Nearby cache (stale-while-revalidate, disk-persistent) -----------------
+// Overpass is slow (~9-20s) and the only healthy public mirror. So we never let
+// a user wait on it twice: results are cached per rounded coord+radius. Two
+// windows:
+//   * FRESH  (< TTL)      → serve from cache, no upstream hit.
+//   * STALE  (TTL..MAX)   → serve cache instantly AND refresh in background.
+//   * cold/expired        → the one unavoidable slow fetch.
+// The cache is persisted to disk so it survives `--watch` reloads and restarts
+// (the reason it felt "slow as before" — in-memory Map was wiped on every save).
+const NEARBY_TTL_MS = Number(process.env.NEARBY_CACHE_TTL_MS) || 30 * 60 * 1000; // fresh window
+const NEARBY_MAX_AGE_MS = Number(process.env.NEARBY_CACHE_MAX_AGE_MS) || 7 * 24 * 60 * 60 * 1000; // serve-stale window
+const NEARBY_CACHE_MAX = 2000;
+const CACHE_FILE = resolve(process.env.NEARBY_CACHE_FILE || './.cache/nearby.json');
+
+const nearbyCache = new Map(); // key -> { at, places }
+const inflight = new Map(); // key -> Promise (dedupe concurrent upstream fetches)
+
+// ~1.1km grid at the equator — coarse enough to share cache across nearby
+// clicks, fine enough not to miss bars for the given radius.
+const cacheKey = (lat, lng, r) => `${lat.toFixed(2)},${lng.toFixed(2)},${r}`;
+
+function loadCacheFromDisk() {
+  try {
+    const raw = JSON.parse(readFileSync(CACHE_FILE, 'utf8'));
+    for (const [k, v] of Object.entries(raw)) nearbyCache.set(k, v);
+  } catch {
+    /* no cache file yet — fine */
+  }
+}
+loadCacheFromDisk();
+
+let persistTimer = null;
+function persistToDisk() {
+  // Debounced: batch rapid writes into one flush.
+  if (persistTimer) return;
+  persistTimer = setTimeout(() => {
+    persistTimer = null;
+    try {
+      mkdirSync(dirname(CACHE_FILE), { recursive: true });
+      writeFileSync(CACHE_FILE, JSON.stringify(Object.fromEntries(nearbyCache)));
+    } catch {
+      /* disk cache is best-effort */
+    }
+  }, 2000);
+}
+
+function cacheSet(key, places) {
+  if (nearbyCache.size >= NEARBY_CACHE_MAX && !nearbyCache.has(key)) {
+    nearbyCache.delete(nearbyCache.keys().next().value); // evict oldest
+  }
+  nearbyCache.set(key, { at: Date.now(), places });
+  persistToDisk();
+}
+
+// Dedupe: many clients hitting the same cold key trigger ONE upstream fetch.
+function fetchAndCache(key, lat, lng, radius_km) {
+  if (inflight.has(key)) return inflight.get(key);
+  const p = findNearbyBars(lat, lng, radius_km)
+    .then((places) => {
+      cacheSet(key, places);
+      return places;
+    })
+    .finally(() => inflight.delete(key));
+  inflight.set(key, p);
+  return p;
+}
+
+// Great-circle distance in km (Haversine). OSM POIs carry no distance, so we
+// compute it here for list sorting / subtitles.
+function distanceKm(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/**
+ * Overlay community ratings onto raw OSM places, matched by osm_node_id.
+ * Each place gains: `id` (our DB uuid when the bar is already persisted, else
+ * null), `avg_overall`, `total_ratings`, and `distance_km`.
+ */
+async function enrichWithRatings(osmPlaces, lat, lng) {
+  const ids = osmPlaces.map((p) => p.osm_node_id).filter((v) => v != null);
+  let byOsm = new Map();
+  if (ids.length) {
+    const { data } = await supabase
+      .from('bars')
+      .select('id, osm_node_id, bar_ratings_summary(avg_overall, total_ratings)')
+      .in('osm_node_id', ids);
+    byOsm = new Map((data ?? []).map((b) => [String(b.osm_node_id), b]));
+  }
+  return osmPlaces.map((p) => {
+    const match = byOsm.get(String(p.osm_node_id));
+    return {
+      ...p,
+      id: match?.id ?? null,
+      avg_overall: match?.bar_ratings_summary?.avg_overall ?? 0,
+      total_ratings: match?.bar_ratings_summary?.total_ratings ?? 0,
+      distance_km: Math.round(distanceKm(lat, lng, p.lat, p.lng) * 100) / 100,
+    };
+  });
+}
+
+const nearbySchema = z.object({
+  lat: z.coerce.number().min(-90).max(90),
+  lng: z.coerce.number().min(-180).max(180),
+  radius_km: z.coerce.number().positive().max(20).optional().default(2),
+});
+
+const searchSchema = z.object({
+  q: z.string().min(2).max(200),
+  limit: z.coerce.number().int().min(1).max(20).optional().default(5),
+});
+
+/** GET /places/nearby — bars/pubs around a point, straight from OpenStreetMap. */
+places.get('/nearby', async (c) => {
+  const { lat, lng, radius_km } = nearbySchema.parse(
+    Object.fromEntries(new URL(c.req.url).searchParams),
+  );
+  const key = cacheKey(lat, lng, radius_km);
+  const cached = nearbyCache.get(key);
+  const age = cached ? Date.now() - cached.at : Infinity;
+
+  try {
+    let results;
+    if (cached && age < NEARBY_MAX_AGE_MS) {
+      // Serve cache instantly. If past the fresh window, refresh in background
+      // (fire-and-forget) so the NEXT load is fresh — this user waits 0s.
+      results = cached.places;
+      if (age > NEARBY_TTL_MS) fetchAndCache(key, lat, lng, radius_km).catch(() => {});
+    } else {
+      // Cold or too stale to trust — the one unavoidable slow fetch.
+      results = await fetchAndCache(key, lat, lng, radius_km);
+    }
+    const enriched = await enrichWithRatings(results, lat, lng);
+    return c.json({ places: enriched });
+  } catch (e) {
+    // Upstream dead but we have *some* cache → serve it rather than 502.
+    if (cached) {
+      const enriched = await enrichWithRatings(cached.places, lat, lng);
+      return c.json({ places: enriched, stale: true });
+    }
+    throw new AppError(502, 'UPSTREAM_ERROR', `OpenStreetMap query failed: ${e.message}`);
+  }
+});
+
+/** GET /places/search — geocode a free-text place/address via Nominatim. */
+places.get('/search', async (c) => {
+  const { q, limit } = searchSchema.parse(
+    Object.fromEntries(new URL(c.req.url).searchParams),
+  );
+  try {
+    const results = await geocode(q, limit);
+    return c.json({ results });
+  } catch (e) {
+    throw new AppError(502, 'UPSTREAM_ERROR', `Geocoding failed: ${e.message}`);
+  }
+});
+
+export default places;

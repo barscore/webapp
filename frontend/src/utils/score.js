@@ -1,0 +1,39 @@
+// Shared rating helpers. DB averages are on a 1–5 scale; the UI shows a 0–10
+// score (value * 2). Pin variant + score color follow the same bands used by
+// the map markers so a bar looks identical in the list and on the map.
+//
+//   verde     (green)  score ≥ 7   — ben valutato
+//   arancione (orange) score < 7   — valutato sotto la soglia
+//   grigio    (grey)   no reviews yet → shown as "—"
+
+export function scoreMeta(bar) {
+  const overall =
+    Number(bar?.avg_overall ?? bar?.bar_ratings_summary?.avg_overall) || 0;
+  const total =
+    Number(bar?.total_ratings ?? bar?.bar_ratings_summary?.total_ratings) || 0;
+  const s = overall * 2; // 0–10
+  const hasReviews = total > 0 && s > 0;
+
+  if (!hasReviews) {
+    return { score: '—', variant: 'grigio', color: 'text-ember-muted', hasReviews: false };
+  }
+  if (s >= 7) {
+    return { score: s.toFixed(1), variant: 'verde', color: 'text-[#57C08A]', hasReviews: true };
+  }
+  return { score: s.toFixed(1), variant: 'arancione', color: 'text-ember-primary', hasReviews: true };
+}
+
+// Stable client-side identity for a bar. Persisted bars have a DB uuid; OSM-only
+// bars (not yet rated) are addressed by their OpenStreetMap type + id until the
+// first visit materializes them (see BarDetail + POST /bars/resolve).
+export function barKey(bar) {
+  if (bar?.id) return bar.id;
+  return `osm_${bar?.osm_type || 'node'}_${bar?.osm_node_id}`;
+}
+
+// Subtitle line for a list row: "0.3 km · Aperto" / "1.1 km · Nessuna recensione".
+export function barSubtitle(bar, hasReviews) {
+  const dist = bar?.distance_km != null ? `${bar.distance_km} km` : bar?.city;
+  const status = bar?.is_active === false ? 'Chiuso' : hasReviews ? 'Aperto' : 'Nessuna recensione';
+  return [dist, status].filter(Boolean).join(' · ');
+}

@@ -9,6 +9,7 @@ import NavTabs from '../components/NavTabs.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import Toast from '../components/Toast.jsx';
 import BarSheet from '../components/BarSheet.jsx';
+import SuggestModal from '../components/SuggestModal.jsx';
 import { placesApi, eventsApi, meApi } from '../services/api.js';
 import { barKey } from '../utils/score.js';
 import { openUntil23 } from '../utils/hours.js';
@@ -122,7 +123,7 @@ function RatedFilter({ ratedOnly, setRatedOnly }) {
 
 // Inner content of the sheet / desktop panel. Module-level so the search input
 // keeps focus across re-renders.
-function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, radius, setRadius, ratedOnly, setRatedOnly, onReload, onWiden, onExplore, onSelect, events, eventsLoading, eventsError }) {
+function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, radius, setRadius, ratedOnly, setRatedOnly, onReload, onWiden, onExplore, onSelect, onSuggest, events, eventsLoading, eventsError }) {
   // Eventi tab: zone events, soonest first. Separate data path (no map pins,
   // no bar rows) so it doesn't share the bars list flow below.
   if (tab === 'eventi') {
@@ -231,7 +232,14 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
             pin="arancione"
           />
         ) : searchActive ? (
-          <EmptyState title="Nessun risultato" hint={`Nessun bar trovato per “${query}”.`} pin="grigio" />
+          <EmptyState
+            title="Nessun risultato"
+            hint={`Non trovi il tuo bar di fiducia? Avvisaci e lo aggiungiamo alla mappa.`}
+            ctaLabel="Avvisaci"
+            ctaIcon="pin"
+            onCta={onSuggest}
+            pin="grigio"
+          />
         ) : (
           <EmptyState
             title="Zona ancora vuota"
@@ -280,6 +288,7 @@ export default function Home() {
   const [searchError, setSearchError] = useState('');
   const [tab, setTab] = useState('vicini');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [suggestOpen, setSuggestOpen] = useState(false);
   const {
     height: sheetH,
     dragging,
@@ -511,6 +520,7 @@ export default function Home() {
     onReload: () => setReloadKey((k) => k + 1),
     onWiden: () => setRadius((r) => Math.min(100, r + 3)),
     onExplore: () => setTab('vicini'),
+    onSuggest: () => setSuggestOpen(true),
     onSelect,
   };
 
@@ -615,12 +625,21 @@ export default function Home() {
               >
                 <Icon name="star" size={16} className="text-ember-primary" /> Le tue valutazioni
               </Link>
+              <div className="flex items-center gap-3 border-t border-white/5 px-3 py-2 text-xs text-ember-muted">
+                <Link to="/privacy" onClick={() => setMenuOpen(false)} className="hover:text-ember-primary">
+                  Privacy
+                </Link>
+                <span className="text-white/15">·</span>
+                <Link to="/tos" onClick={() => setMenuOpen(false)} className="hover:text-ember-primary">
+                  Termini
+                </Link>
+              </div>
               <button
                 onClick={() => {
                   setMenuOpen(false);
                   logout();
                 }}
-                className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-white/5"
+                className="flex w-full items-center gap-2 border-t border-white/5 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-white/5"
               >
                 <Icon name="arrow-left" size={16} /> Esci
               </button>
@@ -684,6 +703,15 @@ export default function Home() {
           seed={selected}
           onClose={closeSheet}
           onChanged={() => setReloadKey((k) => k + 1)}
+        />
+      )}
+
+      {suggestOpen && (
+        <SuggestModal
+          initialName={query.trim()}
+          coords={center}
+          onClose={() => setSuggestOpen(false)}
+          onSent={() => setToast({ msg: 'Grazie! Segnalazione inviata', icon: 'check' })}
         />
       )}
 

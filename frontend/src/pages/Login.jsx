@@ -64,6 +64,11 @@ export function AuthShell({ title, children }) {
         </div>
         <h1 className="mb-4 font-display text-2xl font-bold text-ember-cream">{title}</h1>
         {children}
+        <div className="mt-6 flex items-center justify-center gap-3 border-t border-white/5 pt-4 text-xs text-ember-muted">
+          <Link to="/privacy" className="hover:text-ember-primary">Privacy</Link>
+          <span className="text-white/15">·</span>
+          <Link to="/tos" className="hover:text-ember-primary">Termini</Link>
+        </div>
       </div>
     </div>
   );

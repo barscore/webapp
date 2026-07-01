@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
-import { adminApi } from '../services/api.js';
+import { adminApi, suggestionsApi } from '../services/api.js';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import Toast from '../components/Toast.jsx';
@@ -10,6 +10,7 @@ import Toast from '../components/Toast.jsx';
 const TABS = [
   { key: 'users', label: 'Utenti', icon: 'user' },
   { key: 'ratings', label: 'Valutazioni', icon: 'review' },
+  { key: 'suggestions', label: 'Segnalazioni', icon: 'pin' },
   { key: 'security', label: 'Sicurezza', icon: 'filters' },
   { key: 'emergency', label: 'Emergenza', icon: 'bell' },
 ];
@@ -80,6 +81,7 @@ export default function Admin() {
 
         {tab === 'users' && <UsersTab notify={notify} onChange={loadStats} />}
         {tab === 'ratings' && <RatingsTab notify={notify} onChange={loadStats} />}
+        {tab === 'suggestions' && <SuggestionsTab notify={notify} />}
         {tab === 'security' && <SecurityTab notify={notify} />}
         {tab === 'emergency' && <EmergencyTab notify={notify} onChange={loadStats} />}
       </div>
@@ -324,6 +326,157 @@ function RatingsTab({ notify, onChange }) {
         <ConfirmModal
           title="Elimina valutazione?"
           desc="La valutazione sarà rimossa e le medie del bar ricalcolate."
+          confirmLabel="Elimina"
+          danger
+          onClose={() => setConfirm(null)}
+          onConfirm={() => del(confirm.id)}
+        />
+      )}
+    </section>
+  );
+}
+
+// =========================================================================
+// Suggestions ("segnala il tuo bar" leads)
+// =========================================================================
+const SUGGESTION_FILTERS = [
+  { v: 'new', label: 'Da gestire' },
+  { v: 'done', label: 'Aggiunti' },
+  { v: 'rejected', label: 'Rifiutati' },
+  { v: '', label: 'Tutte' },
+];
+
+function SuggestionsTab({ notify }) {
+  const [q, setQ] = useState('');
+  const [status, setStatus] = useState('new');
+  const [items, setItems] = useState([]);
+  const [busy, setBusy] = useState(false);
+  const [confirm, setConfirm] = useState(null);
+
+  const load = useCallback(() => {
+    setBusy(true);
+    suggestionsApi
+      .list({ q: q || undefined, status: status || undefined, limit: 100 })
+      .then((r) => setItems(r.suggestions))
+      .catch(() => notify('Errore caricamento segnalazioni', 'info'))
+      .finally(() => setBusy(false));
+  }, [q, status, notify]);
+
+  useEffect(() => {
+    const t = setTimeout(load, 250);
+    return () => clearTimeout(t);
+  }, [load]);
+
+  async function setState(id, next, okMsg) {
+    try {
+      await suggestionsApi.setStatus(id, next);
+      notify(okMsg);
+      load();
+    } catch {
+      notify('Operazione fallita', 'info');
+    }
+  }
+
+  async function del(id) {
+    try {
+      await suggestionsApi.remove(id);
+      notify('Segnalazione eliminata');
+      setConfirm(null);
+      load();
+    } catch {
+      notify('Eliminazione fallita', 'info');
+    }
+  }
+
+  return (
+    <section className="space-y-3">
+      <SearchBar value={q} onChange={setQ} placeholder="Cerca nome o città…" />
+
+      <div className="flex flex-wrap gap-1.5">
+        {SUGGESTION_FILTERS.map((f) => (
+          <button
+            key={f.v}
+            onClick={() => setStatus(f.v)}
+            className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+              status === f.v ? 'bg-ember-primary text-ember-bg' : 'bg-ember-card text-ember-muted hover:text-ember-cream'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="divide-y divide-white/5 overflow-hidden rounded-card border border-white/5 bg-ember-card">
+        {busy && !items.length && <p className="p-4 text-sm text-ember-muted">Caricamento…</p>}
+        {!busy && !items.length && <p className="p-4 text-sm text-ember-muted">Nessuna segnalazione.</p>}
+        {items.map((s) => (
+          <div key={s.id} className="p-3">
+            <div className="flex items-start gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-semibold text-ember-cream">{s.name}</span>
+                  {s.city && <span className="text-xs text-ember-muted">· {s.city}</span>}
+                  {s.status !== 'new' && (
+                    <Tag color={s.status === 'done' ? 'primary' : 'accent'}>
+                      {s.status === 'done' ? 'aggiunto' : 'rifiutato'}
+                    </Tag>
+                  )}
+                </div>
+                {s.note && <p className="mt-1 text-sm text-ember-cream/90">{s.note}</p>}
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-ember-muted">
+                  {s.contact && (
+                    <span className="flex items-center gap-1">
+                      <Icon name="link" size={11} /> {s.contact}
+                    </span>
+                  )}
+                  {s.lat != null && s.lng != null && (
+                    <a
+                      href={`https://www.openstreetmap.org/?mlat=${s.lat}&mlon=${s.lng}#map=17/${s.lat}/${s.lng}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="flex items-center gap-1 hover:text-ember-primary"
+                    >
+                      <Icon name="pin" size={11} /> posizione
+                    </a>
+                  )}
+                  <span>{new Date(s.created_at).toLocaleDateString('it-IT')}</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setConfirm(s)}
+                title="Elimina"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ember-muted hover:bg-white/5 hover:text-ember-accent"
+              >
+                <Icon name="trash" size={16} />
+              </button>
+            </div>
+
+            {s.status !== 'done' && (
+              <div className="mt-2 flex gap-2">
+                <button
+                  onClick={() => setState(s.id, 'done', 'Segnata come aggiunta')}
+                  className="flex-1 rounded-lg bg-ember-primary/15 py-1.5 text-xs font-semibold text-ember-primary hover:bg-ember-primary/25"
+                >
+                  Segna come aggiunto
+                </button>
+                {s.status !== 'rejected' && (
+                  <button
+                    onClick={() => setState(s.id, 'rejected', 'Segnalazione rifiutata')}
+                    className="flex-1 rounded-lg bg-white/5 py-1.5 text-xs font-semibold text-ember-muted hover:text-ember-cream"
+                  >
+                    Rifiuta
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {confirm && (
+        <ConfirmModal
+          title="Elimina segnalazione?"
+          desc="La segnalazione sarà rimossa definitivamente."
           confirmLabel="Elimina"
           danger
           onClose={() => setConfirm(null)}

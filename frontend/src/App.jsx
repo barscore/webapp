@@ -10,6 +10,8 @@ import Settings from './pages/Settings.jsx';
 import MyRatings from './pages/MyRatings.jsx';
 import Leaderboard from './pages/Leaderboard.jsx';
 import Admin from './pages/Admin.jsx';
+import Privacy from './pages/Privacy.jsx';
+import Tos from './pages/Tos.jsx';
 import Maintenance from './pages/Maintenance.jsx';
 import BanBanner from './components/BanBanner.jsx';
 
@@ -66,6 +68,8 @@ export default function App() {
       <Route path="/le-tue-valutazioni" element={<MyRatings />} />
       <Route path="/classifica" element={<Leaderboard />} />
       <Route path="/admin" element={<Admin />} />
+      <Route path="/privacy" element={<Privacy />} />
+      <Route path="/tos" element={<Tos />} />
       <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </>

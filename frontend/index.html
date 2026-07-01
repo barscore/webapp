@@ -4,9 +4,46 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#E07B1A" />
-    <meta name="description" content="rabar — mappa interattiva dei bar con valutazioni comunitarie su prezzo, qualità e socialità." />
+
+    <!-- Primary SEO -->
+    <title>rabar — mappa dei bar valutati dalla community</title>
+    <meta
+      name="description"
+      content="rabar è la mappa interattiva dei bar valutati dalla community su prezzo, qualità dell'alcol e socialità. Trova il bar giusto vicino a te."
+    />
+    <meta
+      name="keywords"
+      content="bar, mappa bar, migliori bar, valutazioni bar, prezzo bar, cocktail, aperitivo, locali, nightlife, rabar"
+    />
+    <meta name="author" content="rabar" />
+    <meta name="robots" content="index, follow" />
+    <!-- Set to your production URL before deploy. -->
+    <link rel="canonical" href="https://rabar.it/" />
+
+    <!-- Open Graph (Facebook, WhatsApp, Telegram…) -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="rabar" />
+    <meta property="og:locale" content="it_IT" />
+    <meta property="og:title" content="rabar — mappa dei bar valutati dalla community" />
+    <meta
+      property="og:description"
+      content="Trova il bar giusto: prezzo, qualità dell'alcol e socialità valutati dalla community, su una mappa interattiva."
+    />
+    <meta property="og:url" content="https://rabar.it/" />
+    <meta property="og:image" content="https://rabar.it/icons/icon-512.png" />
+
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="rabar — mappa dei bar valutati dalla community" />
+    <meta
+      name="twitter:description"
+      content="Trova il bar giusto: prezzo, qualità dell'alcol e socialità valutati dalla community."
+    />
+    <meta name="twitter:image" content="https://rabar.it/icons/icon-512.png" />
+
     <link rel="manifest" href="/manifest.json" />
     <link rel="icon" type="image/png" href="/icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="/icons/icon-180.png" />
 
     <!-- EMBER NIGHT type system: Syne (display) + DM Sans (body) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -15,15 +52,24 @@
       href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Syne:wght@600;700;800&display=swap"
       rel="stylesheet"
     />
-    <link rel="apple-touch-icon" href="/icons/icon-180.png" />
-    <title>rabar</title>
 
-    <!-- Google AdSense. Replace ca-pub-XXXX via build-time injection or paste your client id. -->
-    <script
-      async
-      src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-xxxxxxxxxxxxxxxx"
-      crossorigin="anonymous"
-    ></script>
+    <!-- Structured data: helps search engines understand the app. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "rabar",
+        "applicationCategory": "LifestyleApplication",
+        "operatingSystem": "Web",
+        "description": "Mappa interattiva dei bar valutati dalla community su prezzo, qualità dell'alcol e socialità.",
+        "url": "https://rabar.it/",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
+      }
+    </script>
+
+    <!-- Google AdSense loads lazily from AdBanner.jsx, only when
+         VITE_ADSENSE_CLIENT_ID is set (see the component). Nothing to configure
+         here — leave the env var empty to disable ads. -->
   </head>
   <body>
     <div id="root"></div>

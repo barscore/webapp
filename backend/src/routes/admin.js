@@ -72,7 +72,12 @@ admin.get('/users', async (c) => {
     .range(from, to);
 
   if (role) query = query.eq('role', role);
-  if (q) query = query.or(`username.ilike.%${q}%,email.ilike.%${q}%`);
+  // Strip PostgREST .or() metacharacters — a "," or ")" in q would otherwise be
+  // parsed as extra filter conditions (filter injection).
+  if (q) {
+    const safe = q.replace(/[,()]/g, ' ').trim();
+    if (safe) query = query.or(`username.ilike.%${safe}%,email.ilike.%${safe}%`);
+  }
 
   const { data, error, count } = await query;
   if (error) throw new AppError(500, 'INTERNAL_ERROR', 'Could not load users');

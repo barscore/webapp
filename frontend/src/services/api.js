@@ -62,6 +62,16 @@ export const leaderboardApi = {
   list: () => api.get('/leaderboard').then((r) => r.data.leaderboard),
 };
 
+// "Segnala il tuo bar" — create is public (works signed-out); list/moderation
+// are staff-only (backend enforces requireRole).
+export const suggestionsApi = {
+  create: (payload) => api.post('/suggestions', payload).then((r) => r.data.suggestion),
+  list: (params) => api.get('/suggestions', { params }).then((r) => r.data),
+  setStatus: (id, status) =>
+    api.patch(`/suggestions/${id}`, { status }).then((r) => r.data.suggestion),
+  remove: (id) => api.delete(`/suggestions/${id}`).then((r) => r.data),
+};
+
 // Admin panel. Every call is admin-only (backend enforces requireRole('admin')).
 export const adminApi = {
   stats: () => api.get('/admin/stats').then((r) => r.data.stats),

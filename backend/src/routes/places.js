@@ -96,14 +96,23 @@ function distanceKm(lat1, lng1, lat2, lng2) {
  * null), `avg_overall`, `total_ratings`, and `distance_km`.
  */
 async function enrichWithRatings(osmPlaces, lat, lng) {
-  const ids = osmPlaces.map((p) => p.osm_node_id).filter((v) => v != null);
   let byOsm = new Map();
-  if (ids.length) {
+  if (osmPlaces.length) {
+    // Don't filter by the OSM ids: an Overpass result can hold 1000+ places, and
+    // a `.in('osm_node_id', [1300 huge ints])` builds a ~13KB GET URL that makes
+    // PostgREST hang ~9s then fail. The `bars` table is small (only persisted,
+    // community-added venues), so fetch them all once and match in JS.
+    const wanted = new Set(osmPlaces.map((p) => String(p.osm_node_id)));
     const { data } = await supabase
       .from('bars')
       .select('id, osm_node_id, bar_ratings_summary(avg_overall, total_ratings)')
-      .in('osm_node_id', ids);
-    byOsm = new Map((data ?? []).map((b) => [String(b.osm_node_id), b]));
+      .not('osm_node_id', 'is', null)
+      .limit(10000);
+    byOsm = new Map(
+      (data ?? [])
+        .filter((b) => wanted.has(String(b.osm_node_id)))
+        .map((b) => [String(b.osm_node_id), b]),
+    );
   }
   return osmPlaces.map((p) => {
     const match = byOsm.get(String(p.osm_node_id));

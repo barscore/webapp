@@ -1,23 +1,25 @@
 import Icon from './Icon.jsx';
 
-// Three-tab switcher from the mockup: Vicino a me / Salvati / Cerca.
-// The active tab is an amber pill; the rest are muted icon+label.
-//   variant="bar"  → horizontal row, sits at the bottom of the mobile sheet.
-//   variant="rail" → vertical floating menu, docked left on desktop.
+// Tab switcher: Vicino a me / Salvati / Eventi / Cerca.
+// The active tab is an amber pill; the rest are muted.
+//   variant="bar"  → horizontal row at the bottom of the mobile sheet; icon-only.
+//   variant="rail" → horizontal floating menu on desktop; icon + label.
 const TABS = [
   { id: 'vicini', label: 'Vicino a me', icon: 'locate' },
   { id: 'salvati', label: 'Salvati', icon: 'bookmark' },
+  { id: 'eventi', label: 'Eventi', icon: 'bell' },
   { id: 'cerca', label: 'Cerca', icon: 'search' },
 ];
 
-export default function NavTabs({ tab, onTab, savedCount = 0, variant = 'bar', className = '' }) {
+export default function NavTabs({ tab, onTab, savedCount = 0, variant = 'bar', exclude = [], className = '' }) {
   const rail = variant === 'rail';
+  const tabs = TABS.filter((t) => !exclude.includes(t.id));
 
   return (
     <nav
-      className={`flex ${rail ? 'flex-col gap-2 rounded-3xl border border-white/10 bg-ember-bg/80 p-2 shadow-xl backdrop-blur' : 'items-center justify-between gap-1'} ${className}`}
+      className={`flex items-center gap-1 ${rail ? 'justify-between rounded-3xl border border-white/10 bg-ember-bg/80 p-2 shadow-xl backdrop-blur' : 'justify-between'} ${className}`}
     >
-      {TABS.map((t) => {
+      {tabs.map((t) => {
         const active = tab === t.id;
         return (
           <button
@@ -25,8 +27,10 @@ export default function NavTabs({ tab, onTab, savedCount = 0, variant = 'bar', c
             type="button"
             onClick={() => onTab(t.id)}
             aria-current={active ? 'page' : undefined}
-            className={`relative flex items-center gap-1.5 rounded-full text-sm font-semibold transition ${
-              rail ? 'w-full px-4 py-2.5' : 'min-w-0 flex-1 justify-center px-2.5 py-2'
+            aria-label={t.label}
+            title={t.label}
+            className={`relative flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-full text-sm font-semibold transition ${
+              rail ? 'px-3 py-2.5' : 'px-2.5 py-2.5'
             } ${
               active
                 ? 'bg-ember-primary text-ember-bg shadow-[0_4px_14px_rgba(224,123,26,0.4)]'
@@ -41,7 +45,8 @@ export default function NavTabs({ tab, onTab, savedCount = 0, variant = 'bar', c
                 </span>
               )}
             </span>
-            <span className="whitespace-nowrap">{t.label}</span>
+            {/* Bottom bar is icon-only; the rail keeps text labels. */}
+            {rail && <span className="truncate">{t.label}</span>}
           </button>
         );
       })}

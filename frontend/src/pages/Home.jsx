@@ -2,17 +2,18 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Map from '../components/Map.jsx';
 import BarRow from '../components/BarRow.jsx';
+import EventRow from '../components/EventRow.jsx';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import NavTabs from '../components/NavTabs.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import Toast from '../components/Toast.jsx';
 import BarSheet from '../components/BarSheet.jsx';
-import { placesApi } from '../services/api.js';
+import { placesApi, eventsApi } from '../services/api.js';
 import { barKey } from '../utils/score.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { useBookmarks } from '../hooks/useBookmarks.js';
-import { useSheetDrag } from '../hooks/useSheetDrag.js';
+import { useSheetDrag, useIsMobile } from '../hooks/useSheetDrag.js';
 
 // Snap heights (dvh) for the mobile sheet: collapsed / expanded / fullscreen.
 const SHEET_STOPS = [44, 84, 100];
@@ -42,7 +43,7 @@ function writeNearbyCache(lat, lng, r, data) {
   }
 }
 
-const TITLES = { vicini: 'Vicino a me', salvati: 'Salvati', cerca: 'Cerca' };
+const TITLES = { vicini: 'Vicino a me', salvati: 'Salvati', eventi: 'Eventi', cerca: 'Cerca' };
 
 // Circular glass control used top-right (account + repositioning).
 function GlassButton({ onClick, label, children }) {
@@ -58,56 +59,126 @@ function GlassButton({ onClick, label, children }) {
   );
 }
 
+// Search input. On mobile it lives inside the sheet (cerca tab);
+// on desktop it's a persistent bar above the nav rail.
+function SearchPanel({ query, setQuery, autoFocus = false }) {
+  return (
+    <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2.5">
+      <Icon name="search" size={18} className="text-ember-muted" />
+      <input
+        value={query}
+        onChange={(e) => setQuery(e.target.value)}
+        placeholder="Cerca un bar…"
+        autoFocus={autoFocus}
+        className="w-full bg-transparent text-sm text-ember-cream outline-none placeholder:text-ember-muted"
+      />
+      {query && (
+        <button onClick={() => setQuery('')} aria-label="Pulisci ricerca" className="text-ember-muted hover:text-ember-cream">
+          <Icon name="close" size={16} />
+        </button>
+      )}
+    </div>
+  );
+}
+
+// Radius stepper — only in the "Vicino a me" section.
+function RadiusControl({ radius, setRadius }) {
+  return (
+    <div className="flex items-center gap-2 px-1 text-xs text-ember-muted">
+      <Icon name="funnel" size={14} className="text-ember-primary" />
+      Raggio {radius} km
+      <div className="ml-auto flex items-center gap-1">
+        <button
+          onClick={() => setRadius((r) => Math.max(1, r - 1))}
+          aria-label="Riduci raggio"
+          className="rounded-full bg-white/5 p-1.5 text-ember-cream hover:bg-white/10"
+        >
+          <Icon name="minus" size={14} />
+        </button>
+        <button
+          onClick={() => setRadius((r) => Math.min(20, r + 1))}
+          aria-label="Aumenta raggio"
+          className="rounded-full bg-white/5 p-1.5 text-ember-cream hover:bg-white/10"
+        >
+          <Icon name="plus" size={14} />
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // Inner content of the sheet / desktop panel. Module-level so the search input
 // keeps focus across re-renders.
-function SheetBody({ tab, list, loading, error, query, setQuery, radius, setRadius, onReload, onWiden, onExplore, onSelect }) {
+function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, radius, setRadius, onReload, onWiden, onExplore, onSelect, events, eventsLoading, eventsError }) {
+  // Eventi tab: zone events, soonest first. Separate data path (no map pins,
+  // no bar rows) so it doesn't share the bars list flow below.
+  if (tab === 'eventi') {
+    return (
+      <>
+        <div className="mb-2 flex items-center gap-2 px-1">
+          <Icon name="bell" size={14} className="text-ember-primary" />
+          <span className="font-display text-xs font-bold uppercase tracking-wide text-ember-muted">
+            {TITLES.eventi}
+          </span>
+          <span className="text-xs text-ember-muted">· {events.length}</span>
+        </div>
+
+        {eventsLoading && (
+          <p className="flex items-center gap-2 px-1 py-3 text-sm text-ember-muted">
+            <Icon name="reload" size={16} className="animate-spin" /> Caricamento…
+          </p>
+        )}
+
+        {eventsError && !eventsLoading && (
+          <div className="rounded-2xl border border-ember-accent/30 bg-white/[0.03] p-4 text-center">
+            <p className="text-ember-accent">{eventsError}</p>
+            <button
+              onClick={onReload}
+              className="mt-3 inline-flex items-center gap-2 rounded-lg bg-ember-primary px-4 py-2 font-semibold text-ember-bg"
+            >
+              <Icon name="reload" size={16} /> Riprova
+            </button>
+          </div>
+        )}
+
+        {!eventsLoading && !eventsError && events.length === 0 && (
+          <EmptyState
+            title="Nessun evento"
+            hint="Nessun evento in programma qui intorno. Prova ad allargare l'area."
+            ctaLabel="Allarga area"
+            ctaIcon="funnel"
+            onCta={onWiden}
+            pin="arancione"
+          />
+        )}
+
+        {!eventsLoading && events.length > 0 && (
+          <div className="space-y-2 pb-1">
+            {events.map((ev) => (
+              <EventRow key={ev.id} event={ev} />
+            ))}
+          </div>
+        )}
+      </>
+    );
+  }
+
   return (
     <>
       {tab === 'cerca' ? (
-        <div className="mb-3 space-y-3">
-          <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2.5">
-            <Icon name="search" size={18} className="text-ember-muted" />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Cerca un bar…"
-              autoFocus
-              className="w-full bg-transparent text-sm text-ember-cream outline-none placeholder:text-ember-muted"
-            />
-            {query && (
-              <button onClick={() => setQuery('')} aria-label="Pulisci ricerca" className="text-ember-muted hover:text-ember-cream">
-                <Icon name="close" size={16} />
-              </button>
-            )}
-          </div>
-          <div className="flex items-center gap-2 px-1 text-xs text-ember-muted">
-            <Icon name="funnel" size={14} className="text-ember-primary" />
-            Raggio {radius} km
-            <div className="ml-auto flex items-center gap-1">
-              <button
-                onClick={() => setRadius((r) => Math.max(1, r - 1))}
-                aria-label="Riduci raggio"
-                className="rounded-full bg-white/5 p-1.5 text-ember-cream hover:bg-white/10"
-              >
-                <Icon name="minus" size={14} />
-              </button>
-              <button
-                onClick={() => setRadius((r) => Math.min(20, r + 1))}
-                aria-label="Aumenta raggio"
-                className="rounded-full bg-white/5 p-1.5 text-ember-cream hover:bg-white/10"
-              >
-                <Icon name="plus" size={14} />
-              </button>
-            </div>
-          </div>
+        <div className="mb-3">
+          <SearchPanel query={query} setQuery={setQuery} autoFocus />
         </div>
       ) : (
-        <div className="mb-2 flex items-center gap-2 px-1">
-          <Icon name={tab === 'salvati' ? 'bookmark' : 'locate'} size={14} className="text-ember-primary" />
-          <span className="font-display text-xs font-bold uppercase tracking-wide text-ember-muted">
-            {TITLES[tab]}
-          </span>
-          <span className="text-xs text-ember-muted">· {list.length}</span>
+        <div className="mb-2 space-y-2">
+          <div className="flex items-center gap-2 px-1">
+            <Icon name={searchActive ? 'search' : tab === 'salvati' ? 'bookmark' : 'locate'} size={14} className="text-ember-primary" />
+            <span className="font-display text-xs font-bold uppercase tracking-wide text-ember-muted">
+              {searchActive ? 'Risultati' : TITLES[tab]}
+            </span>
+            <span className="text-xs text-ember-muted">· {list.length}</span>
+          </div>
+          {tab === 'vicini' && !searchActive && <RadiusControl radius={radius} setRadius={setRadius} />}
         </div>
       )}
 
@@ -139,7 +210,7 @@ function SheetBody({ tab, list, loading, error, query, setQuery, radius, setRadi
             onCta={onExplore}
             pin="arancione"
           />
-        ) : tab === 'cerca' && query ? (
+        ) : searchActive ? (
           <EmptyState title="Nessun risultato" hint={`Nessun bar trovato per “${query}”.`} pin="grigio" />
         ) : (
           <EmptyState
@@ -167,6 +238,7 @@ export default function Home() {
   const navigate = useNavigate();
   const { isAuthenticated, user, logout } = useAuth();
   const { has, count, savedBars } = useBookmarks();
+  const isMobile = useIsMobile();
 
   const [center, setCenter] = useState([DEFAULT_LAT, DEFAULT_LNG]);
   const [userPos, setUserPos] = useState(null);
@@ -176,7 +248,14 @@ export default function Home() {
   const [error, setError] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
 
+  const [events, setEvents] = useState([]);
+  const [eventsLoading, setEventsLoading] = useState(false);
+  const [eventsError, setEventsError] = useState('');
+
   const [query, setQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [searchLoading, setSearchLoading] = useState(false);
+  const [searchError, setSearchError] = useState('');
   const [tab, setTab] = useState('vicini');
   const [menuOpen, setMenuOpen] = useState(false);
   const {
@@ -241,6 +320,23 @@ export default function Home() {
     };
   }, [center, radius, reloadKey]);
 
+  // Load zone events when the Eventi tab is active (and on area/reload change).
+  // Lazy: no request until the user opens the tab.
+  useEffect(() => {
+    if (tab !== 'eventi') return;
+    let cancelled = false;
+    setEventsLoading(true);
+    setEventsError('');
+    eventsApi
+      .nearby({ lat: center[0], lng: center[1], radius_km: radius })
+      .then((data) => !cancelled && setEvents(data))
+      .catch(() => !cancelled && setEventsError('Impossibile caricare gli eventi'))
+      .finally(() => !cancelled && setEventsLoading(false));
+    return () => {
+      cancelled = true;
+    };
+  }, [tab, center, radius, reloadKey]);
+
   // Close the account menu on outside click.
   useEffect(() => {
     if (!menuOpen) return;
@@ -251,15 +347,55 @@ export default function Home() {
     return () => document.removeEventListener('mousedown', onDoc);
   }, [menuOpen]);
 
+  // Search is global (whole planet). Active on the mobile cerca tab, or the
+  // always-visible desktop search bar.
+  const searchActive = query.trim().length >= 2 && (!isMobile || tab === 'cerca');
+
   const visible = useMemo(() => {
+    // Global search: show the server-side worldwide results, not the nearby set.
+    if (searchActive) {
+      return [...searchResults].sort((a, b) => (a.distance_km ?? 1e9) - (b.distance_km ?? 1e9));
+    }
     let list = bars;
     // Saved bars come from the account (all of them, even outside the radius);
     // signed-out users fall back to filtering the nearby set by local ids.
     if (tab === 'salvati') list = isAuthenticated ? savedBars : list.filter((b) => has(b.id));
-    const q = query.trim().toLowerCase();
-    if (tab === 'cerca' && q) list = list.filter((b) => b.name?.toLowerCase().includes(q));
     return [...list].sort((a, b) => (a.distance_km ?? 1e9) - (b.distance_km ?? 1e9));
-  }, [bars, tab, query, has, isAuthenticated, savedBars]);
+  }, [searchActive, searchResults, bars, tab, has, isAuthenticated, savedBars]);
+
+  // Fire the global bar search (debounced) whenever the query changes.
+  useEffect(() => {
+    if (!searchActive) {
+      setSearchResults([]);
+      setSearchLoading(false);
+      setSearchError('');
+      return;
+    }
+    const q = query.trim();
+    let cancelled = false;
+    setSearchLoading(true);
+    setSearchError('');
+    const t = setTimeout(() => {
+      placesApi
+        .searchBars({ q, lat: center[0], lng: center[1] })
+        .then((data) => {
+          if (cancelled) return;
+          setSearchResults(data);
+          if (!data.length) setSearchError('');
+        })
+        .catch((e) => {
+          if (cancelled) return;
+          console.error('[ricerca bar] fallita:', e);
+          setSearchResults([]);
+          setSearchError(`Ricerca non riuscita: ${e.response?.status || ''} ${e.message}`);
+        })
+        .finally(() => !cancelled && setSearchLoading(false));
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [searchActive, query, center]);
 
   function locateMe() {
     if (!navigator.geolocation) return setToast({ msg: 'Geolocalizzazione non disponibile', icon: 'info' });
@@ -302,8 +438,12 @@ export default function Home() {
   const sheetProps = {
     tab,
     list: visible,
-    loading,
-    error,
+    loading: searchActive ? searchLoading : loading,
+    searchActive,
+    error: searchActive ? searchError : error,
+    events,
+    eventsLoading,
+    eventsError,
     query,
     setQuery,
     radius,
@@ -361,6 +501,20 @@ export default function Home() {
               <div className="flex items-center gap-2 border-b border-white/5 px-3 py-2.5 text-sm text-ember-cream">
                 <Icon name="user" size={16} className="text-ember-primary" />@{user.username}
               </div>
+              <Link
+                to="/impostazioni"
+                onClick={() => setMenuOpen(false)}
+                className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-white/5"
+              >
+                <Icon name="filters" size={16} className="text-ember-primary" /> Impostazioni
+              </Link>
+              <Link
+                to="/le-tue-valutazioni"
+                onClick={() => setMenuOpen(false)}
+                className="flex w-full items-center gap-2 border-b border-white/5 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-white/5"
+              >
+                <Icon name="star" size={16} className="text-ember-primary" /> Le tue valutazioni
+              </Link>
               <button
                 onClick={() => {
                   setMenuOpen(false);
@@ -379,13 +533,17 @@ export default function Home() {
       </div>
 
       {/* Desktop: floating tab menu (left) + list panel below it */}
-      <div className="pointer-events-none absolute left-5 top-24 bottom-6 z-[1100] hidden w-[372px] flex-col gap-3 md:flex">
+      <div className="pointer-events-none absolute left-5 top-24 bottom-6 z-[1100] hidden w-[440px] flex-col gap-3 md:flex">
+        <div className="pointer-events-auto rounded-3xl border border-white/10 bg-ember-bg/80 p-3 shadow-xl backdrop-blur">
+          <SearchPanel query={query} setQuery={setQuery} />
+        </div>
         <NavTabs
           className="pointer-events-auto"
           variant="rail"
           tab={tab}
           onTab={onTab}
           savedCount={count}
+          exclude={['cerca']}
         />
         <div className="pointer-events-auto flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#0f1116]/90 shadow-2xl backdrop-blur-xl">
           <div className="no-scrollbar flex-1 overflow-y-auto px-4 py-4">

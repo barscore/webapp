@@ -22,6 +22,7 @@ function toUser(sessionUser) {
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -40,6 +41,27 @@ export function AuthProvider({ children }) {
 
     return () => subscription.unsubscribe();
   }, []);
+
+  // App role lives in the profiles table (not the JWT). Load it when the user
+  // changes; RLS "profiles_select_all" allows reading with the anon key.
+  useEffect(() => {
+    if (!user) {
+      setRole(null);
+      return;
+    }
+    let active = true;
+    supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (active) setRole(data?.role ?? 'user');
+      });
+    return () => {
+      active = false;
+    };
+  }, [user]);
 
   // Email/password sign-in.
   async function login(email, password) {
@@ -75,9 +97,11 @@ export function AuthProvider({ children }) {
   }
 
   const value = {
-    user,
+    user: user ? { ...user, role } : null,
+    role,
     loading,
     isAuthenticated: !!user,
+    isAdmin: role === 'admin',
     login,
     register,
     loginWithGoogle,

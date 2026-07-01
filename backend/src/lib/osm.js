@@ -129,3 +129,56 @@ export async function geocode(query, limit = 5) {
     type: r.type,
   }));
 }
+
+// Drink/food venues we treat as "bar-like". Broad on purpose: OSM tags many
+// real bars as cafe/restaurant, so a strict bar-only filter loses them.
+const VENUE_AMENITIES = new Set([
+  'bar', 'pub', 'biergarten', 'nightclub', 'cafe', 'restaurant', 'fast_food', 'ice_cream', 'food_court',
+]);
+
+// Photon (komoot) — free, no key, built for as-you-type OSM POI search. Unlike
+// the Nominatim geocoder it handles partial names/typos and isn't 1-req/s
+// rate-limited, so it's the right backend for a live search box.
+const PHOTON_URL = process.env.PHOTON_URL || 'https://photon.komoot.io';
+const PHOTON_LETTER = { N: 'node', W: 'way', R: 'relation' };
+
+/**
+ * Global free-text bar search via Photon (whole planet). Lets a user in Munich
+ * find a bar in Trento by (partial) name. `bias` [lat,lng] only ranks nearer
+ * hits first — results stay worldwide. Output matches the nearby-bar shape.
+ */
+export async function searchBars(query, limit = 20, bias = null) {
+  // `osm_tag=amenity` (key only) restricts to amenities server-side so venues
+  // aren't crowded out of the top results by a same-named town/street. We then
+  // narrow to bar-like values in JS.
+  let url = `${PHOTON_URL}/api/?limit=${limit}&osm_tag=amenity&q=${encodeURIComponent(query)}`;
+  if (bias && bias[0] != null && bias[1] != null) url += `&lat=${bias[0]}&lon=${bias[1]}`;
+  const res = await fetch(url, { headers: { 'User-Agent': UA } });
+  if (!res.ok) throw new Error(`Photon error ${res.status}`);
+  const data = await res.json();
+  // Filter to bar-like venues in JS — Photon's repeated osm_tag param is
+  // unreliable (drops results), so we over-fetch and narrow here.
+  return (data.features || [])
+    .filter((f) => {
+      const p = f.properties || {};
+      const c = f.geometry?.coordinates;
+      return p.osm_id && Array.isArray(c) && p.name && p.osm_key === 'amenity' && VENUE_AMENITIES.has(p.osm_value);
+    })
+    .map((f) => {
+      const p = f.properties;
+      const [lng, lat] = f.geometry.coordinates;
+      return {
+        osm_node_id: p.osm_id,
+        osm_type: PHOTON_LETTER[p.osm_type] || 'node',
+        name: p.name,
+        amenity: p.osm_value || null,
+        address: [p.street, p.housenumber].filter(Boolean).join(' ') || null,
+        city: p.city || p.town || p.village || p.county || null,
+        lat: Number(lat),
+        lng: Number(lng),
+        phone: null,
+        website: null,
+        cover_image_url: null,
+      };
+    });
+}

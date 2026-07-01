@@ -30,6 +30,17 @@ export const barsApi = {
 export const placesApi = {
   nearby: (params) => api.get('/places/nearby', { params }).then((r) => r.data.places),
   search: (q) => api.get('/places/search', { params: { q } }).then((r) => r.data.results),
+  // Global bar search (whole planet), enriched with ratings. Optional lat/lng
+  // only sets distance_km on the results.
+  searchBars: (params) => api.get('/places/bars', { params }).then((r) => r.data.places),
+};
+
+// Zone events, added by hand for venues. Read is public; writes are admin/mod.
+export const eventsApi = {
+  nearby: (params) => api.get('/events', { params }).then((r) => r.data.events),
+  create: (payload) => api.post('/events', payload).then((r) => r.data.event),
+  update: (id, payload) => api.put(`/events/${id}`, payload).then((r) => r.data.event),
+  remove: (id) => api.delete(`/events/${id}`).then((r) => r.data),
 };
 
 // Account-scoped saved bars. Requires an authenticated session.
@@ -37,6 +48,12 @@ export const bookmarksApi = {
   list: () => api.get('/bookmarks').then((r) => r.data),
   add: (barId) => api.post(`/bookmarks/${barId}`).then((r) => r.data),
   remove: (barId) => api.delete(`/bookmarks/${barId}`).then((r) => r.data),
+};
+
+// Account-scoped self data. Requires an authenticated session.
+export const meApi = {
+  profile: () => api.get('/me').then((r) => r.data.profile),
+  ratings: () => api.get('/me/ratings').then((r) => r.data.ratings),
 };
 
 export const ratingsApi = {

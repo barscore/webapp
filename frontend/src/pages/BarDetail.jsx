@@ -25,7 +25,7 @@ function parseOsmToken(id) {
 export default function BarDetail() {
   const { id } = useParams();
   const location = useLocation();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, isAdmin, user } = useAuth();
   const { has, toggle } = useBookmarks();
 
   const [bar, setBar] = useState(null);
@@ -82,6 +82,18 @@ export default function BarDetail() {
     setShowForm(false);
     await load();
     setToast({ msg: 'Valutazione eliminata', icon: 'trash' });
+  }
+
+  // Admin moderation: remove an inappropriate review (any user's).
+  async function adminDeleteRating(rid) {
+    if (!confirm('Eliminare questa valutazione inappropriata?')) return;
+    try {
+      await ratingsApi.remove(bar.id, rid);
+      await load();
+      setToast({ msg: 'Valutazione rimossa', icon: 'trash' });
+    } catch {
+      setToast({ msg: 'Errore durante l’eliminazione', icon: 'info' });
+    }
   }
 
   function voteHelpful(rid, dir) {
@@ -337,6 +349,15 @@ export default function BarDetail() {
                       >
                         <Icon name="thumbs-down" size={16} />
                       </button>
+                      {isAdmin && r.id !== myRating?.id && (
+                        <button
+                          onClick={() => adminDeleteRating(r.id)}
+                          aria-label="Elimina valutazione (admin)"
+                          className="ml-auto text-ember-accent hover:text-ember-cream"
+                        >
+                          <Icon name="trash" size={16} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 );

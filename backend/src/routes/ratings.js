@@ -87,7 +87,7 @@ ratings.put('/:rid', requireAuth, async (c) => {
   return c.json({ rating: data });
 });
 
-/** DELETE /bars/:id/ratings/:rid — delete own rating. */
+/** DELETE /bars/:id/ratings/:rid — delete own rating, or any rating if admin. */
 ratings.delete('/:rid', requireAuth, async (c) => {
   const barId = c.req.param('id');
   const rid = c.req.param('rid');
@@ -100,8 +100,17 @@ ratings.delete('/:rid', requireAuth, async (c) => {
     .eq('bar_id', barId)
     .maybeSingle();
   if (!existing) throw new AppError(404, 'NOT_FOUND', 'Rating not found');
-  if (existing.user_id !== user.id)
-    throw new AppError(403, 'FORBIDDEN', 'Not your rating');
+
+  // Owners delete their own; admins delete any (inappropriate) rating.
+  if (existing.user_id !== user.id) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .maybeSingle();
+    if (profile?.role !== 'admin')
+      throw new AppError(403, 'FORBIDDEN', 'Not your rating');
+  }
 
   const { error } = await supabase.from('ratings').delete().eq('id', rid);
   if (error) throw new AppError(500, 'INTERNAL_ERROR', 'Could not delete rating');

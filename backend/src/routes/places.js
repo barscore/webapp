@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { findNearbyBars, geocode } from '../lib/osm.js';
+import { findNearbyBars, geocode, searchBars } from '../lib/osm.js';
 import { supabase } from '../lib/supabase.js';
 import { AppError } from '../middleware/errorHandler.js';
 
@@ -124,7 +124,10 @@ async function enrichWithRatings(osmPlaces, lat, lng) {
       id: match?.id ?? null,
       avg_overall: match?.bar_ratings_summary?.avg_overall ?? 0,
       total_ratings: match?.bar_ratings_summary?.total_ratings ?? 0,
-      distance_km: Math.round(distanceKm(lat, lng, p.lat, p.lng) * 100) / 100,
+      distance_km:
+        lat != null && lng != null
+          ? Math.round(distanceKm(lat, lng, p.lat, p.lng) * 100) / 100
+          : null,
     };
   });
 }
@@ -138,6 +141,14 @@ const nearbySchema = z.object({
 const searchSchema = z.object({
   q: z.string().min(2).max(200),
   limit: z.coerce.number().int().min(1).max(20).optional().default(5),
+});
+
+const barSearchSchema = z.object({
+  q: z.string().min(2).max(200),
+  limit: z.coerce.number().int().min(1).max(20).optional().default(12),
+  // Optional origin — used only to compute distance_km for the results.
+  lat: z.coerce.number().min(-90).max(90).optional(),
+  lng: z.coerce.number().min(-180).max(180).optional(),
 });
 
 /** GET /places/nearby — bars/pubs around a point, straight from OpenStreetMap. */
@@ -169,6 +180,25 @@ places.get('/nearby', async (c) => {
       return c.json({ places: enriched, stale: true });
     }
     throw new AppError(502, 'UPSTREAM_ERROR', `OpenStreetMap query failed: ${e.message}`);
+  }
+});
+
+/**
+ * GET /places/bars — global free-text bar search (whole planet). Unlike
+ * /nearby, ignores distance so a user anywhere can find a bar by name.
+ * Enriched with community ratings; distance_km set only when lat/lng given.
+ */
+places.get('/bars', async (c) => {
+  const { q, limit, lat, lng } = barSearchSchema.parse(
+    Object.fromEntries(new URL(c.req.url).searchParams),
+  );
+  try {
+    const bias = lat != null && lng != null ? [lat, lng] : null;
+    const results = await searchBars(q, limit, bias);
+    const enriched = await enrichWithRatings(results, lat ?? null, lng ?? null);
+    return c.json({ places: enriched });
+  } catch (e) {
+    throw new AppError(502, 'UPSTREAM_ERROR', `Bar search failed: ${e.message}`);
   }
 });
 

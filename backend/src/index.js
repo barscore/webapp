@@ -7,6 +7,8 @@ import { errorHandler } from './middleware/errorHandler.js';
 import barRoutes from './routes/bars.js';
 import placeRoutes from './routes/places.js';
 import bookmarkRoutes from './routes/bookmarks.js';
+import eventRoutes from './routes/events.js';
+import meRoutes from './routes/me.js';
 import healthRoutes from './routes/health.js';
 
 const app = new Hono();
@@ -37,6 +39,8 @@ app.route('/health', healthRoutes);
 app.route('/bars', barRoutes);
 app.route('/places', placeRoutes);
 app.route('/bookmarks', bookmarkRoutes);
+app.route('/events', eventRoutes);
+app.route('/me', meRoutes);
 
 app.notFound((c) =>
   c.json({ error: 'Not found', code: 'NOT_FOUND', statusCode: 404 }, 404),

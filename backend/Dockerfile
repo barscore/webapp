@@ -1,4 +1,7 @@
-FROM node:20-alpine
+# Node 22+ required: @supabase/realtime-js needs the native WebSocket global —
+# on Node 20 the client crashes at boot ("Node.js 20 detected without native
+# WebSocket support").
+FROM node:22-alpine
 
 WORKDIR /app
 

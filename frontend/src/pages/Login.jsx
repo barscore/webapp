@@ -5,6 +5,8 @@ import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import GoogleButton from '../components/GoogleButton.jsx';
 
+// Email/password sign-in + Google OAuth. Auth is Supabase end to end (no
+// custom backend endpoint) — see hooks/useAuth.js.
 export default function Login() {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -64,6 +66,11 @@ export function AuthShell({ title, children }) {
         </div>
         <h1 className="mb-4 font-display text-2xl font-bold text-ember-cream">{title}</h1>
         {children}
+        <div className="mt-6 flex items-center justify-center gap-3 border-t border-white/5 pt-4 text-xs text-ember-muted">
+          <Link to="/privacy" className="hover:text-ember-primary">Privacy</Link>
+          <span className="text-white/15">·</span>
+          <Link to="/tos" className="hover:text-ember-primary">Termini</Link>
+        </div>
       </div>
     </div>
   );

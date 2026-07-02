@@ -44,6 +44,14 @@ export function barKey(bar) {
   return `osm_${bar?.osm_type || 'node'}_${bar?.osm_node_id}`;
 }
 
+// Inverse of barKey for OSM-only bars: "osm_<type>_<id>" → { osm_type,
+// osm_node_id }, or null when the key is a plain DB uuid.
+export function parseOsmToken(id) {
+  if (!id?.startsWith('osm_')) return null;
+  const [, osm_type, osm_node_id] = id.split('_');
+  return { osm_type, osm_node_id: Number(osm_node_id) };
+}
+
 // Subtitle line for a list row: "0.3 km · Aperto" / "1.1 km · Nessuna recensione".
 export function barSubtitle(bar, hasReviews) {
   const dist = bar?.distance_km != null ? `${bar.distance_km} km` : bar?.city;

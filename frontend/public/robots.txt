@@ -1,0 +1,8 @@
+# rabar — allow indexing of public pages, keep the admin panel out.
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /impostazioni
+Disallow: /le-tue-valutazioni
+
+Sitemap: https://rabar.app/sitemap.xml

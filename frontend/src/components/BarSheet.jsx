@@ -11,7 +11,7 @@ import { useAuth } from '../hooks/useAuth.js';
 import { useBookmarks } from '../hooks/useBookmarks.js';
 import { useSheetDrag, useIsMobile } from '../hooks/useSheetDrag.js';
 import { shareBar } from '../utils/share.js';
-import { barKey } from '../utils/score.js';
+import { barKey, parseOsmToken } from '../utils/score.js';
 
 const PAGE_SIZE = 10;
 
@@ -21,12 +21,6 @@ const BAR_STOPS = [88, 100];
 // Same detail data flow as the /bar/:id page, rendered as a bottom sheet that
 // slides up over the Home menu. `seed` is the bar from the list/map (may be an
 // OSM-only place); it's resolved to a persisted row so ratings can attach.
-function parseOsmToken(id) {
-  if (!id?.startsWith('osm_')) return null;
-  const [, osm_type, osm_node_id] = id.split('_');
-  return { osm_type, osm_node_id: Number(osm_node_id) };
-}
-
 export default function BarSheet({ seed, onClose, onChanged }) {
   const { isAuthenticated, user } = useAuth();
   const { has, toggle } = useBookmarks();

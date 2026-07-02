@@ -11,16 +11,11 @@ import { barsApi, ratingsApi } from '../services/api.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { useBookmarks } from '../hooks/useBookmarks.js';
 import { shareBar } from '../utils/share.js';
-
-const PAGE_SIZE = 10;
-
 // Route id is either our DB uuid or an OSM token "osm_<type>_<id>" for bars
 // that live only in OpenStreetMap until first visited.
-function parseOsmToken(id) {
-  if (!id?.startsWith('osm_')) return null;
-  const [, osm_type, osm_node_id] = id.split('_');
-  return { osm_type, osm_node_id: Number(osm_node_id) };
-}
+import { parseOsmToken } from '../utils/score.js';
+
+const PAGE_SIZE = 10;
 
 export default function BarDetail() {
   const { id } = useParams();

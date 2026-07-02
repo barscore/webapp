@@ -4,6 +4,7 @@ import { serve } from '@hono/node-server';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
 import { errorHandler, AppError } from './middleware/errorHandler.js';
+import { rateLimiter } from './middleware/rateLimiter.js';
 import { supabase } from './lib/supabase.js';
 import barRoutes from './routes/bars.js';
 import placeRoutes from './routes/places.js';
@@ -12,6 +13,7 @@ import eventRoutes from './routes/events.js';
 import meRoutes from './routes/me.js';
 import leaderboardRoutes from './routes/leaderboard.js';
 import adminRoutes from './routes/admin.js';
+import suggestionRoutes from './routes/suggestions.js';
 import healthRoutes from './routes/health.js';
 
 const app = new Hono();
@@ -25,6 +27,7 @@ const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
   .filter(Boolean);
 
 app.use('*', logger());
+
 app.use(
   '*',
   cors({
@@ -38,21 +41,65 @@ app.use(
   }),
 );
 
-// Emergency read-only kill switch. When maintenance_mode is on, block every
-// write (POST/PUT/DELETE) except on /admin, so an admin can still turn it back
-// off. GET/OPTIONS always pass; the app stays browsable.
+// Global fixed-window rate limit per IP (generous — protects the free Overpass/
+// Nominatim proxies and the DB from bursts/abuse). Per-route stricter limits
+// (e.g. POST /suggestions) stack on top. Tune via RATE_LIMIT_* env vars. Runs
+// after CORS so a 429 still carries CORS headers; OPTIONS preflight and the
+// /health probe are exempt. One shared instance — creating it per request would
+// reset the counters every call.
+const globalLimiter = rateLimiter({
+  windowMs: Number(process.env.RATE_LIMIT_WINDOW_MS) || 60_000,
+  max: Number(process.env.RATE_LIMIT_GLOBAL_MAX) || 120,
+});
+app.use('*', (c, next) =>
+  c.req.method === 'OPTIONS' || c.req.path === '/health'
+    ? next()
+    : globalLimiter(c, next),
+);
+
+// Emergency kill switches (admin panel → Emergenza), checked on every write
+// (POST/PUT/DELETE). /admin is always exempt so staff can flip them back off;
+// GET/OPTIONS always pass, the app stays browsable.
+//   maintenance_mode — blocks writes for everyone.
+//   beta_mode        — blocks writes unless the caller's app role is
+//                      admin / moderator / betatester (the frontend shows the
+//                      matching lock screen to everyone else).
+const BETA_ROLES = ['admin', 'moderator', 'betatester'];
+
 app.use('*', async (c, next) => {
   const method = c.req.method;
   if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') return next();
   if (c.req.path.startsWith('/admin')) return next();
 
-  const { data } = await supabase
+  const { data: settings } = await supabase
     .from('app_settings')
-    .select('maintenance_mode')
+    .select('maintenance_mode, beta_mode')
     .eq('id', 1)
     .maybeSingle();
-  if (data?.maintenance_mode) {
+
+  if (settings?.maintenance_mode) {
     throw new AppError(503, 'MAINTENANCE', 'Sito in manutenzione — scritture disabilitate');
+  }
+
+  if (settings?.beta_mode) {
+    // Resolve the caller's role from the Bearer token (best-effort: anonymous
+    // or invalid token simply means no role → blocked).
+    const [scheme, token] = (c.req.header('Authorization') || '').split(' ');
+    let role = null;
+    if (scheme === 'Bearer' && token) {
+      const { data: auth } = await supabase.auth.getUser(token);
+      if (auth?.user) {
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', auth.user.id)
+          .maybeSingle();
+        role = prof?.role ?? null;
+      }
+    }
+    if (!BETA_ROLES.includes(role)) {
+      throw new AppError(503, 'BETA', 'Beta test in corso — accesso riservato ai beta tester');
+    }
   }
   return next();
 });
@@ -65,6 +112,7 @@ app.route('/events', eventRoutes);
 app.route('/me', meRoutes);
 app.route('/leaderboard', leaderboardRoutes);
 app.route('/admin', adminRoutes);
+app.route('/suggestions', suggestionRoutes);
 
 app.notFound((c) =>
   c.json({ error: 'Not found', code: 'NOT_FOUND', statusCode: 404 }, 404),

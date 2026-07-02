@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Map from '../components/Map.jsx';
 import BarRow from '../components/BarRow.jsx';
@@ -8,7 +8,11 @@ import Icon from '../components/Icon.jsx';
 import NavTabs from '../components/NavTabs.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import Toast from '../components/Toast.jsx';
-import BarSheet from '../components/BarSheet.jsx';
+import SuggestModal from '../components/SuggestModal.jsx';
+
+// Lazy: BarSheet pulls in recharts (radar chart, ~350KB min) — loading it on
+// first bar tap keeps the landing bundle small.
+const BarSheet = lazy(() => import('../components/BarSheet.jsx'));
 import { placesApi, eventsApi, meApi } from '../services/api.js';
 import { barKey } from '../utils/score.js';
 import { openUntil23 } from '../utils/hours.js';
@@ -26,7 +30,7 @@ const DEFAULT_ZOOM = Number(import.meta.env.VITE_DEFAULT_ZOOM) || 14;
 // Instant-paint cache: last nearby result per rounded coord+radius, in
 // localStorage. Overpass is slow, so we show the previous result immediately and
 // refresh in the background — the user sees bars in ~0ms on repeat visits.
-// `v2` schema version: bump when the nearby payload changes (e.g. nightclubs
+// `v3` schema version: bump when the nearby payload changes (e.g. nightclubs
 // added) so stale localStorage entries without the new POIs are ignored.
 const nearbyKey = (lat, lng, r) => `rabar:nearby:v3:${lat.toFixed(2)},${lng.toFixed(2)},${r}`;
 function readNearbyCache(lat, lng, r) {
@@ -122,7 +126,7 @@ function RatedFilter({ ratedOnly, setRatedOnly }) {
 
 // Inner content of the sheet / desktop panel. Module-level so the search input
 // keeps focus across re-renders.
-function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, radius, setRadius, ratedOnly, setRatedOnly, onReload, onWiden, onExplore, onSelect, events, eventsLoading, eventsError }) {
+function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, radius, setRadius, ratedOnly, setRatedOnly, onReload, onWiden, onExplore, onSelect, onSuggest, events, eventsLoading, eventsError }) {
   // Eventi tab: zone events, soonest first. Separate data path (no map pins,
   // no bar rows) so it doesn't share the bars list flow below.
   if (tab === 'eventi') {
@@ -231,7 +235,14 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
             pin="arancione"
           />
         ) : searchActive ? (
-          <EmptyState title="Nessun risultato" hint={`Nessun bar trovato per “${query}”.`} pin="grigio" />
+          <EmptyState
+            title="Nessun risultato"
+            hint="Non trovi il tuo bar di fiducia? Avvisaci e lo aggiungiamo alla mappa."
+            ctaLabel="Avvisaci"
+            ctaIcon="pin"
+            onCta={onSuggest}
+            pin="grigio"
+          />
         ) : (
           <EmptyState
             title="Zona ancora vuota"
@@ -280,6 +291,7 @@ export default function Home() {
   const [searchError, setSearchError] = useState('');
   const [tab, setTab] = useState('vicini');
   const [menuOpen, setMenuOpen] = useState(false);
+  const [suggestOpen, setSuggestOpen] = useState(false);
   const {
     height: sheetH,
     dragging,
@@ -511,6 +523,7 @@ export default function Home() {
     onReload: () => setReloadKey((k) => k + 1),
     onWiden: () => setRadius((r) => Math.min(100, r + 3)),
     onExplore: () => setTab('vicini'),
+    onSuggest: () => setSuggestOpen(true),
     onSelect,
   };
 
@@ -615,12 +628,21 @@ export default function Home() {
               >
                 <Icon name="star" size={16} className="text-ember-primary" /> Le tue valutazioni
               </Link>
+              <div className="flex items-center gap-3 border-t border-white/5 px-3 py-2 text-xs text-ember-muted">
+                <Link to="/privacy" onClick={() => setMenuOpen(false)} className="hover:text-ember-primary">
+                  Privacy
+                </Link>
+                <span className="text-white/15">·</span>
+                <Link to="/tos" onClick={() => setMenuOpen(false)} className="hover:text-ember-primary">
+                  Termini
+                </Link>
+              </div>
               <button
                 onClick={() => {
                   setMenuOpen(false);
                   logout();
                 }}
-                className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-white/5"
+                className="flex w-full items-center gap-2 border-t border-white/5 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-white/5"
               >
                 <Icon name="arrow-left" size={16} /> Esci
               </button>
@@ -680,10 +702,21 @@ export default function Home() {
       </section>
 
       {selected && (
-        <BarSheet
-          seed={selected}
-          onClose={closeSheet}
-          onChanged={() => setReloadKey((k) => k + 1)}
+        <Suspense fallback={null}>
+          <BarSheet
+            seed={selected}
+            onClose={closeSheet}
+            onChanged={() => setReloadKey((k) => k + 1)}
+          />
+        </Suspense>
+      )}
+
+      {suggestOpen && (
+        <SuggestModal
+          initialName={query.trim()}
+          coords={center}
+          onClose={() => setSuggestOpen(false)}
+          onSent={() => setToast({ msg: 'Grazie! Segnalazione inviata', icon: 'check' })}
         />
       )}
 

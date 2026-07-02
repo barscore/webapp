@@ -13,10 +13,12 @@ function fmt(ms) {
   return (d > 0 ? `${d}g ` : '') + `${pad(h)}h ${pad(m)}m ${pad(sec)}s`;
 }
 
-// Shown to non-admin users while maintenance_mode is on. Admins bypass this and
-// can still reach /admin to turn it off; /login stays reachable so an admin can
-// sign in.
-export default function Maintenance({ reason, eta }) {
+// Lock screen for the two emergency switches (see App.jsx):
+//   default    — maintenance_mode: shown to non-admins.
+//   beta       — beta_mode: shown to anyone who isn't admin/moderator/
+//                betatester while the private beta runs.
+// /login stays reachable so a privileged user can sign in.
+export default function Maintenance({ reason, eta, beta = false }) {
   const etaMs = eta ? new Date(eta).getTime() : 0;
   const [now, setNow] = useState(Date.now());
 
@@ -39,10 +41,13 @@ export default function Maintenance({ reason, eta }) {
             <Icon name="bell" size={26} className="text-ember-accent" />
           </span>
         </div>
-        <h1 className="font-display text-2xl font-bold text-ember-cream">Sito in manutenzione</h1>
+        <h1 className="font-display text-2xl font-bold text-ember-cream">
+          {beta ? 'Beta test in corso' : 'Sito in manutenzione'}
+        </h1>
         <p className="mt-3 text-sm text-ember-muted">
-          Stiamo effettuando lavori di manutenzione. Il sito è temporaneamente in sola lettura e
-          alcune funzioni non sono disponibili.
+          {beta
+            ? 'rabar è in beta privata: l’accesso è momentaneamente riservato ai beta tester. Torna a trovarci per il lancio!'
+            : 'Stiamo effettuando lavori di manutenzione. Il sito è temporaneamente in sola lettura e alcune funzioni non sono disponibili.'}
         </p>
 
         {reason && (
@@ -74,7 +79,7 @@ export default function Maintenance({ reason, eta }) {
           to="/login"
           className="mt-6 inline-block rounded-lg border border-white/10 px-4 py-2 text-sm text-ember-muted hover:border-ember-primary/50 hover:text-ember-cream"
         >
-          Sei un amministratore? Accedi
+          {beta ? 'Sei un beta tester? Accedi' : 'Sei un amministratore? Accedi'}
         </Link>
       </div>
     </div>

@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
-import { findNearbyBars, geocode, searchBars } from '../lib/osm.js';
+import { findNearbyBars, geocode, searchBars, haversineKm } from '../lib/osm.js';
 import { supabase } from '../lib/supabase.js';
 import { AppError } from '../middleware/errorHandler.js';
 
@@ -79,20 +79,6 @@ function fetchAndCache(key, lat, lng, radius_km) {
   return p;
 }
 
-// Great-circle distance in km (Haversine). OSM POIs carry no distance, so we
-// compute it here for list sorting / subtitles.
-function distanceKm(lat1, lng1, lat2, lng2) {
-  const R = 6371;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLng / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-}
-
 /**
  * Overlay community ratings onto raw OSM places, matched by osm_node_id.
  * Each place gains: `id` (our DB uuid when the bar is already persisted, else
@@ -126,7 +112,7 @@ async function enrichWithRatings(osmPlaces, lat, lng) {
       total_ratings: match?.bar_ratings_summary?.total_ratings ?? 0,
       distance_km:
         lat != null && lng != null
-          ? Math.round(distanceKm(lat, lng, p.lat, p.lng) * 100) / 100
+          ? Math.round(haversineKm(lat, lng, p.lat, p.lng) * 100) / 100
           : null,
     };
   });

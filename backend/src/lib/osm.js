@@ -92,8 +92,9 @@ function mapElement(el) {
  * client can distinguish them from bars. Returns normalized POIs (not persisted).
  */
 // Great-circle distance in km (Haversine). Used to trim the bbox square below
-// back to the requested circular radius.
-function haversineKm(lat1, lng1, lat2, lng2) {
+// back to the requested circular radius; also reused by routes/places.js for
+// result sorting/subtitles.
+export function haversineKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLng = ((lng2 - lng1) * Math.PI) / 180;

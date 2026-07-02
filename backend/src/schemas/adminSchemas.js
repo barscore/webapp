@@ -3,7 +3,7 @@ import { z } from 'zod';
 // --- Users ---------------------------------------------------------------
 export const listUsersQuerySchema = z.object({
   q: z.string().trim().max(100).optional(),
-  role: z.enum(['user', 'moderator', 'admin']).optional(),
+  role: z.enum(['user', 'betatester', 'moderator', 'admin']).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });
@@ -20,7 +20,7 @@ export const banSchema = z.object({
 });
 
 export const roleSchema = z.object({
-  role: z.enum(['user', 'moderator', 'admin']),
+  role: z.enum(['user', 'betatester', 'moderator', 'admin']),
 });
 
 // --- Settings (security + emergency switches) ----------------------------
@@ -31,6 +31,8 @@ export const settingsSchema = z
     maintenance_mode: z.boolean().optional(),
     maintenance_reason: z.string().trim().max(500).nullable().optional(),
     maintenance_eta: z.string().datetime({ offset: true }).nullable().optional(),
+    // Beta program: app locked for everyone except admin/moderator/betatester.
+    beta_mode: z.boolean().optional(),
   })
   .refine((o) => Object.keys(o).length > 0, { message: 'No settings provided' });
 

@@ -72,7 +72,12 @@ admin.get('/users', async (c) => {
     .range(from, to);
 
   if (role) query = query.eq('role', role);
-  if (q) query = query.or(`username.ilike.%${q}%,email.ilike.%${q}%`);
+  // Strip PostgREST .or() metacharacters — a "," or ")" in q would otherwise be
+  // parsed as extra filter conditions (filter injection).
+  if (q) {
+    const safe = q.replace(/[,()]/g, ' ').trim();
+    if (safe) query = query.or(`username.ilike.%${safe}%,email.ilike.%${safe}%`);
+  }
 
   const { data, error, count } = await query;
   if (error) throw new AppError(500, 'INTERNAL_ERROR', 'Could not load users');
@@ -262,7 +267,7 @@ admin.delete('/ratings/:id', async (c) => {
 admin.get('/settings', async (c) => {
   const { data, error } = await supabase
     .from('app_settings')
-    .select('registration_open, ratings_enabled, maintenance_mode, maintenance_reason, maintenance_eta, updated_at')
+    .select('registration_open, ratings_enabled, maintenance_mode, maintenance_reason, maintenance_eta, beta_mode, updated_at')
     .eq('id', 1)
     .maybeSingle();
   if (error) throw new AppError(500, 'INTERNAL_ERROR', 'Could not load settings');
@@ -276,7 +281,7 @@ admin.put('/settings', async (c) => {
     .from('app_settings')
     .update({ ...patch, updated_at: new Date().toISOString(), updated_by: c.get('user').id })
     .eq('id', 1)
-    .select('registration_open, ratings_enabled, maintenance_mode, maintenance_reason, maintenance_eta, updated_at')
+    .select('registration_open, ratings_enabled, maintenance_mode, maintenance_reason, maintenance_eta, beta_mode, updated_at')
     .single();
   if (error) throw new AppError(500, 'INTERNAL_ERROR', 'Could not update settings');
   return c.json({ settings: data });

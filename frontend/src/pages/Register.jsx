@@ -5,6 +5,8 @@ import { supabase } from '../services/supabase.js';
 import { AuthShell, Field } from './Login.jsx';
 import GoogleButton from '../components/GoogleButton.jsx';
 
+// Account sign-up (email/password or Google). The username lands in user
+// metadata; the DB trigger `handle_new_user` turns it into a profiles row.
 export default function Register() {
   const { register } = useAuth();
   const navigate = useNavigate();

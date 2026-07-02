@@ -18,7 +18,7 @@ CREATE TABLE public.profiles (
   email         TEXT UNIQUE NOT NULL,
   username      TEXT UNIQUE NOT NULL CHECK (char_length(username) BETWEEN 3 AND 30),
   avatar_url    TEXT,
-  role          TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'moderator', 'admin')),
+  role          TEXT NOT NULL DEFAULT 'user' CHECK (role IN ('user', 'betatester', 'moderator', 'admin')),
   -- Moderation state (managed from the admin panel):
   banned          BOOLEAN NOT NULL DEFAULT FALSE,
   suspended_until TIMESTAMPTZ,
@@ -311,6 +311,7 @@ CREATE TABLE public.app_settings (
   maintenance_mode  BOOLEAN NOT NULL DEFAULT FALSE,  -- read-only kill switch (blocks non-admin writes)
   maintenance_reason TEXT,                            -- why the site is down (shown to users)
   maintenance_eta   TIMESTAMPTZ,                      -- estimated back-online time
+  beta_mode         BOOLEAN NOT NULL DEFAULT FALSE,  -- private beta: only admin/moderator/betatester get in
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_by        UUID REFERENCES public.profiles(id) ON DELETE SET NULL
 );

@@ -25,17 +25,17 @@ const Maintenance = lazy(() => import('./pages/Maintenance.jsx'));
 const Fallback = <div className="h-[100dvh] w-full bg-ember-bg" />;
 
 export default function App() {
-  const { isAdmin, loading } = useAuth();
+  const { isAdmin, role, isAuthenticated, loading } = useAuth();
   const location = useLocation();
-  const [maint, setMaint] = useState(null); // { maintenance_mode, maintenance_reason, maintenance_eta }
+  const [maint, setMaint] = useState(null); // { maintenance_mode, maintenance_reason, maintenance_eta, beta_mode }
 
-  // Poll the maintenance switch on every navigation so a non-admin user gets
-  // locked out (and released) without a manual reload.
+  // Poll the maintenance/beta switches on every navigation so a non-admin user
+  // gets locked out (and released) without a manual reload.
   useEffect(() => {
     let active = true;
     supabase
       .from('app_settings')
-      .select('maintenance_mode, maintenance_reason, maintenance_eta')
+      .select('maintenance_mode, maintenance_reason, maintenance_eta, beta_mode')
       .eq('id', 1)
       .maybeSingle()
       .then(({ data, error }) => {
@@ -59,14 +59,29 @@ export default function App() {
     };
   }, [location.pathname]);
 
-  // Block non-admins during maintenance. /login stays open so an admin can sign
-  // in; admins reach everything (incl. /admin to flip it back off).
-  if (!loading && maint?.maintenance_mode && !isAdmin && location.pathname !== '/login') {
-    return (
-      <Suspense fallback={Fallback}>
-        <Maintenance reason={maint.maintenance_reason} eta={maint.maintenance_eta} />
-      </Suspense>
-    );
+  // Lock screens. /login always stays open so a privileged user can sign in.
+  // The role loads async after the session — wait for it before gating, or a
+  // signed-in betatester would flash the lock screen on every load.
+  const roleReady = !isAuthenticated || role !== null;
+  const canBeta = isAdmin || role === 'moderator' || role === 'betatester';
+  if (!loading && roleReady && location.pathname !== '/login') {
+    // Maintenance: only admins pass (incl. /admin to flip it back off).
+    if (maint?.maintenance_mode && !isAdmin) {
+      return (
+        <Suspense fallback={Fallback}>
+          <Maintenance reason={maint.maintenance_reason} eta={maint.maintenance_eta} />
+        </Suspense>
+      );
+    }
+    // Beta program: admin/moderator/betatester pass, everyone else is locked
+    // out (backend rejects their writes too — 503 BETA).
+    if (maint?.beta_mode && !canBeta) {
+      return (
+        <Suspense fallback={Fallback}>
+          <Maintenance beta />
+        </Suspense>
+      );
+    }
   }
 
   return (

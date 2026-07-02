@@ -57,21 +57,49 @@ app.use('*', (c, next) =>
     : globalLimiter(c, next),
 );
 
-// Emergency read-only kill switch. When maintenance_mode is on, block every
-// write (POST/PUT/DELETE) except on /admin, so an admin can still turn it back
-// off. GET/OPTIONS always pass; the app stays browsable.
+// Emergency kill switches (admin panel → Emergenza), checked on every write
+// (POST/PUT/DELETE). /admin is always exempt so staff can flip them back off;
+// GET/OPTIONS always pass, the app stays browsable.
+//   maintenance_mode — blocks writes for everyone.
+//   beta_mode        — blocks writes unless the caller's app role is
+//                      admin / moderator / betatester (the frontend shows the
+//                      matching lock screen to everyone else).
+const BETA_ROLES = ['admin', 'moderator', 'betatester'];
+
 app.use('*', async (c, next) => {
   const method = c.req.method;
   if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') return next();
   if (c.req.path.startsWith('/admin')) return next();
 
-  const { data } = await supabase
+  const { data: settings } = await supabase
     .from('app_settings')
-    .select('maintenance_mode')
+    .select('maintenance_mode, beta_mode')
     .eq('id', 1)
     .maybeSingle();
-  if (data?.maintenance_mode) {
+
+  if (settings?.maintenance_mode) {
     throw new AppError(503, 'MAINTENANCE', 'Sito in manutenzione — scritture disabilitate');
+  }
+
+  if (settings?.beta_mode) {
+    // Resolve the caller's role from the Bearer token (best-effort: anonymous
+    // or invalid token simply means no role → blocked).
+    const [scheme, token] = (c.req.header('Authorization') || '').split(' ');
+    let role = null;
+    if (scheme === 'Bearer' && token) {
+      const { data: auth } = await supabase.auth.getUser(token);
+      if (auth?.user) {
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', auth.user.id)
+          .maybeSingle();
+        role = prof?.role ?? null;
+      }
+    }
+    if (!BETA_ROLES.includes(role)) {
+      throw new AppError(503, 'BETA', 'Beta test in corso — accesso riservato ai beta tester');
+    }
   }
   return next();
 });

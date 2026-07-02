@@ -148,6 +148,7 @@ function UsersTab({ notify, onChange }) {
         {[
           { v: '', label: 'Tutti' },
           { v: 'user', label: 'User' },
+          { v: 'betatester', label: 'Betatester' },
           { v: 'moderator', label: 'Moderator' },
           { v: 'admin', label: 'Admin' },
         ].map((r) => (
@@ -589,6 +590,18 @@ function EmergencyTab({ notify, onChange }) {
     }
   }
 
+  // Beta program switch: app locked for everyone except admin/moderator/
+  // betatester (frontend lock screen + backend write block).
+  async function toggleBeta() {
+    try {
+      const saved = await adminApi.updateSettings({ beta_mode: !settings.beta_mode });
+      setSettings(saved);
+      notify(saved.beta_mode ? 'Beta test ATTIVO — app riservata ai beta tester' : 'Beta test terminato — app pubblica');
+    } catch {
+      notify('Operazione fallita', 'info');
+    }
+  }
+
   async function purge() {
     try {
       const r = await adminApi.purgeUserRatings(purgeId.trim());
@@ -649,6 +662,27 @@ function EmergencyTab({ notify, onChange }) {
             {settings?.maintenance_mode ? 'Disattiva manutenzione' : 'Attiva manutenzione'}
           </button>
         </div>
+      </div>
+
+      {/* Beta test — private beta gate, separate from maintenance. */}
+      <div className={`rounded-card border p-4 ${settings?.beta_mode ? 'border-ember-primary/60 bg-ember-primary/10' : 'border-white/5 bg-ember-card'}`}>
+        <div className="flex items-center gap-2 font-display font-bold text-ember-cream">
+          <Icon name="star" size={18} className="text-ember-primary" /> Beta test
+        </div>
+        <p className="mt-1 text-sm text-ember-muted">
+          Beta privata: l'app resta accessibile solo ad admin, moderator e betatester. Gli altri
+          vedono la schermata di beta e le loro scritture sono bloccate. Assegna il ruolo
+          betatester dalla scheda Utenti.
+        </p>
+        <button
+          onClick={toggleBeta}
+          disabled={!settings}
+          className={`mt-3 w-full rounded-lg py-2 font-semibold ${
+            settings?.beta_mode ? 'bg-ember-primary text-ember-bg' : 'bg-white/10 text-ember-cream hover:bg-white/15'
+          } disabled:opacity-50`}
+        >
+          {settings?.beta_mode ? 'Termina beta test' : 'Avvia beta test'}
+        </button>
       </div>
 
       <div className="rounded-card border border-white/5 bg-ember-card p-4">
@@ -927,7 +961,7 @@ function SuspendModal({ user, onClose, onConfirm }) {
   );
 }
 
-const ROLES = ['user', 'moderator', 'admin'];
+const ROLES = ['user', 'betatester', 'moderator', 'admin'];
 
 function RoleModal({ user, onClose, onConfirm }) {
   const [role, setRole] = useState(user.role);

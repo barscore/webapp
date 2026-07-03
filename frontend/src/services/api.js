@@ -62,7 +62,11 @@ export const eventsApi = {
 
 // Account-scoped saved bars. Requires an authenticated session.
 export const bookmarksApi = {
-  list: () => api.get('/bookmarks').then((r) => r.data),
+  list: () =>
+    api.get('/bookmarks').then((r) => ({
+      bar_ids: expectArray(r.data.bar_ids, 'bookmarkIds'),
+      bars: expectArray(r.data.bars ?? [], 'bookmarkBars'),
+    })),
   add: (barId) => api.post(`/bookmarks/${barId}`).then((r) => r.data),
   remove: (barId) => api.delete(`/bookmarks/${barId}`).then((r) => r.data),
 };
@@ -82,7 +86,11 @@ export const leaderboardApi = {
 // are staff-only (backend enforces requireRole).
 export const suggestionsApi = {
   create: (payload) => api.post('/suggestions', payload).then((r) => r.data.suggestion),
-  list: (params) => api.get('/suggestions', { params }).then((r) => r.data),
+  list: (params) =>
+    api.get('/suggestions', { params }).then((r) => ({
+      ...r.data,
+      suggestions: expectArray(r.data.suggestions, 'suggestions'),
+    })),
   setStatus: (id, status) =>
     api.patch(`/suggestions/${id}`, { status }).then((r) => r.data.suggestion),
   remove: (id) => api.delete(`/suggestions/${id}`).then((r) => r.data),
@@ -93,7 +101,11 @@ export const adminApi = {
   stats: () => api.get('/admin/stats').then((r) => r.data.stats),
 
   // Users
-  users: (params) => api.get('/admin/users', { params }).then((r) => r.data),
+  users: (params) =>
+    api.get('/admin/users', { params }).then((r) => ({
+      ...r.data,
+      users: expectArray(r.data.users, 'adminUsers'),
+    })),
   banUser: (id, reason) =>
     api.post(`/admin/users/${id}/ban`, { reason }).then((r) => r.data),
   suspendUser: (id, hours, reason) =>
@@ -104,7 +116,11 @@ export const adminApi = {
   deleteUser: (id) => api.delete(`/admin/users/${id}`).then((r) => r.data),
 
   // Ratings
-  ratings: (params) => api.get('/admin/ratings', { params }).then((r) => r.data),
+  ratings: (params) =>
+    api.get('/admin/ratings', { params }).then((r) => ({
+      ...r.data,
+      ratings: expectArray(r.data.ratings, 'adminRatings'),
+    })),
   deleteRating: (id) => api.delete(`/admin/ratings/${id}`).then((r) => r.data),
 
   // Settings + emergency

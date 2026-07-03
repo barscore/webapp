@@ -3,17 +3,21 @@ import Icon from './Icon.jsx';
 
 const DIMENSIONS = [
   { key: 'prezzo', label: 'Prezzo', icon: 'euro', hint: '1 = caro · 5 = economico' },
-  { key: 'qualita_alcol', label: 'Qualità alcol', icon: 'bottle', hint: '1 = scarsa · 5 = ottima' },
+  { key: 'qualita_drinks', label: 'Qualità drinks', icon: 'bottle', hint: '1 = scarsa · 5 = ottima' },
   { key: 'socialita', label: 'Socialità', icon: 'social', hint: '1 = morto · 5 = vivace' },
+  { key: 'varieta', label: 'Varietà', icon: 'cocktail', hint: '1 = poca scelta · 5 = ampia scelta' },
+  { key: 'orari', label: 'Orari', icon: 'bell', hint: '1 = scomodi · 5 = comodi' },
 ];
 
-// Three 1–5 sliders + optional comment. Pass `initial` to edit an existing vote,
+// Five 1–5 sliders + optional comment. Pass `initial` to edit an existing vote,
 // `onDelete` to allow removing it.
 export default function RatingForm({ initial, onSubmit, onCancel, onDelete }) {
   const [values, setValues] = useState({
     prezzo: initial?.prezzo ?? 3,
-    qualita_alcol: initial?.qualita_alcol ?? 3,
+    qualita_drinks: initial?.qualita_drinks ?? 3,
     socialita: initial?.socialita ?? 3,
+    varieta: initial?.varieta ?? 3,
+    orari: initial?.orari ?? 3,
   });
   const [commento, setCommento] = useState(initial?.commento ?? '');
   const [busy, setBusy] = useState(false);

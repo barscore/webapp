@@ -11,7 +11,8 @@ export default function Tos() {
 
       <Section title="Il servizio">
         <p>
-          rabar è una mappa di bar valutati dalla community su prezzo, qualità dell’alcol e socialità.
+          rabar è una mappa di bar valutati dalla community su prezzo, qualità dei drinks,
+          socialità, varietà e orari.
           I dati dei locali provengono da OpenStreetMap; le valutazioni sono contenuti generati dagli
           utenti e non riflettono opinioni del gestore.
         </p>

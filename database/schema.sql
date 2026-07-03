@@ -106,8 +106,10 @@ CREATE TABLE public.ratings (
   bar_id          UUID NOT NULL REFERENCES public.bars(id) ON DELETE CASCADE,
   user_id         UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   prezzo          SMALLINT NOT NULL CHECK (prezzo BETWEEN 1 AND 5),
-  qualita_alcol   SMALLINT NOT NULL CHECK (qualita_alcol BETWEEN 1 AND 5),
+  qualita_drinks  SMALLINT NOT NULL CHECK (qualita_drinks BETWEEN 1 AND 5),
   socialita       SMALLINT NOT NULL CHECK (socialita BETWEEN 1 AND 5),
+  varieta         SMALLINT NOT NULL CHECK (varieta BETWEEN 1 AND 5),
+  orari           SMALLINT NOT NULL CHECK (orari BETWEEN 1 AND 5),
   commento        TEXT CHECK (char_length(commento) <= 500),
   created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -123,8 +125,10 @@ CREATE INDEX idx_ratings_user_id ON public.ratings(user_id);
 CREATE TABLE public.bar_ratings_summary (
   bar_id              UUID PRIMARY KEY REFERENCES public.bars(id) ON DELETE CASCADE,
   avg_prezzo          NUMERIC(3,2) DEFAULT 0,
-  avg_qualita_alcol   NUMERIC(3,2) DEFAULT 0,
+  avg_qualita_drinks  NUMERIC(3,2) DEFAULT 0,
   avg_socialita       NUMERIC(3,2) DEFAULT 0,
+  avg_varieta         NUMERIC(3,2) DEFAULT 0,
+  avg_orari           NUMERIC(3,2) DEFAULT 0,
   avg_overall         NUMERIC(3,2) DEFAULT 0,
   total_ratings       INTEGER DEFAULT 0,
   last_updated        TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -143,22 +147,34 @@ BEGIN
   END IF;
 
   INSERT INTO public.bar_ratings_summary (
-    bar_id, avg_prezzo, avg_qualita_alcol, avg_socialita, avg_overall, total_ratings, last_updated
+    bar_id, avg_prezzo, avg_qualita_drinks, avg_socialita,
+    avg_varieta, avg_orari, avg_overall, total_ratings, last_updated
   )
   SELECT
     target_bar_id,
     ROUND(AVG(prezzo)::NUMERIC, 2),
-    ROUND(AVG(qualita_alcol)::NUMERIC, 2),
+    ROUND(AVG(qualita_drinks)::NUMERIC, 2),
     ROUND(AVG(socialita)::NUMERIC, 2),
-    ROUND(((AVG(prezzo) + AVG(qualita_alcol) + AVG(socialita)) / 3)::NUMERIC, 2),
+    COALESCE(ROUND(AVG(varieta)::NUMERIC, 2), 0),
+    COALESCE(ROUND(AVG(orari)::NUMERIC, 2), 0),
+    -- Average only the axes that have votes: rows migrated from the 3-axis
+    -- era have NULL varieta/orari and must not drag the overall down.
+    ROUND((
+      (AVG(prezzo) + AVG(qualita_drinks) + AVG(socialita)
+        + COALESCE(AVG(varieta), 0) + COALESCE(AVG(orari), 0))
+      / (3 + CASE WHEN COUNT(varieta) > 0 THEN 1 ELSE 0 END
+           + CASE WHEN COUNT(orari) > 0 THEN 1 ELSE 0 END)
+    )::NUMERIC, 2),
     COUNT(*),
     NOW()
   FROM public.ratings
   WHERE bar_id = target_bar_id
   ON CONFLICT (bar_id) DO UPDATE SET
     avg_prezzo          = EXCLUDED.avg_prezzo,
-    avg_qualita_alcol   = EXCLUDED.avg_qualita_alcol,
+    avg_qualita_drinks  = EXCLUDED.avg_qualita_drinks,
     avg_socialita       = EXCLUDED.avg_socialita,
+    avg_varieta         = EXCLUDED.avg_varieta,
+    avg_orari           = EXCLUDED.avg_orari,
     avg_overall         = EXCLUDED.avg_overall,
     total_ratings       = EXCLUDED.total_ratings,
     last_updated        = EXCLUDED.last_updated;
@@ -168,7 +184,8 @@ BEGIN
     SELECT 1 FROM public.ratings WHERE bar_id = target_bar_id
   ) THEN
     UPDATE public.bar_ratings_summary
-    SET avg_prezzo = 0, avg_qualita_alcol = 0, avg_socialita = 0,
+    SET avg_prezzo = 0, avg_qualita_drinks = 0, avg_socialita = 0,
+        avg_varieta = 0, avg_orari = 0,
         avg_overall = 0, total_ratings = 0, last_updated = NOW()
     WHERE bar_id = target_bar_id;
   END IF;

@@ -296,8 +296,14 @@ export default function BarSheet({ seed, onClose, onChanged }) {
                           </span>
                           <span className="flex items-center gap-2 text-xs text-ember-primary">
                             <span className="flex items-center gap-0.5"><Icon name="euro" size={12} />{r.prezzo}</span>
-                            <span className="flex items-center gap-0.5"><Icon name="bottle" size={12} />{r.qualita_alcol}</span>
+                            <span className="flex items-center gap-0.5"><Icon name="bottle" size={12} />{r.qualita_drinks}</span>
                             <span className="flex items-center gap-0.5"><Icon name="social" size={12} />{r.socialita}</span>
+                            {r.varieta != null && (
+                              <span className="flex items-center gap-0.5"><Icon name="cocktail" size={12} />{r.varieta}</span>
+                            )}
+                            {r.orari != null && (
+                              <span className="flex items-center gap-0.5"><Icon name="bell" size={12} />{r.orari}</span>
+                            )}
                           </span>
                         </div>
                         {r.commento && <p className="mt-1 text-ember-muted">{r.commento}</p>}

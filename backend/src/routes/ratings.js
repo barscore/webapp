@@ -39,7 +39,7 @@ ratings.get('/', async (c) => {
 
   const { data, error, count } = await supabase
     .from('ratings')
-    .select('id, prezzo, qualita_alcol, socialita, commento, created_at, profiles(username, avatar_url)', {
+    .select('id, prezzo, qualita_drinks, socialita, varieta, orari, commento, created_at, profiles(username, avatar_url)', {
       count: 'exact',
     })
     .eq('bar_id', barId)

@@ -307,7 +307,8 @@ function RatingsTab({ notify, onChange }) {
                 </Link>
               </div>
               <div className="mt-0.5 text-xs text-ember-muted">
-                P {r.prezzo} · Q {r.qualita_alcol} · S {r.socialita} ·{' '}
+                P {r.prezzo} · D {r.qualita_drinks} · S {r.socialita} · V {r.varieta ?? '—'} · O{' '}
+                {r.orari ?? '—'} ·{' '}
                 {new Date(r.created_at).toLocaleDateString('it-IT')}
               </div>
               {r.commento && <p className="mt-1 text-sm text-ember-cream/90">{r.commento}</p>}

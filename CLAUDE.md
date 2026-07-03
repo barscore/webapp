@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-**rabar** — interactive map of bars rated by the community on three axes: **prezzo** (price), **qualita_alcol** (alcohol quality), **socialita** (vibe), shown as a radar chart. Italian-language UI/domain terms; keep them in Italian. Three deployables: `frontend/` (React PWA), `backend/` (Hono API), `database/` (Supabase SQL). No paid APIs — maps/venues/geocoding all via free OpenStreetMap (tile, Overpass, Nominatim).
+**rabar** — interactive map of bars rated by the community on five axes: **prezzo** (price), **qualita_drinks** (drinks quality), **socialita** (vibe), **varieta** (variety), **orari** (opening hours), shown as a radar chart. Italian-language UI/domain terms; keep them in Italian. Three deployables: `frontend/` (React PWA), `backend/` (Hono API), `database/` (Supabase SQL). No paid APIs — maps/venues/geocoding all via free OpenStreetMap (tile, Overpass, Nominatim).
 
 ## Commands
 
@@ -20,7 +20,7 @@ Frontend (`cd frontend`):
 
 No test suite, no linter configured. Both apps need their `.env` filled first (`cp .env.example .env` in each dir).
 
-Database: paste `database/schema.sql` into the Supabase SQL Editor (full setup), or `database/migrate_to_supabase_auth.sql` if migrating an older deploy.
+Database: paste `database/schema.sql` into the Supabase SQL Editor (full setup), or `database/migrate_to_supabase_auth.sql` if migrating an older deploy. `database/migrate_varieta_orari_drinks.sql` upgrades a 3-axis deploy to the 5-axis schema (qualita_alcol → qualita_drinks + varieta/orari).
 
 ## Architecture
 
@@ -35,7 +35,7 @@ Database: paste `database/schema.sql` into the Supabase SQL Editor (full setup),
 
 **Profiles are derived, not created by app code.** On any `auth.users` insert (email or OAuth), the `handle_new_user` trigger auto-creates a `profiles` row, deriving/sanitizing a unique username. Don't write profile-creation logic — extend the trigger.
 
-**Rating aggregates are trigger-maintained.** Never compute averages in JS. The `ratings` table has a `trigger_update_ratings_summary` that recomputes `bar_ratings_summary` (avg_prezzo/qualita/socialita/overall + total) on every insert/update/delete. Read aggregates from `bar_ratings_summary`; one rating per (bar_id, user_id) is enforced by a unique constraint (insert returns Postgres `23505` → 409 CONFLICT).
+**Rating aggregates are trigger-maintained.** Never compute averages in JS. The `ratings` table has a `trigger_update_ratings_summary` that recomputes `bar_ratings_summary` (avg_prezzo/qualita_drinks/socialita/varieta/orari/overall + total) on every insert/update/delete. Read aggregates from `bar_ratings_summary`; one rating per (bar_id, user_id) is enforced by a unique constraint (insert returns Postgres `23505` → 409 CONFLICT).
 
 **Geo queries use PostGIS RPCs, not JS distance math.** `GET /bars?lat=&lng=&radius_km=` calls the `get_nearby_bars` Postgres function; `/places/*` proxy Overpass/Nominatim through `backend/src/lib/osm.js`. Plain `GET /bars` (no coords) returns up to 500 active bars.
 
@@ -48,5 +48,5 @@ Routes in `App.jsx`: `/` (Home — map + radius slider + bar list), `/bar/:id` (
 ## Conventions
 
 - ESM throughout (`"type": "module"` in both package.json). Use `import`, `.js` extensions in relative imports.
-- Domain field names stay Italian (`prezzo`, `qualita_alcol`, `socialita`, `commento`); ratings are integers 1–5, `commento` ≤ 500 chars.
+- Domain field names stay Italian (`prezzo`, `qualita_drinks`, `socialita`, `varieta`, `orari`, `commento`); ratings are integers 1–5, `commento` ≤ 500 chars. On migrated DBs `varieta`/`orari` are nullable (legacy 3-axis votes) — the summary trigger averages only axes that have votes.
 - API error shape is fixed: `{ error, code, statusCode }` — keep it when adding endpoints.

@@ -224,7 +224,7 @@ admin.get('/ratings', async (c) => {
   let query = supabase
     .from('ratings')
     .select(
-      'id, bar_id, user_id, prezzo, qualita_alcol, socialita, commento, created_at, profiles(username), bars(name)',
+      'id, bar_id, user_id, prezzo, qualita_drinks, socialita, varieta, orari, commento, created_at, profiles(username), bars(name)',
       { count: 'exact' },
     )
     .order('created_at', { ascending: false })

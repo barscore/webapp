@@ -1,5 +1,5 @@
-import { memo, useEffect, useMemo } from 'react';
-import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
+import { memo, useEffect, useMemo, useState } from 'react';
+import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { usePins } from '../utils/pins.js';
 import { scoreMeta, barKey, isDisco, DISCO_ICON_URL } from '../utils/score.js';
@@ -10,6 +10,15 @@ function Recenter({ center }) {
   useEffect(() => {
     if (center) map.setView(center);
   }, [center, map]);
+  return null;
+}
+
+// Reports the live zoom level up to Map so the marker set can thin out.
+function ZoomWatcher({ onZoom }) {
+  const map = useMapEvents({ zoomend: () => onZoom(map.getZoom()) });
+  useEffect(() => {
+    onZoom(map.getZoom());
+  }, [map, onZoom]);
   return null;
 }
 
@@ -27,6 +36,22 @@ function FlyTo({ pos }) {
 // (memoized) `bars` and `onSelect` for this to pay off.
 function Map({ bars = [], center, zoom = 14, userPos, selectedKey, focus, onSelect }) {
   const pins = usePins();
+  const [zoomLevel, setZoomLevel] = useState(zoom);
+
+  // Zoomed out the map thins to the best-rated bars only:
+  //   ≥ 14  → everything
+  //   12–13 → only bars with reviews
+  //   < 12  → only "verde" bars (score ≥ 7)
+  // The selected bar always stays visible.
+  const visibleBars = useMemo(() => {
+    if (zoomLevel >= 14) return bars;
+    return bars.filter((bar) => {
+      if (barKey(bar) === selectedKey) return true;
+      const meta = scoreMeta(bar);
+      if (!meta.hasReviews) return false;
+      return zoomLevel >= 12 || meta.variant === 'verde';
+    });
+  }, [bars, zoomLevel, selectedKey]);
 
   // Build one Leaflet icon per pin variant from the extracted sprite data URLs.
   // Two sizes: normal, and an enlarged animated variant for the selected pin.
@@ -91,6 +116,7 @@ function Map({ bars = [], center, zoom = 14, userPos, selectedKey, focus, onSele
       />
       <Recenter center={center} />
       <FlyTo pos={focus} />
+      <ZoomWatcher onZoom={setZoomLevel} />
 
       {userPos && (
         <Marker
@@ -105,7 +131,7 @@ function Map({ bars = [], center, zoom = 14, userPos, selectedKey, focus, onSele
       )}
 
       {icons &&
-        bars.map((bar) => {
+        visibleBars.map((bar) => {
           const { variant } = scoreMeta(bar);
           const key = barKey(bar);
           const isActive = key === selectedKey;

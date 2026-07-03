@@ -29,8 +29,10 @@ body {
    of the brand mockup. Only the tile pane is filtered, so brand pins and the
    user-location dot keep their real colors. */
 .leaflet-tile-pane {
-  filter: sepia(0.55) hue-rotate(178deg) saturate(1.7) brightness(0.72)
-    contrast(1.06);
+  /* Legibility first: lift the dark CARTO tiles instead of crushing them —
+     higher brightness makes streets/labels readable, mild contrast only. */
+  filter: sepia(0.35) hue-rotate(178deg) saturate(1.4) brightness(1.25)
+    contrast(1.12);
 }
 
 /* Brand marker pins: soft shadow, no default leaflet styling. */

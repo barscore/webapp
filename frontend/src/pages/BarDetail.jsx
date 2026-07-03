@@ -317,12 +317,24 @@ export default function BarDetail() {
                         </span>
                         <span className="flex items-center gap-0.5">
                           <Icon name="bottle" size={12} />
-                          {r.qualita_alcol}
+                          {r.qualita_drinks}
                         </span>
                         <span className="flex items-center gap-0.5">
                           <Icon name="social" size={12} />
                           {r.socialita}
                         </span>
+                        {r.varieta != null && (
+                          <span className="flex items-center gap-0.5">
+                            <Icon name="cocktail" size={12} />
+                            {r.varieta}
+                          </span>
+                        )}
+                        {r.orari != null && (
+                          <span className="flex items-center gap-0.5">
+                            <Icon name="bell" size={12} />
+                            {r.orari}
+                          </span>
+                        )}
                       </span>
                     </div>
                     {r.commento && <p className="mt-1 text-ember-muted">{r.commento}</p>}

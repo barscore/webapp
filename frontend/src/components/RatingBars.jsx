@@ -4,8 +4,10 @@ import Icon from './Icon.jsx';
 // uses a 0–10 scale (value * 2). Each axis carries its brand icon.
 const ROWS = [
   { key: 'prezzo', label: 'Prezzo', icon: 'euro' },
-  { key: 'qualita_alcol', label: 'Alcol', icon: 'bottle' },
+  { key: 'qualita_drinks', label: 'Drinks', icon: 'bottle' },
   { key: 'socialita', label: 'Socialità', icon: 'social' },
+  { key: 'varieta', label: 'Varietà', icon: 'cocktail' },
+  { key: 'orari', label: 'Orari', icon: 'bell' },
 ];
 
 export default function RatingBars({ summary }) {

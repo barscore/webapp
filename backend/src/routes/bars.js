@@ -8,6 +8,7 @@ import {
   updateBarSchema,
   resolveBarSchema,
 } from '../schemas/barSchemas.js';
+import { listTopQuerySchema } from '../schemas/drinkSchemas.js';
 import { fetchElement } from '../lib/osm.js';
 import ratings from './ratings.js';
 
@@ -17,6 +18,34 @@ const BAR_DETAIL_SELECT = '*, bar_ratings_summary(*), bar_images(id, url, source
 
 // Nested ratings routes: /bars/:id/ratings...
 bars.route('/:id/ratings', ratings);
+
+/** GET /bars/:id/drinks — the best drinks at this bar (trigger-maintained summary). */
+bars.get('/:id/drinks', async (c) => {
+  const barId = c.req.param('id');
+  const { page, limit } = listTopQuerySchema.parse(
+    Object.fromEntries(new URL(c.req.url).searchParams),
+  );
+  const from = (page - 1) * limit;
+  const to = from + limit - 1;
+
+  const { data, error, count } = await supabase
+    .from('drink_bar_summary')
+    .select('avg_rating, total_ratings, drinks(id, name, description)', { count: 'exact' })
+    .eq('bar_id', barId)
+    .gt('total_ratings', 0)
+    .order('avg_rating', { ascending: false })
+    .order('total_ratings', { ascending: false })
+    .range(from, to);
+
+  if (error) throw new AppError(500, 'INTERNAL_ERROR', 'Could not load bar drinks');
+
+  const flattened = (data ?? []).map((row) => ({
+    ...row.drinks,
+    avg_rating: row.avg_rating,
+    total_ratings: row.total_ratings,
+  }));
+  return c.json({ drinks: flattened, page, limit, total: count ?? 0 });
+});
 
 /**
  * POST /bars/resolve — find-or-create a bar from an OpenStreetMap place.

@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { supabase } from '../lib/supabase.js';
-import { requireAuth, requireRole } from '../middleware/auth.js';
+import { requireAuth, requireRole, optionalUser } from '../middleware/auth.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { rateLimiter } from '../middleware/rateLimiter.js';
 import {
@@ -13,16 +13,6 @@ import {
 // required); reads + moderation are staff-only. Backend uses the service-role
 // key, so these bypass RLS.
 const suggestions = new Hono();
-
-// Best-effort auth: attach the user id when a valid Bearer token is present,
-// but never reject an anonymous submission.
-async function optionalUser(c) {
-  const header = c.req.header('Authorization') || '';
-  const [scheme, token] = header.split(' ');
-  if (scheme !== 'Bearer' || !token) return null;
-  const { data } = await supabase.auth.getUser(token);
-  return data?.user?.id ?? null;
-}
 
 /**
  * POST /suggestions — submit a missing bar. Public, strictly rate-limited

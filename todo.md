@@ -7,7 +7,6 @@ start:  npm run dev
 - disaster recovery
 - api per i bar più aggiornato e gratis
 
-cloudflared-linux-amd64.deb
+- assicurati rispetto GDPR
 
-idee:
-- sezione valutazione drink e in che bar lo fanno meglio
+cloudflared-linux-amd64.deb

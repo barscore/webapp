@@ -3,6 +3,7 @@ import { Link, useParams, useLocation } from 'react-router-dom';
 import RadarChart from '../components/RadarChart.jsx';
 import RatingBars from '../components/RatingBars.jsx';
 import RatingForm from '../components/RatingForm.jsx';
+import BarDrinksSection from '../components/BarDrinksSection.jsx';
 import AdBanner from '../components/AdBanner.jsx';
 import Icon from '../components/Icon.jsx';
 import Toast from '../components/Toast.jsx';
@@ -257,6 +258,9 @@ export default function BarDetail() {
             <RadarChart summary={summary} />
           </div>
         </section>
+
+        {/* Best drinks here */}
+        <BarDrinksSection bar={bar} onToast={(msg, icon) => setToast({ msg, icon })} />
 
         {/* Rate CTA / form */}
         {isAuthenticated ? (

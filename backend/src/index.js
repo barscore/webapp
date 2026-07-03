@@ -14,6 +14,7 @@ import meRoutes from './routes/me.js';
 import leaderboardRoutes from './routes/leaderboard.js';
 import adminRoutes from './routes/admin.js';
 import suggestionRoutes from './routes/suggestions.js';
+import drinkRoutes from './routes/drinks.js';
 import healthRoutes from './routes/health.js';
 
 const app = new Hono();
@@ -36,7 +37,7 @@ app.use(
       if (!origin) return allowedOrigins[0]; // non-browser / same-origin
       return allowedOrigins.includes(origin) ? origin : null;
     },
-    allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowMethods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowHeaders: ['Content-Type', 'Authorization'],
   }),
 );
@@ -113,6 +114,7 @@ app.route('/me', meRoutes);
 app.route('/leaderboard', leaderboardRoutes);
 app.route('/admin', adminRoutes);
 app.route('/suggestions', suggestionRoutes);
+app.route('/drinks', drinkRoutes);
 
 app.notFound((c) =>
   c.json({ error: 'Not found', code: 'NOT_FOUND', statusCode: 404 }, 404),

@@ -17,7 +17,8 @@ async function assertBarExists(barId) {
 }
 
 // Admin security switch: block new/updated ratings when disabled from the panel.
-async function assertRatingsEnabled() {
+// Exported: drink votes (routes/drinks.js) respect the same kill switch.
+export async function assertRatingsEnabled() {
   const { data } = await supabase
     .from('app_settings')
     .select('ratings_enabled')

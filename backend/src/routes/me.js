@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { supabase } from '../lib/supabase.js';
 import { requireAuth } from '../middleware/auth.js';
 import { AppError } from '../middleware/errorHandler.js';
+import { myDrinkVotesQuerySchema } from '../schemas/drinkSchemas.js';
 
 // Account-scoped self routes. All require auth; a user only ever reads their own
 // profile and ratings. Credential changes go through supabase-js on the frontend.
@@ -52,6 +53,34 @@ me.get('/ratings', async (c) => {
 
   if (error) throw new AppError(500, 'INTERNAL_ERROR', 'Could not load ratings');
   return c.json({ ratings: data ?? [] });
+});
+
+/** GET /me/drink-votes — the caller's drink votes (optionally filtered by drink/bar). */
+me.get('/drink-votes', async (c) => {
+  const user = c.get('user');
+  const { drink_id, bar_id } = myDrinkVotesQuerySchema.parse(
+    Object.fromEntries(new URL(c.req.url).searchParams),
+  );
+
+  let query = supabase
+    .from('drink_ratings')
+    .select('drink_id, bar_id, rating')
+    .eq('user_id', user.id);
+  if (drink_id) query = query.eq('drink_id', drink_id);
+  if (bar_id) query = query.eq('bar_id', bar_id);
+
+  const { data, error } = await query;
+  if (error) throw new AppError(500, 'INTERNAL_ERROR', 'Could not load votes');
+  return c.json({ votes: data ?? [] });
+});
+
+/** DELETE /me — the caller erases their own account (GDPR art. 17). Deleting the
+ *  auth user cascades to profiles + ratings + votes (ON DELETE CASCADE). */
+me.delete('/', async (c) => {
+  const user = c.get('user');
+  const { error } = await supabase.auth.admin.deleteUser(user.id);
+  if (error) throw new AppError(500, 'INTERNAL_ERROR', 'Eliminazione account fallita');
+  return c.json({ success: true });
 });
 
 export default me;

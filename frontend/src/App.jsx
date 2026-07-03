@@ -5,12 +5,14 @@ import { supabase } from './services/supabase.js';
 import Home from './pages/Home.jsx';
 import BanBanner from './components/BanBanner.jsx';
 import TutorialSplash from './components/TutorialSplash.jsx';
+import CookieBanner from './components/CookieBanner.jsx';
 
 // Route-level code splitting: only Home (the landing map) ships in the initial
 // bundle; every other page loads on first navigation. Keeps heavy deps out of
 // the critical path — recharts in particular only loads when a bar detail (or
 // the admin panel) is opened.
 const BarDetail = lazy(() => import('./pages/BarDetail.jsx'));
+const DrinkDetail = lazy(() => import('./pages/DrinkDetail.jsx'));
 const Login = lazy(() => import('./pages/Login.jsx'));
 const Register = lazy(() => import('./pages/Register.jsx'));
 const Settings = lazy(() => import('./pages/Settings.jsx'));
@@ -89,10 +91,12 @@ export default function App() {
     <>
       <BanBanner />
       <TutorialSplash />
+      <CookieBanner />
       <Suspense fallback={Fallback}>
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/bar/:id" element={<BarDetail />} />
+        <Route path="/drink/:id" element={<DrinkDetail />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/impostazioni" element={<Settings />} />

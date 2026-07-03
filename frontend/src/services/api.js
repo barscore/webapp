@@ -108,6 +108,7 @@ export const bookmarksApi = {
 export const meApi = {
   profile: () => api.get('/me').then((r) => r.data.profile),
   ratings: () => api.get('/me/ratings').then((r) => expectArray(r.data.ratings, 'meRatings')),
+  deleteAccount: () => api.delete('/me').then((r) => r.data),
 };
 
 // Public ice-cube leaderboard (all users, ranked).
@@ -162,6 +163,44 @@ export const adminApi = {
     api.put('/admin/settings', patch).then((r) => r.data.settings),
   purgeUserRatings: (id) =>
     api.post(`/admin/emergency/purge-user-ratings/${id}`).then((r) => r.data),
+};
+
+// Drinks catalog + per-bar votes + moderated proposals. Catalog/rankings are
+// public; voting requires auth; suggest works signed-out (like suggestions);
+// suggestions list/moderation are staff-only (backend enforces requireRole).
+export const drinksApi = {
+  list: (params) =>
+    api.get('/drinks', { params }).then((r) => ({
+      ...r.data,
+      drinks: expectArray(r.data.drinks, 'drinks'),
+    })),
+  get: (id) => api.get(`/drinks/${id}`).then((r) => r.data.drink),
+  // Ranking: the bars that make this drink best.
+  topBars: (id, params) =>
+    api.get(`/drinks/${id}/bars`, { params }).then((r) => ({
+      ...r.data,
+      bars: expectArray(r.data.bars, 'drinkBars'),
+    })),
+  // The best drinks at a bar.
+  forBar: (barId, params) =>
+    api.get(`/bars/${barId}/drinks`, { params }).then((r) => ({
+      ...r.data,
+      drinks: expectArray(r.data.drinks, 'barDrinks'),
+    })),
+  // Upsert: same call creates and updates the caller's vote.
+  vote: (id, payload) => api.post(`/drinks/${id}/votes`, payload).then((r) => r.data.vote),
+  removeVote: (id, barId) => api.delete(`/drinks/${id}/votes/${barId}`).then((r) => r.data),
+  myVotes: (params) =>
+    api.get('/me/drink-votes', { params }).then((r) => expectArray(r.data.votes, 'myDrinkVotes')),
+  suggest: (payload) => api.post('/drinks/suggestions', payload).then((r) => r.data.suggestion),
+  suggestions: (params) =>
+    api.get('/drinks/suggestions', { params }).then((r) => ({
+      ...r.data,
+      suggestions: expectArray(r.data.suggestions, 'drinkSuggestions'),
+    })),
+  setSuggestionStatus: (id, status) =>
+    api.patch(`/drinks/suggestions/${id}`, { status }).then((r) => r.data),
+  removeSuggestion: (id) => api.delete(`/drinks/suggestions/${id}`).then((r) => r.data),
 };
 
 export const ratingsApi = {

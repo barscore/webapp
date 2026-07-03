@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { personalizedAds } from '../services/consent.js';
 
 const CLIENT_ID = import.meta.env.VITE_ADSENSE_CLIENT_ID;
 
@@ -23,7 +24,11 @@ export default function AdBanner({ slot = '0000000000', className = '' }) {
     if (ref.current || !CLIENT_ID) return;
     try {
       ensureAdsenseLoaded();
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
+      const adsbygoogle = (window.adsbygoogle = window.adsbygoogle || []);
+      // No consent (null) or denied → non-personalized ads (GDPR-safe, still
+      // shown, still paid). Granted → personalized. Global flag, read at push.
+      if (!personalizedAds()) adsbygoogle.requestNonPersonalizedAds = 1;
+      adsbygoogle.push({});
       ref.current = true;
     } catch {
       /* AdSense not loaded (e.g. blocked) — fail silently */

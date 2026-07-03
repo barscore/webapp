@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import RadarChart from './RadarChart.jsx';
 import RatingBars from './RatingBars.jsx';
 import RatingForm from './RatingForm.jsx';
+import BarDrinksSection from './BarDrinksSection.jsx';
 import Icon from './Icon.jsx';
 import Toast from './Toast.jsx';
 import EmptyState from './EmptyState.jsx';
@@ -251,6 +252,9 @@ export default function BarSheet({ seed, onClose, onChanged }) {
                   <RadarChart summary={summary} />
                 </div>
               </section>
+
+              {/* Best drinks here */}
+              <BarDrinksSection bar={bar} onToast={(msg, icon) => setToast({ msg, icon })} />
 
               {/* Rate CTA / form */}
               {isAuthenticated ? (

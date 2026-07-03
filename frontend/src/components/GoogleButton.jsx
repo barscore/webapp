@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth.js';
 
 // "Continua con Google" — triggers Supabase OAuth redirect.
-export default function GoogleButton({ label = 'Continua con Google' }) {
+export default function GoogleButton({ label = 'Continua con Google', disabled = false }) {
   const { loginWithGoogle } = useAuth();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -28,7 +28,7 @@ export default function GoogleButton({ label = 'Continua con Google' }) {
       <button
         type="button"
         onClick={handle}
-        disabled={busy}
+        disabled={busy || disabled}
         className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-ember-cream py-2 font-medium text-ember-bg disabled:opacity-50"
       >
         <GoogleIcon />

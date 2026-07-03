@@ -25,6 +25,10 @@ export default function Settings() {
   const [pwBusy, setPwBusy] = useState(false);
   const [pwErr, setPwErr] = useState('');
 
+  const [delConfirm, setDelConfirm] = useState(false);
+  const [delBusy, setDelBusy] = useState(false);
+  const [delErr, setDelErr] = useState('');
+
   useEffect(() => {
     if (!loading && !isAuthenticated) navigate('/login');
   }, [loading, isAuthenticated, navigate]);
@@ -71,6 +75,19 @@ export default function Settings() {
       setPwErr(err.message || 'Errore durante l’aggiornamento');
     } finally {
       setPwBusy(false);
+    }
+  }
+
+  async function deleteAccount() {
+    setDelBusy(true);
+    setDelErr('');
+    try {
+      await meApi.deleteAccount();
+      await supabase.auth.signOut();
+      navigate('/');
+    } catch (err) {
+      setDelErr(err.response?.data?.error || 'Eliminazione fallita');
+      setDelBusy(false);
     }
   }
 
@@ -136,6 +153,47 @@ export default function Settings() {
             {pwBusy ? 'Salvataggio…' : 'Aggiorna password'}
           </button>
         </form>
+
+        {/* Danger zone — GDPR art. 17 self-service erasure */}
+        <section className="space-y-3 rounded-card border border-ember-accent/40 bg-ember-card p-4">
+          <h2 className="font-display font-bold text-ember-accent">Elimina account</h2>
+          <p className="text-sm text-ember-muted">
+            Cancella definitivamente il tuo account e tutti i dati collegati (valutazioni, voti,
+            bar salvati). Operazione irreversibile.
+          </p>
+          {delErr && <p className="text-sm text-ember-accent">{delErr}</p>}
+          {!delConfirm ? (
+            <button
+              type="button"
+              onClick={() => setDelConfirm(true)}
+              className="w-full rounded-lg border border-ember-accent py-2 font-semibold text-ember-accent"
+            >
+              Elimina account
+            </button>
+          ) : (
+            <div className="space-y-2">
+              <p className="text-sm font-semibold text-ember-cream">Sei sicuro? Non si può annullare.</p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setDelConfirm(false)}
+                  disabled={delBusy}
+                  className="flex-1 rounded-lg border border-white/10 py-2 font-semibold text-ember-cream disabled:opacity-50"
+                >
+                  Annulla
+                </button>
+                <button
+                  type="button"
+                  onClick={deleteAccount}
+                  disabled={delBusy}
+                  className="flex-1 rounded-lg bg-ember-accent py-2 font-semibold text-ember-bg disabled:opacity-50"
+                >
+                  {delBusy ? 'Eliminazione…' : 'Conferma eliminazione'}
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
       </div>
 
       <Toast message={toast?.msg} icon={toast?.icon} onDone={() => setToast(null)} />

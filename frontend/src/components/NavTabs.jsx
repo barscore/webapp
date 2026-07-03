@@ -1,6 +1,6 @@
 import Icon from './Icon.jsx';
 
-// Tab switcher: Vicino a me / Salvati / Eventi / Cerca.
+// Tab switcher: Vicino a me / Salvati / Eventi / Drinks / Cerca.
 // The active tab is an amber pill; the rest are muted.
 //   variant="bar"  → horizontal row at the bottom of the mobile sheet; icon-only.
 //   variant="rail" → horizontal floating menu on desktop; icon + label.
@@ -8,6 +8,7 @@ const TABS = [
   { id: 'vicini', label: 'Vicino a me', icon: 'locate' },
   { id: 'salvati', label: 'Salvati', icon: 'bookmark' },
   { id: 'eventi', label: 'Eventi', icon: 'bell' },
+  { id: 'drinks', label: 'Drinks', icon: 'cocktail' },
   { id: 'cerca', label: 'Cerca', icon: 'search' },
 ];
 

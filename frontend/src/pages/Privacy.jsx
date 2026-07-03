@@ -20,7 +20,7 @@ export default function Privacy() {
       <Section title="Dati che trattiamo">
         <ul className="list-disc space-y-1 pl-5">
           <li><strong>Account:</strong> email e username, gestiti tramite Supabase Auth (anche login Google).</li>
-          <li><strong>Contenuti:</strong> valutazioni (prezzo, qualità, socialità), commenti, bar salvati.</li>
+          <li><strong>Contenuti:</strong> valutazioni (prezzo, qualità dei drinks, socialità, varietà, orari), commenti, bar salvati.</li>
           <li><strong>Posizione:</strong> la geolocalizzazione è usata solo sul dispositivo per centrare la mappa; non la conserviamo lato server salvo tu la invii in una segnalazione.</li>
           <li><strong>Dati tecnici:</strong> log di richiesta (indirizzo IP, user-agent) per sicurezza e anti-abuso.</li>
         </ul>
@@ -46,9 +46,11 @@ export default function Privacy() {
 
       <Section title="Cookie">
         <p>
-          Usiamo lo storage locale del browser per mantenere la sessione e le preferenze. Se abilitata,
-          la pubblicità di Google può impostare cookie: puoi gestirli dalle impostazioni del browser o
-          da <a href="https://adssettings.google.com" target="_blank" rel="noreferrer" className="text-ember-primary hover:underline">Impostazioni annunci Google</a>.
+          Usiamo lo storage locale del browser per mantenere la sessione e le preferenze. La
+          pubblicità di Google viene mostrata a tutti: senza il tuo consenso gli annunci sono
+          <strong> non personalizzati</strong>, con il consenso diventano personalizzati e possono
+          usare cookie di profilazione. Puoi cambiare scelta e gestire i cookie dalle impostazioni
+          del browser o da <a href="https://adssettings.google.com" target="_blank" rel="noreferrer" className="text-ember-primary hover:underline">Impostazioni annunci Google</a>.
         </p>
       </Section>
 

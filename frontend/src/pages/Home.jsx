@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import { Link, useNavigate } from 'react-router-dom';
 import Map from '../components/Map.jsx';
 import BarRow from '../components/BarRow.jsx';
+import DrinkRow from '../components/DrinkRow.jsx';
 import EventRow from '../components/EventRow.jsx';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
@@ -9,11 +10,12 @@ import NavTabs from '../components/NavTabs.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import Toast from '../components/Toast.jsx';
 import SuggestModal from '../components/SuggestModal.jsx';
+import ProposeDrinkModal from '../components/ProposeDrinkModal.jsx';
 
 // Lazy: BarSheet pulls in recharts (radar chart, ~350KB min) — loading it on
 // first bar tap keeps the landing bundle small.
 const BarSheet = lazy(() => import('../components/BarSheet.jsx'));
-import { placesApi, eventsApi, meApi } from '../services/api.js';
+import { placesApi, eventsApi, meApi, drinksApi } from '../services/api.js';
 import { barKey } from '../utils/score.js';
 import { openUntil23 } from '../utils/hours.js';
 import { useAuth } from '../hooks/useAuth.js';
@@ -48,7 +50,7 @@ function writeNearbyCache(lat, lng, r, data) {
   }
 }
 
-const TITLES = { vicini: 'Vicino a me', salvati: 'Salvati', eventi: 'Eventi', cerca: 'Cerca' };
+const TITLES = { vicini: 'Vicino a me', salvati: 'Salvati', eventi: 'Eventi', drinks: 'Drinks', cerca: 'Cerca' };
 
 // Circular glass control used top-right (account + repositioning).
 function GlassButton({ onClick, label, children }) {
@@ -66,14 +68,14 @@ function GlassButton({ onClick, label, children }) {
 
 // Search input. On mobile it lives inside the sheet (cerca tab);
 // on desktop it's a persistent bar above the nav rail.
-function SearchPanel({ query, setQuery, autoFocus = false }) {
+function SearchPanel({ query, setQuery, autoFocus = false, placeholder = 'Cerca un bar…' }) {
   return (
     <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2.5">
       <Icon name="search" size={18} className="text-ember-muted" />
       <input
         value={query}
         onChange={(e) => setQuery(e.target.value)}
-        placeholder="Cerca un bar…"
+        placeholder={placeholder}
         autoFocus={autoFocus}
         className="w-full bg-transparent text-sm text-ember-cream outline-none placeholder:text-ember-muted"
       />
@@ -126,7 +128,7 @@ function RatedFilter({ ratedOnly, setRatedOnly }) {
 
 // Inner content of the sheet / desktop panel. Module-level so the search input
 // keeps focus across re-renders.
-function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, radius, setRadius, ratedOnly, setRatedOnly, onReload, onWiden, onExplore, onSelect, onSuggest, events, eventsLoading, eventsError }) {
+function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, radius, setRadius, ratedOnly, setRatedOnly, onReload, onWiden, onExplore, onSelect, onSuggest, events, eventsLoading, eventsError, drinks, drinksLoading, drinksError, drinkQuery, setDrinkQuery, onProposeDrink }) {
   // Eventi tab: zone events, soonest first. Separate data path (no map pins,
   // no bar rows) so it doesn't share the bars list flow below.
   if (tab === 'eventi') {
@@ -174,6 +176,70 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
             {events.map((ev) => (
               <EventRow key={ev.id} event={ev} />
             ))}
+          </div>
+        )}
+      </>
+    );
+  }
+
+  // Drinks tab: catalog with its own drinks-only search, separate from the
+  // bar search/nearby flow (no map pins, no bar rows).
+  if (tab === 'drinks') {
+    return (
+      <>
+        <div className="mb-3">
+          <SearchPanel query={drinkQuery} setQuery={setDrinkQuery} placeholder="Cerca un drink…" />
+        </div>
+
+        <div className="mb-2 flex items-center gap-2 px-1">
+          <Icon name="cocktail" size={14} className="text-ember-primary" />
+          <span className="font-display text-xs font-bold uppercase tracking-wide text-ember-muted">
+            {TITLES.drinks}
+          </span>
+          <span className="text-xs text-ember-muted">· {drinks.length}</span>
+        </div>
+
+        {drinksLoading && (
+          <p className="flex items-center gap-2 px-1 py-3 text-sm text-ember-muted">
+            <Icon name="reload" size={16} className="animate-spin" /> Caricamento…
+          </p>
+        )}
+
+        {drinksError && !drinksLoading && (
+          <div className="rounded-2xl border border-ember-accent/30 bg-white/[0.03] p-4 text-center">
+            <p className="text-ember-accent">{drinksError}</p>
+            <button
+              onClick={onReload}
+              className="mt-3 inline-flex items-center gap-2 rounded-lg bg-ember-primary px-4 py-2 font-semibold text-ember-bg"
+            >
+              <Icon name="reload" size={16} /> Riprova
+            </button>
+          </div>
+        )}
+
+        {!drinksLoading && !drinksError && drinks.length === 0 && (
+          <EmptyState
+            title="Drink non trovato"
+            hint="Manca nel catalogo? Proponilo: sarà visibile dopo l'approvazione dello staff."
+            ctaLabel="Proponi drink"
+            ctaIcon="plus"
+            onCta={onProposeDrink}
+            pin="grigio"
+          />
+        )}
+
+        {!drinksLoading && drinks.length > 0 && (
+          <div className="space-y-2 pb-1">
+            {drinks.map((d) => (
+              <DrinkRow key={d.id} drink={d} />
+            ))}
+            <button
+              type="button"
+              onClick={onProposeDrink}
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-white/15 px-3 py-3 text-sm text-ember-muted transition hover:text-ember-cream"
+            >
+              <Icon name="plus" size={15} /> Non trovi un drink? Proponilo
+            </button>
           </div>
         )}
       </>
@@ -285,6 +351,13 @@ export default function Home() {
   const [eventsLoading, setEventsLoading] = useState(false);
   const [eventsError, setEventsError] = useState('');
 
+  const [drinks, setDrinks] = useState([]);
+  const [drinksLoading, setDrinksLoading] = useState(false);
+  const [drinksError, setDrinksError] = useState('');
+  // Drinks-only search, deliberately separate from the bar search `query`.
+  const [drinkQuery, setDrinkQuery] = useState('');
+  const [proposeDrinkOpen, setProposeDrinkOpen] = useState(false);
+
   const [query, setQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -385,6 +458,26 @@ export default function Home() {
       cancelled = true;
     };
   }, [tab, center, radius, reloadKey]);
+
+  // Load the drinks catalog when the Drinks tab is active. Lazy like the
+  // eventi tab; debounced on the drinks-only search input.
+  useEffect(() => {
+    if (tab !== 'drinks') return;
+    let cancelled = false;
+    setDrinksLoading(true);
+    setDrinksError('');
+    const t = setTimeout(() => {
+      drinksApi
+        .list({ q: drinkQuery.trim() || undefined, limit: 100 })
+        .then((r) => !cancelled && setDrinks(r.drinks))
+        .catch(() => !cancelled && setDrinksError('Impossibile caricare i drink'))
+        .finally(() => !cancelled && setDrinksLoading(false));
+    }, 300);
+    return () => {
+      cancelled = true;
+      clearTimeout(t);
+    };
+  }, [tab, drinkQuery, reloadKey]);
 
   // Load the caller's profile (username, ice cubes, ratings…) for the account
   // card. Refetch on reloadKey so ice cubes update right after a new rating.
@@ -517,6 +610,12 @@ export default function Home() {
     events,
     eventsLoading,
     eventsError,
+    drinks,
+    drinksLoading,
+    drinksError,
+    drinkQuery,
+    setDrinkQuery,
+    onProposeDrink: () => setProposeDrinkOpen(true),
     query,
     setQuery,
     radius,
@@ -725,6 +824,16 @@ export default function Home() {
           coords={center}
           onClose={() => setSuggestOpen(false)}
           onSent={() => setToast({ msg: 'Grazie! Segnalazione inviata', icon: 'check' })}
+        />
+      )}
+
+      {proposeDrinkOpen && (
+        <ProposeDrinkModal
+          initialName={drinkQuery.trim()}
+          onClose={() => setProposeDrinkOpen(false)}
+          onSent={() =>
+            setToast({ msg: "Grazie! Proposta inviata — visibile dopo l'approvazione", icon: 'check' })
+          }
         />
       )}
 

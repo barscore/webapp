@@ -41,6 +41,17 @@ export async function requireAuth(c, next) {
   await next();
 }
 
+// Best-effort auth: return the user id when a valid Bearer token is present,
+// null otherwise. Never rejects — for public routes that just want to attach
+// the author when one exists (suggestions, drink proposals).
+export async function optionalUser(c) {
+  const header = c.req.header('Authorization') || '';
+  const [scheme, token] = header.split(' ');
+  if (scheme !== 'Bearer' || !token) return null;
+  const { data } = await supabase.auth.getUser(token);
+  return data?.user?.id ?? null;
+}
+
 // Restricts a route to the given roles. Use after requireAuth.
 // Fetches the caller's role from profiles (Supabase JWT carries no app role).
 export function requireRole(...roles) {

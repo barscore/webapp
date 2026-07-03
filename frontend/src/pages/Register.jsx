@@ -13,6 +13,7 @@ export default function Register() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   // Admin security switch: registrations can be closed from the admin panel.
@@ -31,6 +32,10 @@ export default function Register() {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    if (!accepted) {
+      setError('Devi accettare Privacy e Termini e confermare di avere almeno 18 anni.');
+      return;
+    }
     setBusy(true);
     setError('');
     try {
@@ -65,16 +70,29 @@ export default function Register() {
         <Field label="Username" value={username} onChange={setUsername} />
         <Field label="Email" type="email" value={email} onChange={setEmail} />
         <Field label="Password (min 8)" type="password" value={password} onChange={setPassword} />
+        <label className="flex items-start gap-2 text-sm text-ember-muted">
+          <input
+            type="checkbox"
+            checked={accepted}
+            onChange={(e) => setAccepted(e.target.checked)}
+            className="mt-0.5 accent-ember-primary"
+          />
+          <span>
+            Ho almeno 18 anni e accetto la{' '}
+            <Link to="/privacy" className="text-ember-primary underline">Privacy</Link> e i{' '}
+            <Link to="/tos" className="text-ember-primary underline">Termini di servizio</Link>.
+          </span>
+        </label>
         {error && <p className="text-sm text-ember-accent">{error}</p>}
         <button
           type="submit"
-          disabled={busy}
+          disabled={busy || !accepted}
           className="w-full rounded-lg bg-ember-primary py-2 font-semibold text-ember-bg disabled:opacity-50"
         >
           {busy ? 'Creazione…' : 'Registrati'}
         </button>
       </form>
-      <GoogleButton label="Registrati con Google" />
+      <GoogleButton label="Registrati con Google" disabled={!accepted} />
       <p className="mt-4 text-center text-sm text-ember-muted">
         Hai già un account?{' '}
         <Link to="/login" className="text-ember-primary underline">

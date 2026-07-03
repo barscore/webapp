@@ -1,7 +1,11 @@
 import axios from 'axios';
 import { supabase } from './supabase.js';
 
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+let baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+// A bare host ("rabar-api.up.railway.app", no scheme) would be treated by
+// axios as a RELATIVE path and every call would silently hit the frontend's
+// own static server instead of the API. Force an absolute URL.
+if (!/^https?:\/\//i.test(baseURL)) baseURL = `https://${baseURL}`;
 if (import.meta.env.PROD && !import.meta.env.VITE_API_BASE_URL) {
   // Vite env vars are baked in at BUILD time: if the hosting build ran without
   // VITE_API_BASE_URL every call goes to localhost and the app looks broken.

@@ -15,6 +15,10 @@ const OVERPASS_URLS = (process.env.OVERPASS_URL
       'https://overpass.private.coffee/api/interpreter',
       'https://overpass-api.de/api/interpreter',
       'https://overpass.kumi.systems/api/interpreter',
+      // mail.ru sometimes hangs for minutes — safe here because the race
+      // aborts losers; one extra healthy mirror matters from cloud IPs, which
+      // the public mirrors rate-limit far more aggressively than home IPs.
+      'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
     ]);
 const NOMINATIM_URL = process.env.NOMINATIM_URL || 'https://nominatim.openstreetmap.org';
 const UA = process.env.OSM_USER_AGENT || 'rabar/1.0 (https://github.com/rabar; contact: admin@rabar.app)';
@@ -137,7 +141,15 @@ export async function findNearbyBars(lat, lng, radiusKm = 2) {
 
   // Give the client abort a margin over the server-side timeout so the mirror
   // gets to return its own (partial) result instead of us cutting it off.
-  const data = await overpassFetch(query, (serverTimeout + 15) * 1000);
+  // One automatic retry: public mirrors 504/abort in bursts (especially for
+  // cloud IPs); a second pass a moment later usually finds a healthy one.
+  let data;
+  try {
+    data = await overpassFetch(query, (serverTimeout + 15) * 1000);
+  } catch {
+    await new Promise((r) => setTimeout(r, 1500));
+    data = await overpassFetch(query, (serverTimeout + 15) * 1000);
+  }
   return (data.elements || [])
     .map(mapElement)
     .filter(Boolean)

@@ -45,6 +45,9 @@ body {
   filter: drop-shadow(0 6px 10px rgba(224, 123, 26, 0.6));
   animation: rabar-pin-pulse 1.2s ease-in-out infinite;
   z-index: 1000 !important;
+  /* Promote to its own layer: the infinite pulse otherwise repaints the
+     filtered pin every frame on weak GPUs. */
+  will-change: transform;
 }
 @keyframes rabar-pin-pulse {
   0%,

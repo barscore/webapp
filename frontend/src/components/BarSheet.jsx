@@ -25,7 +25,7 @@ export default function BarSheet({ seed, onClose, onChanged }) {
   const { isAuthenticated, user } = useAuth();
   const { has, toggle } = useBookmarks();
   const isMobile = useIsMobile();
-  const { height, dragging, grabberProps, contentProps } = useSheetDrag(BAR_STOPS, BAR_STOPS[0]);
+  const { height, dragging, sheetRef, grabberProps, contentProps } = useSheetDrag(BAR_STOPS, BAR_STOPS[0]);
   const full = isMobile && height >= 99;
 
   const [bar, setBar] = useState(null);
@@ -106,17 +106,20 @@ export default function BarSheet({ seed, onClose, onChanged }) {
       <div className="absolute inset-0 z-[1450] bg-black/40" onClick={onClose} aria-hidden />
 
       <section
+        ref={sheetRef}
         role="dialog"
         aria-modal="true"
-        className={`rabar-sheet-in absolute z-[1500] flex flex-col overflow-hidden border border-white/10 bg-[#0f1116]/95 shadow-[0_-10px_50px_rgba(0,0,0,0.6)] backdrop-blur-xl ${
+        className={`rabar-sheet-in absolute z-[1500] flex flex-col overflow-hidden border border-white/10 bg-[#0f1116] shadow-[0_-10px_50px_rgba(0,0,0,0.6)] md:bg-[#0f1116]/95 md:backdrop-blur-xl ${
           isMobile
             ? full
-              ? 'inset-0 rounded-none'
+              ? 'inset-x-0 bottom-0 rounded-none'
               : 'inset-x-3 bottom-3 rounded-3xl'
             : 'inset-x-3 bottom-3 top-16 rounded-3xl md:inset-x-auto md:left-5 md:top-24 md:bottom-6 md:w-[372px]'
         }`}
         style={
-          isMobile && !full
+          // Bottom-anchored with explicit height (never inset-0) so the
+          // imperative drag can shrink the sheet from fullscreen too.
+          isMobile
             ? { height: `${height}dvh`, transition: dragging ? 'none' : 'height 0.25s ease' }
             : undefined
         }

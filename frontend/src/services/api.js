@@ -37,6 +37,35 @@ api.interceptors.request.use(async (config) => {
   return config;
 });
 
+// Self-heal a stale session. A 401 on a request that DID carry a token means
+// the locally cached session no longer verifies on the backend (key rotation,
+// deleted user, clock drift). Left alone, every authenticated hook keeps
+// firing doomed calls and the console fills with 401s. Try one refresh and
+// retry; if the session can't be refreshed, sign out so the app cleanly falls
+// back to the signed-out experience.
+let refreshing = null;
+api.interceptors.response.use(
+  (r) => r,
+  async (error) => {
+    const { config, response } = error;
+    if (response?.status !== 401 || !config?.headers?.Authorization || config._retried) {
+      throw error;
+    }
+    config._retried = true;
+    refreshing ??= supabase.auth
+      .refreshSession()
+      .finally(() => {
+        refreshing = null;
+      });
+    const { data, error: refreshErr } = await refreshing;
+    if (refreshErr || !data?.session) {
+      await supabase.auth.signOut();
+      throw error;
+    }
+    return api(config);
+  },
+);
+
 // --- API helpers ---
 export const barsApi = {
   list: (params) => api.get('/bars', { params }).then((r) => expectArray(r.data.bars, 'bars')),

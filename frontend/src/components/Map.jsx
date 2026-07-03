@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { memo, useEffect, useMemo } from 'react';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { usePins } from '../utils/pins.js';
@@ -22,7 +22,10 @@ function FlyTo({ pos }) {
   return null;
 }
 
-export default function Map({ bars = [], center, zoom = 14, userPos, selectedKey, focus, onSelect }) {
+// Memoized: Home re-renders on every keystroke/toast/menu toggle — without
+// memo each of those re-renders every Marker. Callers must pass stable
+// (memoized) `bars` and `onSelect` for this to pay off.
+function Map({ bars = [], center, zoom = 14, userPos, selectedKey, focus, onSelect }) {
   const pins = usePins();
 
   // Build one Leaflet icon per pin variant from the extracted sprite data URLs.
@@ -122,3 +125,5 @@ export default function Map({ bars = [], center, zoom = 14, userPos, selectedKey
     </MapContainer>
   );
 }
+
+export default memo(Map);

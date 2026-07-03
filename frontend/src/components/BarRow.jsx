@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Pin from './Pin.jsx';
 import { scoreMeta, barSubtitle, barKey, isDisco } from '../utils/score.js';
@@ -6,7 +7,9 @@ import { scoreMeta, barSubtitle, barKey, isDisco } from '../utils/score.js';
 // Tapping opens the bar sheet (Home passes onSelect). Falls back to navigating
 // to the detail page when used standalone. OSM-only bars carry their place data
 // so the sheet/page can materialize them on first visit.
-export default function BarRow({ bar, onSelect }) {
+// Memoized (lists can hold hundreds of rows); content-visibility lets the
+// browser skip layout/paint for off-screen rows on long lists.
+function BarRow({ bar, onSelect }) {
   const navigate = useNavigate();
   const { score, variant, color, hasReviews } = scoreMeta(bar);
 
@@ -16,7 +19,7 @@ export default function BarRow({ bar, onSelect }) {
       onClick={() =>
         onSelect ? onSelect(bar) : navigate(`/bar/${barKey(bar)}`, { state: { osm: bar } })
       }
-      className="flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.03] px-3 py-3 text-left transition active:scale-[0.99] hover:border-white/10 hover:bg-white/[0.06]"
+      className="flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.03] px-3 py-3 text-left transition active:scale-[0.99] hover:border-white/10 hover:bg-white/[0.06] [content-visibility:auto] [contain-intrinsic-size:auto_66px]"
     >
       <Pin variant={variant} disco={isDisco(bar)} size={32} className="shrink-0" />
       <div className="min-w-0 flex-1">
@@ -29,3 +32,5 @@ export default function BarRow({ bar, onSelect }) {
     </button>
   );
 }
+
+export default memo(BarRow);

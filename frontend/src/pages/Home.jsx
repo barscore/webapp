@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Map from '../components/Map.jsx';
 import BarRow from '../components/BarRow.jsx';
@@ -296,6 +296,7 @@ export default function Home() {
     height: sheetH,
     dragging,
     setHeight: setSheetH,
+    sheetRef,
     grabberProps,
     contentProps,
   } = useSheetDrag(SHEET_STOPS, SHEET_STOPS[0]);
@@ -495,15 +496,17 @@ export default function Home() {
     setSheetH((h) => (h < 84 ? 84 : h));
   }
 
-  function onSelect(bar) {
+  // Stable identities so the memoized Map / BarRow don't re-render (all the
+  // markers with them) on every unrelated Home state change.
+  const onSelect = useCallback((bar) => {
     setSelected(bar);
     if (bar?.lat != null && bar?.lng != null) setFocus([bar.lat, bar.lng]);
-  }
+  }, []);
 
-  function closeSheet() {
+  const closeSheet = useCallback(() => {
     setSelected(null);
     setFocus(null);
-  }
+  }, []);
 
   const sheetProps = {
     tab,
@@ -677,11 +680,16 @@ export default function Home() {
       {/* Mobile: bottom sheet with tab bar. Drag the grabber to resize;
           it snaps to collapsed / expanded / fullscreen. */}
       <section
-        className={`absolute z-[1100] flex flex-col overflow-hidden border border-white/10 bg-[#0f1116]/95 shadow-[0_10px_40px_rgba(0,0,0,0.55)] backdrop-blur-xl md:hidden ${
-          sheetFull ? 'inset-0 rounded-none' : 'inset-x-3 bottom-3 rounded-3xl'
+        ref={sheetRef}
+        className={`absolute z-[1100] flex flex-col overflow-hidden border border-white/10 bg-[#0f1116] shadow-[0_10px_40px_rgba(0,0,0,0.55)] md:hidden ${
+          sheetFull ? 'inset-x-0 bottom-0 rounded-none' : 'inset-x-3 bottom-3 rounded-3xl'
         }`}
         style={{
-          height: sheetFull ? undefined : `${sheetH}dvh`,
+          // Always bottom-anchored with an explicit height (never inset-0):
+          // the imperative drag writes `height` directly, so the sheet must
+          // grow/shrink from the bottom even while the full-screen classes are
+          // still applied.
+          height: `${sheetH}dvh`,
           transition: dragging ? 'none' : 'height 0.28s ease',
         }}
       >

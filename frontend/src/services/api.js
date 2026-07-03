@@ -2,8 +2,24 @@ import axios from 'axios';
 import { supabase } from './supabase.js';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+if (import.meta.env.PROD && !import.meta.env.VITE_API_BASE_URL) {
+  // Vite env vars are baked in at BUILD time: if the hosting build ran without
+  // VITE_API_BASE_URL every call goes to localhost and the app looks broken.
+  console.warn('[rabar] VITE_API_BASE_URL assente al build — API su', baseURL);
+}
 
 export const api = axios.create({ baseURL });
+
+// Guard against a misconfigured VITE_API_BASE_URL pointing at a static host:
+// an SPA fallback (serve -s / CDN rewrite) answers any path with index.html,
+// HTTP 200 — so `r.data.<list>` comes back undefined and would crash the UI.
+// Fail loudly instead: the caller's catch shows its normal error state.
+function expectArray(v, what) {
+  if (!Array.isArray(v)) {
+    throw new Error(`Risposta API non valida per "${what}" — controlla VITE_API_BASE_URL`);
+  }
+  return v;
+}
 
 // Attach the current Supabase access token to every request. supabase-js
 // handles persistence + transparent refresh, so we just read the live session.
@@ -19,7 +35,7 @@ api.interceptors.request.use(async (config) => {
 
 // --- API helpers ---
 export const barsApi = {
-  list: (params) => api.get('/bars', { params }).then((r) => r.data.bars),
+  list: (params) => api.get('/bars', { params }).then((r) => expectArray(r.data.bars, 'bars')),
   get: (id) => api.get(`/bars/${id}`).then((r) => r.data.bar),
   // Find-or-create the DB bar backing an OpenStreetMap place, so ratings can
   // attach to it. Returns the full bar (with real uuid + summary).
@@ -29,16 +45,16 @@ export const barsApi = {
 // Free OSM-backed discovery (Overpass + Nominatim, proxied by the backend).
 export const placesApi = {
   nearby: (params, config) =>
-    api.get('/places/nearby', { params, ...config }).then((r) => r.data.places),
-  search: (q) => api.get('/places/search', { params: { q } }).then((r) => r.data.results),
+    api.get('/places/nearby', { params, ...config }).then((r) => expectArray(r.data.places, 'nearby')),
+  search: (q) => api.get('/places/search', { params: { q } }).then((r) => expectArray(r.data.results, 'search')),
   // Global bar search (whole planet), enriched with ratings. Optional lat/lng
   // only sets distance_km on the results.
-  searchBars: (params) => api.get('/places/bars', { params }).then((r) => r.data.places),
+  searchBars: (params) => api.get('/places/bars', { params }).then((r) => expectArray(r.data.places, 'searchBars')),
 };
 
 // Zone events, added by hand for venues. Read is public; writes are admin/mod.
 export const eventsApi = {
-  nearby: (params) => api.get('/events', { params }).then((r) => r.data.events),
+  nearby: (params) => api.get('/events', { params }).then((r) => expectArray(r.data.events, 'events')),
   create: (payload) => api.post('/events', payload).then((r) => r.data.event),
   update: (id, payload) => api.put(`/events/${id}`, payload).then((r) => r.data.event),
   remove: (id) => api.delete(`/events/${id}`).then((r) => r.data),
@@ -54,12 +70,12 @@ export const bookmarksApi = {
 // Account-scoped self data. Requires an authenticated session.
 export const meApi = {
   profile: () => api.get('/me').then((r) => r.data.profile),
-  ratings: () => api.get('/me/ratings').then((r) => r.data.ratings),
+  ratings: () => api.get('/me/ratings').then((r) => expectArray(r.data.ratings, 'meRatings')),
 };
 
 // Public ice-cube leaderboard (all users, ranked).
 export const leaderboardApi = {
-  list: () => api.get('/leaderboard').then((r) => r.data.leaderboard),
+  list: () => api.get('/leaderboard').then((r) => expectArray(r.data.leaderboard, 'leaderboard')),
 };
 
 // "Segnala il tuo bar" — create is public (works signed-out); list/moderation

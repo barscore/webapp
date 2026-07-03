@@ -4,12 +4,13 @@ import L from 'leaflet';
 import { usePins } from '../utils/pins.js';
 import { scoreMeta, barKey, isDisco, DISCO_ICON_URL } from '../utils/score.js';
 
-// Re-centers the map imperatively when center changes.
-function Recenter({ center }) {
+// Re-centers the map imperatively when center changes, restoring the default
+// zoom (center only moves on geolocate / "la mia posizione").
+function Recenter({ center, zoom }) {
   const map = useMap();
   useEffect(() => {
-    if (center) map.setView(center);
-  }, [center, map]);
+    if (center) map.setView(center, zoom);
+  }, [center, zoom, map]);
   return null;
 }
 
@@ -114,7 +115,7 @@ function Map({ bars = [], center, zoom = 14, userPos, selectedKey, focus, onSele
         subdomains="abcd"
         maxZoom={20}
       />
-      <Recenter center={center} />
+      <Recenter center={center} zoom={zoom} />
       <FlyTo pos={focus} />
       <ZoomWatcher onZoom={setZoomLevel} />
 

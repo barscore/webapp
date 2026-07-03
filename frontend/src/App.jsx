@@ -4,6 +4,7 @@ import { useAuth } from './hooks/useAuth.js';
 import { supabase } from './services/supabase.js';
 import Home from './pages/Home.jsx';
 import BanBanner from './components/BanBanner.jsx';
+import TutorialSplash from './components/TutorialSplash.jsx';
 
 // Route-level code splitting: only Home (the landing map) ships in the initial
 // bundle; every other page loads on first navigation. Keeps heavy deps out of
@@ -87,6 +88,7 @@ export default function App() {
   return (
     <>
       <BanBanner />
+      <TutorialSplash />
       <Suspense fallback={Fallback}>
       <Routes>
         <Route path="/" element={<Home />} />

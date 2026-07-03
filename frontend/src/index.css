@@ -15,6 +15,16 @@ body {
   font-family: 'DM Sans', system-ui, sans-serif;
   -webkit-tap-highlight-color: transparent;
   overscroll-behavior-y: none;
+  /* App-like feel: no text selection anywhere; form fields re-enable below. */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input,
+textarea,
+[contenteditable] {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* Leaflet must have an explicit height to render. */

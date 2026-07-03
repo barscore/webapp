@@ -6,6 +6,7 @@ import { adminApi, suggestionsApi } from '../services/api.js';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import Toast from '../components/Toast.jsx';
+import { copyText } from '../utils/share.js';
 
 const TABS = [
   { key: 'users', label: 'Utenti', icon: 'user' },
@@ -178,9 +179,9 @@ function UsersTab({ notify, onChange }) {
               </div>
               <div className="truncate text-xs text-ember-muted">{u.email}</div>
               <button
-                onClick={() => {
-                  navigator.clipboard?.writeText(u.id);
-                  notify('UUID copiato');
+                onClick={async () => {
+                  const ok = await copyText(u.id);
+                  notify(ok ? 'UUID copiato' : 'Copia non riuscita', ok ? 'check' : 'info');
                 }}
                 title="Copia UUID"
                 className="flex max-w-full items-center gap-1 font-mono text-[10px] text-ember-muted/70 hover:text-ember-primary"

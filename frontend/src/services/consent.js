@@ -2,7 +2,7 @@
 // decides personalized vs non-personalized (NPA). GDPR forbids *profiling*
 // cookies without consent, not advertising itself: Google AdSense serves NPA to
 // non-consented users, so revenue is preserved (lower, not zero). The choice
-// persists in localStorage; a window event lets AdBanner react without reload.
+// persists in localStorage; a window event lets adsense.js react without reload.
 const KEY = 'rabar_ad_consent'; // 'granted' (personalized) | 'denied' (NPA)
 const EVENT = 'rabar-consent';
 

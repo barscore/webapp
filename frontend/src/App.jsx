@@ -6,6 +6,8 @@ import Home from './pages/Home.jsx';
 import BanBanner from './components/BanBanner.jsx';
 import TutorialSplash from './components/TutorialSplash.jsx';
 import CookieBanner from './components/CookieBanner.jsx';
+import { loadAdsense } from './services/adsense.js';
+import { onConsentChange } from './services/consent.js';
 
 // Route-level code splitting: only Home (the landing map) ships in the initial
 // bundle; every other page loads on first navigation. Keeps heavy deps out of
@@ -31,6 +33,13 @@ export default function App() {
   const { isAdmin, role, isAuthenticated, loading } = useAuth();
   const location = useLocation();
   const [maint, setMaint] = useState(null); // { maintenance_mode, maintenance_reason, maintenance_eta, beta_mode }
+
+  // Load AdSense once, globally, so Auto Ads can appear on every route. Re-run on
+  // consent change to (re)set the non-personalized flag for the next requests.
+  useEffect(() => {
+    loadAdsense();
+    return onConsentChange(() => loadAdsense());
+  }, []);
 
   // Poll the maintenance/beta switches on every navigation so a non-admin user
   // gets locked out (and released) without a manual reload.

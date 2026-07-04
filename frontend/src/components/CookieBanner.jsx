@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { hasChosen, setConsent } from '../services/consent.js';
 
 // Cookie consent banner. Shows once until the user accepts or rejects
-// advertising cookies. AdSense stays unloaded until "Accetta" (see AdBanner).
+// advertising cookies. AdSense loads globally; consent only toggles NPA (see adsense.js).
 export default function CookieBanner() {
   const [visible, setVisible] = useState(() => !hasChosen());
   if (!visible) return null;

@@ -4,7 +4,6 @@ import RadarChart from '../components/RadarChart.jsx';
 import RatingBars from '../components/RatingBars.jsx';
 import RatingForm from '../components/RatingForm.jsx';
 import BarDrinksSection from '../components/BarDrinksSection.jsx';
-import AdBanner from '../components/AdBanner.jsx';
 import Icon from '../components/Icon.jsx';
 import Toast from '../components/Toast.jsx';
 import EmptyState from '../components/EmptyState.jsx';
@@ -397,8 +396,6 @@ export default function BarDetail() {
             </div>
           )}
         </section>
-
-        <AdBanner slot="2222222222" />
       </div>
 
       <Toast message={toast?.msg} icon={toast?.icon} onDone={() => setToast(null)} />

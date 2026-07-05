@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
+import { useAuth } from '../hooks/useAuth.js';
+import { supabase } from '../services/supabase.js';
 
 function fmt(ms) {
   const s = Math.max(0, Math.floor(ms / 1000));
@@ -14,11 +16,15 @@ function fmt(ms) {
 }
 
 // Lock screen for the two emergency switches (see App.jsx):
-//   default    — maintenance_mode: shown to non-admins.
-//   beta       — beta_mode: shown to anyone who isn't admin/moderator/
-//                betatester while the private beta runs.
+//   default        — maintenance_mode: shown to non-admins.
+//   beta           — beta_mode: shown to visitors who aren't admin/moderator/
+//                    betatester while the private beta runs.
+//   beta + pending — same switch but the viewer is signed in: their account
+//                    exists and is waiting for a moderator to promote it to
+//                    betatester from the admin panel.
 // /login stays reachable so a privileged user can sign in.
-export default function Maintenance({ reason, eta, beta = false }) {
+export default function Maintenance({ reason, eta, beta = false, pending = false }) {
+  const { user, logout } = useAuth();
   const etaMs = eta ? new Date(eta).getTime() : 0;
   const [now, setNow] = useState(Date.now());
 
@@ -28,7 +34,56 @@ export default function Maintenance({ reason, eta, beta = false }) {
     return () => clearInterval(t);
   }, [etaMs]);
 
+  // While waiting for approval, poll the profile role so the screen unlocks by
+  // itself once a moderator promotes the account (no manual reload needed).
+  useEffect(() => {
+    if (!pending || !user?.id) return;
+    const t = setInterval(() => {
+      supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          if (data?.role && data.role !== 'user') window.location.reload();
+        });
+    }, 30000);
+    return () => clearInterval(t);
+  }, [pending, user?.id]);
+
   const remaining = etaMs - now;
+
+  if (beta && pending) {
+    return (
+      <div className="grid min-h-full place-items-center bg-ember-bg p-6">
+        <div className="w-full max-w-md rounded-card border border-white/5 bg-ember-card p-8 text-center">
+          <div className="mb-4 flex justify-center">
+            <Logo size="sm" />
+          </div>
+          <div className="mb-4 flex justify-center">
+            <span className="grid h-14 w-14 place-items-center rounded-full bg-ember-primary/15">
+              <Icon name="user" size={26} className="text-ember-primary" />
+            </span>
+          </div>
+          <h1 className="font-display text-2xl font-bold text-ember-cream">
+            Attendi l’approvazione di un moderatore
+          </h1>
+          <p className="mt-3 text-sm text-ember-muted">
+            Il tuo account è stato creato! rabar è in beta privata: un moderatore deve approvare
+            il tuo accesso prima che tu possa entrare. Di solito ci vuole poco — questa pagina si
+            sbloccherà da sola appena l’approvazione arriva.
+          </p>
+          <button
+            type="button"
+            onClick={logout}
+            className="mt-6 inline-block rounded-lg border border-white/10 px-4 py-2 text-sm text-ember-muted hover:border-ember-primary/50 hover:text-ember-cream"
+          >
+            Esci
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="grid min-h-full place-items-center bg-ember-bg p-6">

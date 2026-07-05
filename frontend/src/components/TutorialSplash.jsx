@@ -5,8 +5,10 @@ import Logo from './Logo.jsx';
 
 // One-time onboarding splash, shown the first time a user is signed in on this
 // device. Dismissal is remembered per user id in localStorage, so a new account
-// on the same browser still gets the tour.
-const seenKey = (userId) => `rabar:tutorial-seen:${userId}`;
+// on the same browser still gets the tour. Bump the version segment when the
+// content changes enough that existing users should see it again (v2: drinks).
+// Exported so InstallHint can hold back while the tour is still pending.
+export const tutorialSeenKey = (userId) => `rabar:tutorial-seen:v2:${userId}`;
 
 const STEPS = [
   {
@@ -43,6 +45,27 @@ const STEPS = [
             Per <strong>eliminarla</strong>, usa il cestino nel form o la pagina{' '}
             <strong>Le tue valutazioni</strong> dal menu.
           </span>
+        </p>
+      </>
+    ),
+  },
+  {
+    icon: 'cocktail',
+    title: 'I drink',
+    body: (
+      <>
+        <p>
+          In ogni scheda bar trovi <strong>I migliori drink qui</strong>: la classifica dei drink
+          votati dalla community in quel locale.
+        </p>
+        <p>
+          Tocca <strong>Valuta un drink</strong> e dai un voto da 1 a 5 stelle — un voto per drink
+          per bar, modificabile quando vuoi. Da una pagina drink puoi anche votarlo in un altro
+          bar.
+        </p>
+        <p>
+          Non trovi il tuo drink preferito? <strong>Proponilo</strong>: entra nel catalogo dopo
+          l’approvazione.
         </p>
       </>
     ),
@@ -89,7 +112,7 @@ export default function TutorialSplash() {
 
   useEffect(() => {
     if (loading || !user) return;
-    if (!localStorage.getItem(seenKey(user.id))) {
+    if (!localStorage.getItem(tutorialSeenKey(user.id))) {
       setStep(0);
       setOpen(true);
     }
@@ -98,8 +121,10 @@ export default function TutorialSplash() {
   if (!open || !user) return null;
 
   function dismiss() {
-    localStorage.setItem(seenKey(user.id), '1');
+    localStorage.setItem(tutorialSeenKey(user.id), '1');
     setOpen(false);
+    // Wake up other one-time overlays (InstallHint) now that the tour is done.
+    window.dispatchEvent(new Event('rabar:tutorial-dismissed'));
   }
 
   const last = step === STEPS.length - 1;

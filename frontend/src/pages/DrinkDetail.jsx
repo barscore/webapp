@@ -9,9 +9,12 @@ import { drinksApi } from '../services/api.js';
 import { useAuth } from '../hooks/useAuth.js';
 
 const PAGE_SIZE = 20;
+// Keep in sync with RANKING_RADIUS_KM in backend/src/routes/drinks.js.
+const RADIUS_KM = 30;
 
 // Drink detail: ranking of the bars that make this drink best (community
 // 1–5 votes, native scale — not the ×2 used for the bar overall score).
+// With geolocation the ranking only shows bars within RADIUS_KM.
 export default function DrinkDetail() {
   const { id } = useParams();
   const { isAuthenticated } = useAuth();
@@ -25,13 +28,32 @@ export default function DrinkDetail() {
   const [voteOpen, setVoteOpen] = useState(false);
   const [proposeOpen, setProposeOpen] = useState(false);
   const [toast, setToast] = useState(null);
+  // undefined = still resolving, [lat, lng] = fix, null = denied/unavailable
+  // (fall back to the unfiltered global ranking).
+  const [userPos, setUserPos] = useState(undefined);
+
+  // Same caveat as Home: geolocation needs a secure context; on failure we
+  // just skip the radius filter instead of blocking the page.
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setUserPos(null);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setUserPos([pos.coords.latitude, pos.coords.longitude]),
+      () => setUserPos(null),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+    );
+  }, []);
 
   const load = useCallback(async () => {
+    if (userPos === undefined) return; // wait for geolocation to settle
     setLoading(true);
     try {
+      const geo = userPos ? { lat: userPos[0], lng: userPos[1] } : {};
       const [drinkData, ranking] = await Promise.all([
         drinksApi.get(id),
-        drinksApi.topBars(id, { page, limit: PAGE_SIZE }),
+        drinksApi.topBars(id, { page, limit: PAGE_SIZE, ...geo }),
       ]);
       setDrink(drinkData);
       setBars(ranking.bars);
@@ -41,7 +63,7 @@ export default function DrinkDetail() {
     } finally {
       setLoading(false);
     }
-  }, [id, page]);
+  }, [id, page, userPos]);
 
   useEffect(() => {
     load();
@@ -105,12 +127,21 @@ export default function DrinkDetail() {
           <h2 className="mb-2 flex items-center gap-2 font-display font-bold text-ember-cream">
             <Icon name="star" size={18} className="text-ember-primary" />
             Dove lo fanno meglio
+            {userPos && (
+              <span className="text-xs font-normal text-ember-muted">
+                entro {RADIUS_KM} km
+              </span>
+            )}
           </h2>
 
           {bars.length === 0 ? (
             <EmptyState
               title="Nessun voto ancora"
-              hint="Nessun bar è stato ancora votato per questo drink. Vota il tuo preferito!"
+              hint={
+                userPos
+                  ? `Nessun bar votato per questo drink entro ${RADIUS_KM} km. Vota il tuo preferito!`
+                  : 'Nessun bar è stato ancora votato per questo drink. Vota il tuo preferito!'
+              }
               pin="arancione"
             />
           ) : (
@@ -130,6 +161,7 @@ export default function DrinkDetail() {
                       </span>
                       <span className="block truncate text-xs text-ember-muted">
                         {[b.address, b.city].filter(Boolean).join(', ')}
+                        {b.distance_km != null && ` · ${b.distance_km} km`}
                       </span>
                     </span>
                     <span className="flex shrink-0 items-center gap-1 font-display text-base font-extrabold tabular-nums text-ember-primary">

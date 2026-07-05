@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
-import { adminApi, suggestionsApi, drinksApi } from '../services/api.js';
+import { adminApi, suggestionsApi, reportsApi, drinksApi } from '../services/api.js';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import Toast from '../components/Toast.jsx';
@@ -12,6 +12,7 @@ const TABS = [
   { key: 'users', label: 'Utenti', icon: 'user' },
   { key: 'ratings', label: 'Valutazioni', icon: 'review' },
   { key: 'suggestions', label: 'Segnalazioni', icon: 'pin' },
+  { key: 'reports', label: 'Report', icon: 'info' },
   { key: 'drinks', label: 'Drinks', icon: 'cocktail' },
   { key: 'security', label: 'Sicurezza', icon: 'filters' },
   { key: 'emergency', label: 'Emergenza', icon: 'bell' },
@@ -84,6 +85,7 @@ export default function Admin() {
         {tab === 'users' && <UsersTab notify={notify} onChange={loadStats} />}
         {tab === 'ratings' && <RatingsTab notify={notify} onChange={loadStats} />}
         {tab === 'suggestions' && <SuggestionsTab notify={notify} />}
+        {tab === 'reports' && <ReportsTab notify={notify} />}
         {tab === 'drinks' && <DrinkSuggestionsTab notify={notify} />}
         {tab === 'security' && <SecurityTab notify={notify} />}
         {tab === 'emergency' && <EmergencyTab notify={notify} onChange={loadStats} />}
@@ -482,6 +484,154 @@ function SuggestionsTab({ notify }) {
         <ConfirmModal
           title="Elimina segnalazione?"
           desc="La segnalazione sarà rimossa definitivamente."
+          confirmLabel="Elimina"
+          danger
+          onClose={() => setConfirm(null)}
+          onConfirm={() => del(confirm.id)}
+        />
+      )}
+    </section>
+  );
+}
+
+// =========================================================================
+// User reports ("segnala" from the account menu)
+// =========================================================================
+const REPORT_FILTERS = [
+  { v: 'new', label: 'Nuovi' },
+  { v: 'done', label: 'Risolti' },
+  { v: 'rejected', label: 'Scartati' },
+  { v: '', label: 'Tutti' },
+];
+
+const REPORT_TYPE_LABELS = {
+  bug: 'Bug',
+  contenuto: 'Contenuto inappropriato',
+  account: 'Account',
+  suggerimento: 'Suggerimento',
+  altro: 'Altro',
+};
+
+function ReportsTab({ notify }) {
+  const [q, setQ] = useState('');
+  const [status, setStatus] = useState('new');
+  const [items, setItems] = useState([]);
+  const [busy, setBusy] = useState(false);
+  const [confirm, setConfirm] = useState(null);
+
+  const load = useCallback(() => {
+    setBusy(true);
+    reportsApi
+      .list({ q: q || undefined, status: status || undefined, limit: 100 })
+      .then((r) => setItems(r.reports))
+      .catch(() => notify('Errore caricamento report', 'info'))
+      .finally(() => setBusy(false));
+  }, [q, status, notify]);
+
+  useEffect(() => {
+    const t = setTimeout(load, 250);
+    return () => clearTimeout(t);
+  }, [load]);
+
+  async function setState(id, next, okMsg) {
+    try {
+      await reportsApi.setStatus(id, next);
+      notify(okMsg);
+      load();
+    } catch {
+      notify('Operazione fallita', 'info');
+    }
+  }
+
+  async function del(id) {
+    try {
+      await reportsApi.remove(id);
+      notify('Report eliminato');
+      setConfirm(null);
+      load();
+    } catch {
+      notify('Eliminazione fallita', 'info');
+    }
+  }
+
+  return (
+    <section className="space-y-3">
+      <SearchBar value={q} onChange={setQ} placeholder="Cerca nel testo…" />
+
+      <div className="flex flex-wrap gap-1.5">
+        {REPORT_FILTERS.map((f) => (
+          <button
+            key={f.v}
+            onClick={() => setStatus(f.v)}
+            className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+              status === f.v ? 'bg-ember-primary text-ember-bg' : 'bg-ember-card text-ember-muted hover:text-ember-cream'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="divide-y divide-white/5 overflow-hidden rounded-card border border-white/5 bg-ember-card">
+        {busy && !items.length && <p className="p-4 text-sm text-ember-muted">Caricamento…</p>}
+        {!busy && !items.length && <p className="p-4 text-sm text-ember-muted">Nessun report.</p>}
+        {items.map((r) => (
+          <div key={r.id} className="p-3">
+            <div className="flex items-start gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Tag color="primary">{REPORT_TYPE_LABELS[r.type] || r.type}</Tag>
+                  {r.status !== 'new' && (
+                    <Tag color={r.status === 'done' ? 'primary' : 'accent'}>
+                      {r.status === 'done' ? 'risolto' : 'scartato'}
+                    </Tag>
+                  )}
+                </div>
+                <p className="mt-1 text-sm text-ember-cream/90">{r.message}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-ember-muted">
+                  {r.profiles?.username && (
+                    <span className="flex items-center gap-1">
+                      <Icon name="user" size={11} /> @{r.profiles.username}
+                    </span>
+                  )}
+                  <span>{new Date(r.created_at).toLocaleDateString('it-IT')}</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setConfirm(r)}
+                title="Elimina"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ember-muted hover:bg-white/5 hover:text-ember-accent"
+              >
+                <Icon name="trash" size={16} />
+              </button>
+            </div>
+
+            {r.status !== 'done' && (
+              <div className="mt-2 flex gap-2">
+                <button
+                  onClick={() => setState(r.id, 'done', 'Segnato come risolto')}
+                  className="flex-1 rounded-lg bg-ember-primary/15 py-1.5 text-xs font-semibold text-ember-primary hover:bg-ember-primary/25"
+                >
+                  Segna come risolto
+                </button>
+                {r.status !== 'rejected' && (
+                  <button
+                    onClick={() => setState(r.id, 'rejected', 'Report scartato')}
+                    className="flex-1 rounded-lg bg-white/5 py-1.5 text-xs font-semibold text-ember-muted hover:text-ember-cream"
+                  >
+                    Scarta
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {confirm && (
+        <ConfirmModal
+          title="Elimina report?"
+          desc="Il report sarà rimosso definitivamente."
           confirmLabel="Elimina"
           danger
           onClose={() => setConfirm(null)}

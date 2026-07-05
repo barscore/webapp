@@ -10,6 +10,7 @@ import NavTabs from '../components/NavTabs.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import Toast from '../components/Toast.jsx';
 import SuggestModal from '../components/SuggestModal.jsx';
+import ReportModal from '../components/ReportModal.jsx';
 import ProposeDrinkModal from '../components/ProposeDrinkModal.jsx';
 
 // Lazy: BarSheet pulls in recharts (radar chart, ~350KB min) — loading it on
@@ -365,6 +366,7 @@ export default function Home() {
   const [tab, setTab] = useState('vicini');
   const [menuOpen, setMenuOpen] = useState(false);
   const [suggestOpen, setSuggestOpen] = useState(false);
+  const [reportOpen, setReportOpen] = useState(false);
   const {
     height: sheetH,
     dragging,
@@ -730,6 +732,16 @@ export default function Home() {
               >
                 <Icon name="star" size={16} className="text-ember-primary" /> Le tue valutazioni
               </Link>
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  setReportOpen(true);
+                }}
+                className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-white/5"
+              >
+                <Icon name="bell" size={16} className="text-ember-primary" /> Segnala
+              </button>
               <div className="flex items-center gap-3 border-t border-white/5 px-3 py-2 text-xs text-ember-muted">
                 <Link to="/privacy" onClick={() => setMenuOpen(false)} className="hover:text-ember-primary">
                   Privacy
@@ -823,6 +835,13 @@ export default function Home() {
           initialName={query.trim()}
           coords={center}
           onClose={() => setSuggestOpen(false)}
+          onSent={() => setToast({ msg: 'Grazie! Segnalazione inviata', icon: 'check' })}
+        />
+      )}
+
+      {reportOpen && (
+        <ReportModal
+          onClose={() => setReportOpen(false)}
           onSent={() => setToast({ msg: 'Grazie! Segnalazione inviata', icon: 'check' })}
         />
       )}

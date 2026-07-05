@@ -130,6 +130,19 @@ export const suggestionsApi = {
   remove: (id) => api.delete(`/suggestions/${id}`).then((r) => r.data),
 };
 
+// Generic "segnala" reports from the account menu — create requires auth;
+// list/moderation are staff-only (backend enforces requireRole).
+export const reportsApi = {
+  create: (payload) => api.post('/reports', payload).then((r) => r.data.report),
+  list: (params) =>
+    api.get('/reports', { params }).then((r) => ({
+      ...r.data,
+      reports: expectArray(r.data.reports, 'reports'),
+    })),
+  setStatus: (id, status) => api.patch(`/reports/${id}`, { status }).then((r) => r.data.report),
+  remove: (id) => api.delete(`/reports/${id}`).then((r) => r.data),
+};
+
 // Admin panel. Every call is admin-only (backend enforces requireRole('admin')).
 export const adminApi = {
   stats: () => api.get('/admin/stats').then((r) => r.data.stats),

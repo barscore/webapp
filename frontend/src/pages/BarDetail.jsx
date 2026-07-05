@@ -212,7 +212,7 @@ export default function BarDetail() {
         </div>
 
         {showInfo && (
-          <div className="space-y-1 rounded-card border border-white/5 bg-ember-card p-4 text-sm text-ember-muted">
+          <div className="space-y-1 rounded-card border border-ember-line/5 bg-ember-card p-4 text-sm text-ember-muted">
             <p className="flex items-center gap-2">
               <Icon name="pin" size={14} className="text-ember-primary" />
               {bar.address}, {bar.city}
@@ -244,7 +244,7 @@ export default function BarDetail() {
         )}
 
         {/* Community rating */}
-        <section className="rounded-card border border-white/5 bg-ember-card p-4">
+        <section className="rounded-card border border-ember-line/5 bg-ember-card p-4">
           <h2 className="mb-3 flex items-center gap-2 font-display font-bold text-ember-cream">
             <Icon name="star" size={18} className="text-ember-primary" />
             Valutazione community

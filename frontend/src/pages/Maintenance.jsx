@@ -56,7 +56,7 @@ export default function Maintenance({ reason, eta, beta = false, pending = false
   if (beta && pending) {
     return (
       <div className="grid min-h-full place-items-center bg-ember-bg p-6">
-        <div className="w-full max-w-md rounded-card border border-white/5 bg-ember-card p-8 text-center">
+        <div className="w-full max-w-md rounded-card border border-ember-line/5 bg-ember-card p-8 text-center">
           <div className="mb-4 flex justify-center">
             <Logo size="sm" />
           </div>
@@ -76,7 +76,7 @@ export default function Maintenance({ reason, eta, beta = false, pending = false
           <button
             type="button"
             onClick={logout}
-            className="mt-6 inline-block rounded-lg border border-white/10 px-4 py-2 text-sm text-ember-muted hover:border-ember-primary/50 hover:text-ember-cream"
+            className="mt-6 inline-block rounded-lg border border-ember-line/10 px-4 py-2 text-sm text-ember-muted hover:border-ember-primary/50 hover:text-ember-cream"
           >
             Esci
           </button>
@@ -87,7 +87,7 @@ export default function Maintenance({ reason, eta, beta = false, pending = false
 
   return (
     <div className="grid min-h-full place-items-center bg-ember-bg p-6">
-      <div className="w-full max-w-md rounded-card border border-white/5 bg-ember-card p-8 text-center">
+      <div className="w-full max-w-md rounded-card border border-ember-line/5 bg-ember-card p-8 text-center">
         <div className="mb-4 flex justify-center">
           <Logo size="sm" />
         </div>
@@ -106,14 +106,14 @@ export default function Maintenance({ reason, eta, beta = false, pending = false
         </p>
 
         {reason && (
-          <div className="mt-4 rounded-lg bg-white/[0.03] p-3 text-left text-sm">
+          <div className="mt-4 rounded-lg bg-ember-line/[0.03] p-3 text-left text-sm">
             <div className="text-xs uppercase tracking-wide text-ember-muted">Motivo</div>
             <div className="mt-0.5 text-ember-cream">{reason}</div>
           </div>
         )}
 
         {etaMs > 0 && (
-          <div className="mt-3 rounded-lg bg-white/[0.03] p-3 text-sm">
+          <div className="mt-3 rounded-lg bg-ember-line/[0.03] p-3 text-sm">
             <div className="text-xs uppercase tracking-wide text-ember-muted">Tempo stimato</div>
             {remaining > 0 ? (
               <>
@@ -132,7 +132,7 @@ export default function Maintenance({ reason, eta, beta = false, pending = false
 
         <Link
           to="/login"
-          className="mt-6 inline-block rounded-lg border border-white/10 px-4 py-2 text-sm text-ember-muted hover:border-ember-primary/50 hover:text-ember-cream"
+          className="mt-6 inline-block rounded-lg border border-ember-line/10 px-4 py-2 text-sm text-ember-muted hover:border-ember-primary/50 hover:text-ember-cream"
         >
           {beta ? 'Sei un beta tester? Accedi' : 'Sei un amministratore? Accedi'}
         </Link>

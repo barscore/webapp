@@ -14,7 +14,7 @@ export default function CookieBanner() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[1000] border-t border-white/10 bg-ember-card/95 p-4 backdrop-blur">
+    <div className="fixed inset-x-0 bottom-0 z-[1000] border-t border-ember-line/10 bg-ember-card/95 p-4 backdrop-blur">
       <div className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center">
         <p className="flex-1 text-sm text-ember-muted">
           Usiamo cookie tecnici e mostriamo pubblicità di Google. Con il tuo consenso gli
@@ -25,7 +25,7 @@ export default function CookieBanner() {
           <button
             type="button"
             onClick={() => choose(false)}
-            className="flex-1 whitespace-nowrap rounded-lg border border-white/10 px-4 py-2 text-sm font-semibold text-ember-cream sm:flex-none"
+            className="flex-1 whitespace-nowrap rounded-lg border border-ember-line/10 px-4 py-2 text-sm font-semibold text-ember-cream sm:flex-none"
           >
             Rifiuta
           </button>

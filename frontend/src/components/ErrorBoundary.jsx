@@ -64,7 +64,7 @@ export default class ErrorBoundary extends Component {
 
     return (
       <div className="grid min-h-[100dvh] place-items-center bg-ember-bg p-6 text-ember-cream">
-        <div className="w-full max-w-md rounded-2xl border border-white/10 bg-ember-card p-6 text-center">
+        <div className="w-full max-w-md rounded-2xl border border-ember-line/10 bg-ember-card p-6 text-center">
           <h1 className="font-display text-xl font-bold">
             {stale ? 'Aggiornamento in corso…' : 'Qualcosa è andato storto'}
           </h1>
@@ -85,7 +85,7 @@ export default class ErrorBoundary extends Component {
               sessionStorage.removeItem('rabar-chunk-reload');
               window.location.reload();
             }}
-            className="mt-5 inline-block rounded-lg border border-white/10 px-4 py-2 text-sm hover:border-ember-primary/50"
+            className="mt-5 inline-block rounded-lg border border-ember-line/10 px-4 py-2 text-sm hover:border-ember-primary/50"
           >
             Ricarica l’app
           </button>

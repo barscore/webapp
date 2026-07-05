@@ -13,7 +13,7 @@ function DrinkRow({ drink }) {
     <button
       type="button"
       onClick={() => navigate(`/drink/${drink.id}`)}
-      className="flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.03] px-3 py-3 text-left transition active:scale-[0.99] hover:border-white/10 hover:bg-white/[0.06] [content-visibility:auto] [contain-intrinsic-size:auto_66px]"
+      className="flex w-full items-center gap-3 rounded-2xl border border-ember-line/5 bg-ember-line/[0.03] px-3 py-3 text-left transition active:scale-[0.99] hover:border-ember-line/10 hover:bg-ember-line/[0.06] [content-visibility:auto] [contain-intrinsic-size:auto_66px]"
     >
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ember-primary/10">
         <Icon name="cocktail" size={18} className="text-ember-primary" />

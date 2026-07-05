@@ -60,7 +60,7 @@ function GlassButton({ onClick, label, children }) {
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-ember-bg/70 text-ember-cream shadow-lg backdrop-blur-md transition hover:text-ember-primary active:scale-95"
+      className="flex h-11 w-11 items-center justify-center rounded-full border border-ember-line/10 bg-ember-bg/70 text-ember-cream shadow-lg backdrop-blur-md transition hover:text-ember-primary active:scale-95"
     >
       {children}
     </button>
@@ -71,7 +71,7 @@ function GlassButton({ onClick, label, children }) {
 // on desktop it's a persistent bar above the nav rail.
 function SearchPanel({ query, setQuery, autoFocus = false, placeholder = 'Cerca un bar…' }) {
   return (
-    <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2.5">
+    <div className="flex items-center gap-2 rounded-full border border-ember-line/10 bg-ember-line/[0.04] px-3 py-2.5">
       <Icon name="search" size={18} className="text-ember-muted" />
       <input
         value={query}
@@ -119,7 +119,7 @@ function RatedFilter({ ratedOnly, setRatedOnly }) {
       className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition ${
         ratedOnly
           ? 'border-ember-primary/60 bg-ember-primary/10 text-ember-primary'
-          : 'border-white/10 text-ember-muted hover:text-ember-cream'
+          : 'border-ember-line/10 text-ember-muted hover:text-ember-cream'
       }`}
     >
       <Icon name={ratedOnly ? 'check' : 'star'} size={13} /> Solo valutati
@@ -150,7 +150,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
         )}
 
         {eventsError && !eventsLoading && (
-          <div className="rounded-2xl border border-ember-accent/30 bg-white/[0.03] p-4 text-center">
+          <div className="rounded-2xl border border-ember-accent/30 bg-ember-line/[0.03] p-4 text-center">
             <p className="text-ember-accent">{eventsError}</p>
             <button
               onClick={onReload}
@@ -207,7 +207,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
         )}
 
         {drinksError && !drinksLoading && (
-          <div className="rounded-2xl border border-ember-accent/30 bg-white/[0.03] p-4 text-center">
+          <div className="rounded-2xl border border-ember-accent/30 bg-ember-line/[0.03] p-4 text-center">
             <p className="text-ember-accent">{drinksError}</p>
             <button
               onClick={onReload}
@@ -237,7 +237,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
             <button
               type="button"
               onClick={onProposeDrink}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-white/15 px-3 py-3 text-sm text-ember-muted transition hover:text-ember-cream"
+              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-ember-line/15 px-3 py-3 text-sm text-ember-muted transition hover:text-ember-cream"
             >
               <Icon name="plus" size={15} /> Non trovi un drink? Proponilo
             </button>
@@ -280,7 +280,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
       )}
 
       {error && !loading && (
-        <div className="rounded-2xl border border-ember-accent/30 bg-white/[0.03] p-4 text-center">
+        <div className="rounded-2xl border border-ember-accent/30 bg-ember-line/[0.03] p-4 text-center">
           <p className="text-ember-accent">{error}</p>
           <button
             onClick={onReload}
@@ -632,7 +632,7 @@ export default function Home() {
   };
 
   return (
-    <div className="relative h-[100dvh] w-full overflow-hidden bg-[#0e1626]">
+    <div className="relative h-[100dvh] w-full overflow-hidden bg-[color:var(--map-bg)]">
       {/* Full-bleed map */}
       <div className="absolute inset-0">
         <Map
@@ -674,9 +674,9 @@ export default function Home() {
             <Icon name="user" size={22} />
           </GlassButton>
           {menuOpen && isAuthenticated && (
-            <div className="absolute right-0 z-[1400] mt-2 w-64 overflow-hidden rounded-2xl border border-white/10 bg-ember-card shadow-xl">
+            <div className="absolute right-0 z-[1400] mt-2 w-64 overflow-hidden rounded-2xl border border-ember-line/10 bg-ember-card shadow-xl">
               {/* Own profile card — no need to open Impostazioni to see this. */}
-              <div className="border-b border-white/5 px-3 py-3">
+              <div className="border-b border-ember-line/5 px-3 py-3">
                 <div className="flex items-center gap-2 text-sm font-semibold text-ember-cream">
                   <Icon name="user" size={16} className="text-ember-primary" />@{user.username}
                 </div>
@@ -699,7 +699,7 @@ export default function Home() {
                     setMenuOpen(false);
                     navigate('/classifica');
                   }}
-                  className="mt-2 flex w-full items-center gap-2 rounded-lg border border-white/10 bg-white/[0.03] px-2.5 py-1.5 text-sm text-ember-cream transition hover:border-ember-primary/50"
+                  className="mt-2 flex w-full items-center gap-2 rounded-lg border border-ember-line/10 bg-ember-line/[0.03] px-2.5 py-1.5 text-sm text-ember-cream transition hover:border-ember-primary/50"
                 >
                   <img src="/icons/ice.png" alt="" width={18} height={18} className="shrink-0 object-contain" />
                   <span className="font-display font-bold tabular-nums">
@@ -713,7 +713,7 @@ export default function Home() {
                 <Link
                   to="/admin"
                   onClick={() => setMenuOpen(false)}
-                  className="flex w-full items-center gap-2 border-b border-white/5 px-3 py-2.5 text-left text-sm font-semibold text-ember-primary hover:bg-white/5"
+                  className="flex w-full items-center gap-2 border-b border-ember-line/5 px-3 py-2.5 text-left text-sm font-semibold text-ember-primary hover:bg-ember-line/5"
                 >
                   <Icon name="filters" size={16} className="text-ember-primary" /> Pannello admin
                 </Link>
@@ -721,14 +721,14 @@ export default function Home() {
               <Link
                 to="/impostazioni"
                 onClick={() => setMenuOpen(false)}
-                className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-white/5"
+                className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-ember-line/5"
               >
                 <Icon name="filters" size={16} className="text-ember-primary" /> Impostazioni
               </Link>
               <Link
                 to="/le-tue-valutazioni"
                 onClick={() => setMenuOpen(false)}
-                className="flex w-full items-center gap-2 border-b border-white/5 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-white/5"
+                className="flex w-full items-center gap-2 border-b border-ember-line/5 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-ember-line/5"
               >
                 <Icon name="star" size={16} className="text-ember-primary" /> Le tue valutazioni
               </Link>
@@ -738,15 +738,15 @@ export default function Home() {
                   setMenuOpen(false);
                   setReportOpen(true);
                 }}
-                className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-white/5"
+                className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-ember-line/5"
               >
                 <Icon name="bell" size={16} className="text-ember-primary" /> Segnala
               </button>
-              <div className="flex items-center gap-3 border-t border-white/5 px-3 py-2 text-xs text-ember-muted">
+              <div className="flex items-center gap-3 border-t border-ember-line/5 px-3 py-2 text-xs text-ember-muted">
                 <Link to="/privacy" onClick={() => setMenuOpen(false)} className="hover:text-ember-primary">
                   Privacy
                 </Link>
-                <span className="text-white/15">·</span>
+                <span className="text-ember-line/15">·</span>
                 <Link to="/tos" onClick={() => setMenuOpen(false)} className="hover:text-ember-primary">
                   Termini
                 </Link>
@@ -756,7 +756,7 @@ export default function Home() {
                   setMenuOpen(false);
                   logout();
                 }}
-                className="flex w-full items-center gap-2 border-t border-white/5 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-white/5"
+                className="flex w-full items-center gap-2 border-t border-ember-line/5 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-ember-line/5"
               >
                 <Icon name="arrow-left" size={16} /> Esci
               </button>
@@ -770,7 +770,7 @@ export default function Home() {
 
       {/* Desktop: floating tab menu (left) + list panel below it */}
       <div className="pointer-events-none absolute left-5 top-24 bottom-6 z-[1100] hidden w-[440px] flex-col gap-3 md:flex">
-        <div className="pointer-events-auto rounded-3xl border border-white/10 bg-ember-bg/80 p-3 shadow-xl backdrop-blur">
+        <div className="pointer-events-auto rounded-3xl border border-ember-line/10 bg-ember-bg/80 p-3 shadow-xl backdrop-blur">
           <SearchPanel query={query} setQuery={setQuery} />
         </div>
         <NavTabs
@@ -781,7 +781,7 @@ export default function Home() {
           savedCount={count}
           exclude={['cerca']}
         />
-        <div className="pointer-events-auto flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-white/10 bg-[#0f1116]/90 shadow-2xl backdrop-blur-xl">
+        <div className="pointer-events-auto flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-ember-line/10 bg-ember-sheet/90 shadow-2xl backdrop-blur-xl">
           <div className="no-scrollbar flex-1 overflow-y-auto px-4 py-4">
             <SheetBody {...sheetProps} />
           </div>
@@ -792,7 +792,7 @@ export default function Home() {
           it snaps to collapsed / expanded / fullscreen. */}
       <section
         ref={sheetRef}
-        className={`absolute z-[1100] flex flex-col overflow-hidden border border-white/10 bg-[#0f1116] shadow-[0_10px_40px_rgba(0,0,0,0.55)] md:hidden ${
+        className={`absolute z-[1100] flex flex-col overflow-hidden border border-ember-line/10 bg-ember-sheet shadow-[0_10px_40px_rgba(0,0,0,0.55)] md:hidden ${
           sheetFull ? 'inset-x-0 bottom-0 rounded-none' : 'inset-x-3 bottom-3 rounded-3xl'
         }`}
         style={{
@@ -810,12 +810,12 @@ export default function Home() {
           aria-label="Trascina per ridimensionare"
           className="flex w-full touch-none justify-center pb-1 pt-2.5"
         >
-          <span className="h-1.5 w-10 rounded-full bg-white/25" />
+          <span className="h-1.5 w-10 rounded-full bg-ember-line/25" />
         </div>
         <div {...contentProps} className="no-scrollbar flex-1 touch-none overflow-y-auto px-4 pb-2">
           <SheetBody {...sheetProps} />
         </div>
-        <div className="border-t border-white/5 px-3 pb-3 pt-2">
+        <div className="border-t border-ember-line/5 px-3 pb-3 pt-2">
           <NavTabs variant="bar" tab={tab} onTab={onTab} savedCount={count} />
         </div>
       </section>

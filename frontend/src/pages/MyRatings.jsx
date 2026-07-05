@@ -85,7 +85,7 @@ export default function MyRatings() {
         {!busy && ratings.length > 0 && (
           <div className="space-y-2">
             {ratings.map((r) => (
-              <div key={r.id} className="rounded-card border border-white/5 bg-ember-card p-3 text-sm">
+              <div key={r.id} className="rounded-card border border-ember-line/5 bg-ember-card p-3 text-sm">
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate font-medium text-ember-cream">

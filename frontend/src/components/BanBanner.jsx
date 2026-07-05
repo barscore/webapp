@@ -68,14 +68,14 @@ export default function BanBanner() {
           </span>
           <button
             onClick={() => setOpen((o) => !o)}
-            className="rounded-md bg-white/20 px-2 py-1 text-xs font-semibold hover:bg-white/30"
+            className="rounded-md bg-ember-line/20 px-2 py-1 text-xs font-semibold hover:bg-ember-line/30"
           >
             {open ? 'Nascondi' : 'Dettagli'}
           </button>
           <button
             onClick={() => setDismissed(true)}
             aria-label="Chiudi"
-            className="grid h-7 w-7 place-items-center rounded-md hover:bg-white/20"
+            className="grid h-7 w-7 place-items-center rounded-md hover:bg-ember-line/20"
           >
             <Icon name="close" size={15} />
           </button>

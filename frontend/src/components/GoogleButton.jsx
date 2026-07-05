@@ -21,15 +21,15 @@ export default function GoogleButton({ label = 'Continua con Google', disabled =
   return (
     <div>
       <div className="my-4 flex items-center gap-3 text-xs text-ember-muted">
-        <span className="h-px flex-1 bg-white/10" />
+        <span className="h-px flex-1 bg-ember-line/10" />
         oppure
-        <span className="h-px flex-1 bg-white/10" />
+        <span className="h-px flex-1 bg-ember-line/10" />
       </div>
       <button
         type="button"
         onClick={handle}
         disabled={busy || disabled}
-        className="flex w-full items-center justify-center gap-2 rounded-lg border border-white/10 bg-ember-cream py-2 font-medium text-ember-bg disabled:opacity-50"
+        className="flex w-full items-center justify-center gap-2 rounded-lg border border-ember-line/10 bg-ember-cream py-2 font-medium text-ember-bg disabled:opacity-50"
       >
         <GoogleIcon />
         {busy ? 'Reindirizzamento…' : label}

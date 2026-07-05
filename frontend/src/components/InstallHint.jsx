@@ -93,7 +93,7 @@ export default function InstallHint() {
         role="dialog"
         aria-modal="true"
         aria-label="Installa l'app"
-        className="w-full max-w-sm space-y-4 rounded-card border border-white/10 bg-ember-card p-5"
+        className="w-full max-w-sm space-y-4 rounded-card border border-ember-line/10 bg-ember-card p-5"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-ember-primary/15">
@@ -146,7 +146,7 @@ export default function InstallHint() {
           <button
             type="button"
             onClick={dismiss}
-            className="flex-1 rounded-lg border border-white/10 py-2.5 text-sm font-semibold text-ember-muted hover:text-ember-cream"
+            className="flex-1 rounded-lg border border-ember-line/10 py-2.5 text-sm font-semibold text-ember-muted hover:text-ember-cream"
           >
             Non ora
           </button>

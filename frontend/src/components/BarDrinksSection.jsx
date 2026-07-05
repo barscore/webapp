@@ -31,7 +31,7 @@ export default function BarDrinksSection({ bar, onToast }) {
   }, [bar.id, reloadKey]);
 
   return (
-    <section className="rounded-card border border-white/5 bg-ember-card p-4">
+    <section className="rounded-card border border-ember-line/5 bg-ember-card p-4">
       <h2 className="mb-3 flex items-center gap-2 font-display font-bold text-ember-cream">
         <Icon name="cocktail" size={18} className="text-ember-primary" />
         I migliori drink qui
@@ -52,7 +52,7 @@ export default function BarDrinksSection({ bar, onToast }) {
               key={d.id}
               type="button"
               onClick={() => navigate(`/drink/${d.id}`)}
-              className="flex w-full items-center gap-2 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2 text-left text-sm transition hover:border-white/10 hover:bg-white/[0.06]"
+              className="flex w-full items-center gap-2 rounded-xl border border-ember-line/5 bg-ember-line/[0.03] px-3 py-2 text-left text-sm transition hover:border-ember-line/10 hover:bg-ember-line/[0.06]"
             >
               <Icon name="cocktail" size={14} className="shrink-0 text-ember-primary" />
               <span className="min-w-0 flex-1 truncate font-semibold text-ember-cream">{d.name}</span>
@@ -83,7 +83,7 @@ export default function BarDrinksSection({ bar, onToast }) {
         <button
           type="button"
           onClick={() => setProposeOpen(true)}
-          className="rounded-lg bg-white/5 px-3 py-2 text-xs font-semibold text-ember-muted hover:text-ember-cream"
+          className="rounded-lg bg-ember-line/5 px-3 py-2 text-xs font-semibold text-ember-muted hover:text-ember-cream"
         >
           Proponi un drink
         </button>

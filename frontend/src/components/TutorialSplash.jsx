@@ -137,7 +137,7 @@ export default function TutorialSplash() {
       aria-modal="true"
       aria-label="Tutorial di benvenuto"
     >
-      <div className="w-full max-w-sm space-y-4 rounded-card border border-white/10 bg-ember-card p-5">
+      <div className="w-full max-w-sm space-y-4 rounded-card border border-ember-line/10 bg-ember-card p-5">
         <div className="flex items-center justify-between">
           <Logo size="sm" />
           <button
@@ -166,7 +166,7 @@ export default function TutorialSplash() {
               <span
                 key={i}
                 className={`h-1.5 rounded-full transition-all ${
-                  i === step ? 'w-5 bg-ember-primary' : 'w-1.5 bg-white/15'
+                  i === step ? 'w-5 bg-ember-primary' : 'w-1.5 bg-ember-line/15'
                 }`}
               />
             ))}

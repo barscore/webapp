@@ -18,7 +18,7 @@ export default function NavTabs({ tab, onTab, savedCount = 0, variant = 'bar', e
 
   return (
     <nav
-      className={`flex items-center gap-1 ${rail ? 'justify-between rounded-3xl border border-white/10 bg-ember-bg/80 p-2 shadow-xl backdrop-blur' : 'justify-between'} ${className}`}
+      className={`flex items-center gap-1 ${rail ? 'justify-between rounded-3xl border border-ember-line/10 bg-ember-bg/80 p-2 shadow-xl backdrop-blur' : 'justify-between'} ${className}`}
     >
       {tabs.map((t) => {
         const active = tab === t.id;
@@ -34,7 +34,7 @@ export default function NavTabs({ tab, onTab, savedCount = 0, variant = 'bar', e
               rail ? 'px-3 py-2.5' : 'px-2.5 py-2.5'
             } ${
               active
-                ? 'bg-ember-primary text-ember-bg shadow-[0_4px_14px_rgba(224,123,26,0.4)]'
+                ? 'bg-ember-primary text-ember-bg shadow-[0_4px_14px_rgb(var(--ember-primary)/0.4)]'
                 : 'text-ember-muted hover:text-ember-cream'
             }`}
           >

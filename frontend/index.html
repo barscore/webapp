@@ -5,6 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#E07B1A" />
 
+    <!-- Apply the saved theme before first paint to avoid a flash of the
+         default palette. Kept in sync with src/hooks/useTheme.js. -->
+    <script>
+      try {
+        var t = localStorage.getItem('rabar-theme');
+        var themeColors = {
+          'midnight-red': '#C94060',
+          'gold-rush': '#FFB800',
+          'electric-blue': '#5B8CFF',
+          aperitif: '#D6452C',
+        };
+        if (themeColors[t]) {
+          document.documentElement.dataset.theme = t;
+          var meta = document.querySelector('meta[name="theme-color"]');
+          if (meta) meta.setAttribute('content', themeColors[t]);
+        }
+      } catch (e) {}
+    </script>
+
     <!-- Primary SEO -->
     <title>rabar — mappa dei bar valutati dalla community</title>
     <meta
@@ -45,7 +64,10 @@
     <link rel="icon" type="image/png" href="/icons/icon-192.png" />
     <link rel="apple-touch-icon" href="/icons/icon-180.png" />
 
-    <!-- EMBER NIGHT type system: Syne (display) + DM Sans (body) -->
+    <!-- Theme type systems (browsers only download the families actually used
+         by the active theme): rabar = Syne + DM Sans · midnight-red = Space
+         Grotesk + Source Sans 3 · gold-rush = Barlow Condensed + DM Sans ·
+         electric-blue = Unbounded + Karla · aperitif = Archivo + Instrument Sans. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
@@ -56,7 +78,7 @@
     <link rel="dns-prefetch" href="https://c.basemaps.cartocdn.com" />
     <link rel="dns-prefetch" href="https://d.basemaps.cartocdn.com" />
     <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Syne:wght@600;700;800&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;700;800&family=Barlow+Condensed:wght@700;900&family=DM+Sans:wght@400;500;700&family=Instrument+Sans:wght@400;500;600;700&family=Karla:wght@400;500;700&family=Source+Sans+3:wght@400;600;700&family=Space+Grotesk:wght@600;700&family=Syne:wght@600;700;800&family=Unbounded:wght@600;700&display=swap"
       rel="stylesheet"
     />
 

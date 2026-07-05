@@ -19,7 +19,7 @@ function BarRow({ bar, onSelect }) {
       onClick={() =>
         onSelect ? onSelect(bar) : navigate(`/bar/${barKey(bar)}`, { state: { osm: bar } })
       }
-      className="flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.03] px-3 py-3 text-left transition active:scale-[0.99] hover:border-white/10 hover:bg-white/[0.06] [content-visibility:auto] [contain-intrinsic-size:auto_66px]"
+      className="flex w-full items-center gap-3 rounded-2xl border border-ember-line/5 bg-ember-line/[0.03] px-3 py-3 text-left transition active:scale-[0.99] hover:border-ember-line/10 hover:bg-ember-line/[0.06] [content-visibility:auto] [contain-intrinsic-size:auto_66px]"
     >
       <Pin variant={variant} disco={isDisco(bar)} size={32} className="shrink-0" />
       <div className="min-w-0 flex-1">

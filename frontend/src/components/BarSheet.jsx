@@ -110,7 +110,7 @@ export default function BarSheet({ seed, onClose, onChanged }) {
         ref={sheetRef}
         role="dialog"
         aria-modal="true"
-        className={`rabar-sheet-in absolute z-[1500] flex flex-col overflow-hidden border border-white/10 bg-[#0f1116] shadow-[0_-10px_50px_rgba(0,0,0,0.6)] md:bg-[#0f1116]/95 md:backdrop-blur-xl ${
+        className={`rabar-sheet-in absolute z-[1500] flex flex-col overflow-hidden border border-ember-line/10 bg-ember-sheet shadow-[0_-10px_50px_rgba(0,0,0,0.6)] md:bg-ember-sheet/95 md:backdrop-blur-xl ${
           isMobile
             ? full
               ? 'inset-x-0 bottom-0 rounded-none'
@@ -133,13 +133,13 @@ export default function BarSheet({ seed, onClose, onChanged }) {
             aria-label="Trascina per ridimensionare"
             className="flex touch-none justify-center px-8 pb-2 pt-3"
           >
-            <span className="h-1.5 w-10 rounded-full bg-white/25" />
+            <span className="h-1.5 w-10 rounded-full bg-ember-line/25" />
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Chiudi"
-            className="absolute right-3 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-ember-cream hover:bg-white/10"
+            className="absolute right-3 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-ember-line/5 text-ember-cream hover:bg-ember-line/10"
           >
             <Icon name="close" size={16} />
           </button>
@@ -210,7 +210,7 @@ export default function BarSheet({ seed, onClose, onChanged }) {
               </div>
 
               {showInfo && (
-                <div className="space-y-1 rounded-card border border-white/5 bg-ember-card p-4 text-sm text-ember-muted">
+                <div className="space-y-1 rounded-card border border-ember-line/5 bg-ember-card p-4 text-sm text-ember-muted">
                   <p className="flex items-center gap-2">
                     <Icon name="pin" size={14} className="text-ember-primary" />
                     {[bar.address, bar.city].filter(Boolean).join(', ')}
@@ -239,7 +239,7 @@ export default function BarSheet({ seed, onClose, onChanged }) {
               )}
 
               {/* Community rating */}
-              <section className="rounded-card border border-white/5 bg-ember-card p-4">
+              <section className="rounded-card border border-ember-line/5 bg-ember-card p-4">
                 <h2 className="mb-3 flex items-center gap-2 font-display font-bold text-ember-cream">
                   <Icon name="star" size={18} className="text-ember-primary" />
                   Community

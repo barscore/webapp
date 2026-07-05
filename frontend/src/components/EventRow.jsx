@@ -23,7 +23,7 @@ export default function EventRow({ event }) {
   const dist = event.distance_km != null ? `${event.distance_km} km` : null;
 
   return (
-    <div className="flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.03] px-3 py-3 text-left">
+    <div className="flex w-full items-center gap-3 rounded-2xl border border-ember-line/5 bg-ember-line/[0.03] px-3 py-3 text-left">
       <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ember-primary/15 text-ember-primary">
         <Icon name="bell" size={16} />
       </span>

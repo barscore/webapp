@@ -55,7 +55,7 @@ export default function RatingForm({ initial, onSubmit, onCancel, onDelete }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 rounded-card border border-white/5 bg-ember-card p-4"
+      className="space-y-4 rounded-card border border-ember-line/5 bg-ember-card p-4"
     >
       <h3 className="flex items-center gap-2 font-display font-bold text-ember-cream">
         <Icon name="cocktail" size={18} className="text-ember-primary" />

@@ -150,7 +150,7 @@ export default function DrinkDetail() {
                 <li key={b.id}>
                   <Link
                     to={`/bar/${b.id}`}
-                    className="flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.03] px-3 py-3 transition hover:border-white/10 hover:bg-white/[0.06]"
+                    className="flex w-full items-center gap-3 rounded-2xl border border-ember-line/5 bg-ember-line/[0.03] px-3 py-3 transition hover:border-ember-line/10 hover:bg-ember-line/[0.06]"
                   >
                     <span className="w-7 shrink-0 text-center font-display text-lg font-extrabold tabular-nums text-ember-muted">
                       {(page - 1) * PAGE_SIZE + i + 1}

@@ -1,17 +1,19 @@
 import { useState } from 'react';
 import Icon from './Icon.jsx';
+import { useI18n } from '../i18n/index.js';
 
 const DIMENSIONS = [
-  { key: 'prezzo', label: 'Prezzo', icon: 'euro', hint: '1 = caro · 5 = economico' },
-  { key: 'qualita_drinks', label: 'Qualità drinks', icon: 'bottle', hint: '1 = scarsa · 5 = ottima' },
-  { key: 'socialita', label: 'Socialità', icon: 'social', hint: '1 = morto · 5 = vivace' },
-  { key: 'varieta', label: 'Varietà', icon: 'cocktail', hint: '1 = poca scelta · 5 = ampia scelta' },
-  { key: 'orari', label: 'Orari', icon: 'bell', hint: '1 = scomodi · 5 = comodi' },
+  { key: 'prezzo', label: 'axis.prezzo', icon: 'euro', hint: 'axis.prezzoHint' },
+  { key: 'qualita_drinks', label: 'axis.qualita_drinks', icon: 'bottle', hint: 'axis.drinksHint' },
+  { key: 'socialita', label: 'axis.socialita', icon: 'social', hint: 'axis.socialitaHint' },
+  { key: 'varieta', label: 'axis.varieta', icon: 'cocktail', hint: 'axis.varietaHint' },
+  { key: 'orari', label: 'axis.orari', icon: 'bell', hint: 'axis.orariHint' },
 ];
 
 // Five 1–5 sliders + optional comment. Pass `initial` to edit an existing vote,
 // `onDelete` to allow removing it.
 export default function RatingForm({ initial, onSubmit, onCancel, onDelete }) {
+  const { t } = useI18n();
   const [values, setValues] = useState({
     prezzo: initial?.prezzo ?? 3,
     qualita_drinks: initial?.qualita_drinks ?? 3,
@@ -34,20 +36,20 @@ export default function RatingForm({ initial, onSubmit, onCancel, onDelete }) {
     try {
       await onSubmit({ ...values, commento: commento.trim() || undefined });
     } catch (err) {
-      setError(err.response?.data?.error || 'Errore durante il salvataggio');
+      setError(err.response?.data?.error || t('form.saveError'));
     } finally {
       setBusy(false);
     }
   }
 
   async function handleDelete() {
-    if (!onDelete || !confirm('Eliminare la tua valutazione?')) return;
+    if (!onDelete || !confirm(t('form.deleteConfirm'))) return;
     setBusy(true);
     setError('');
     try {
       await onDelete();
     } catch (err) {
-      setError(err.response?.data?.error || 'Errore durante l’eliminazione');
+      setError(err.response?.data?.error || t('bar.deleteError'));
       setBusy(false);
     }
   }
@@ -59,7 +61,7 @@ export default function RatingForm({ initial, onSubmit, onCancel, onDelete }) {
     >
       <h3 className="flex items-center gap-2 font-display font-bold text-ember-cream">
         <Icon name="cocktail" size={18} className="text-ember-primary" />
-        {initial ? 'Modifica la tua valutazione' : 'La tua valutazione'}
+        {initial ? t('form.editYourRating') : t('form.yourRating')}
       </h3>
 
       {DIMENSIONS.map((d) => (
@@ -67,7 +69,7 @@ export default function RatingForm({ initial, onSubmit, onCancel, onDelete }) {
           <div className="flex items-center justify-between">
             <label className="flex items-center gap-1.5 font-medium text-ember-cream">
               <Icon name={d.icon} size={16} className="text-ember-primary" />
-              {d.label}
+              {t(d.label)}
             </label>
             <span className="font-display font-semibold text-ember-primary">{values[d.key]}</span>
           </div>
@@ -80,28 +82,28 @@ export default function RatingForm({ initial, onSubmit, onCancel, onDelete }) {
             onChange={(e) => setVal(d.key, e.target.value)}
             className="w-full"
           />
-          <p className="text-xs text-ember-muted">{d.hint}</p>
+          <p className="text-xs text-ember-muted">{t(d.hint)}</p>
         </div>
       ))}
 
       <div>
-        <label className="font-medium text-ember-cream">Commento (opzionale)</label>
+        <label className="font-medium text-ember-cream">{t('form.comment')}</label>
         <textarea
           value={commento}
           maxLength={500}
           rows={3}
           onChange={(e) => setCommento(e.target.value)}
           className="mt-1 w-full rounded-lg bg-ember-bg p-2 text-sm text-ember-cream outline-none ring-ember-primary focus:ring-2"
-          placeholder="La tua esperienza…"
+          placeholder={t('form.commentPh')}
         />
         <div className="flex items-center justify-between text-xs text-ember-muted">
           <button
             type="button"
             disabled
-            title="Caricamento foto in arrivo"
+            title={t('form.photoSoon')}
             className="flex items-center gap-1.5 opacity-50"
           >
-            <Icon name="camera" size={16} /> Aggiungi foto
+            <Icon name="camera" size={16} /> {t('form.addPhoto')}
           </button>
           <span>{commento.length}/500</span>
         </div>
@@ -116,14 +118,14 @@ export default function RatingForm({ initial, onSubmit, onCancel, onDelete }) {
           className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-ember-primary py-2.5 font-semibold text-ember-bg active:scale-[0.98] disabled:opacity-50"
         >
           <Icon name="check" size={18} />
-          {busy ? 'Salvataggio…' : 'Salva'}
+          {busy ? t('common.saving') : t('common.save')}
         </button>
         {onDelete && initial && (
           <button
             type="button"
             onClick={handleDelete}
             disabled={busy}
-            aria-label="Elimina valutazione"
+            aria-label={t('form.deleteAria')}
             className="rounded-lg bg-ember-bg p-2.5 text-ember-accent disabled:opacity-50"
           >
             <Icon name="trash" size={18} />
@@ -134,7 +136,7 @@ export default function RatingForm({ initial, onSubmit, onCancel, onDelete }) {
             type="button"
             onClick={onCancel}
             disabled={busy}
-            aria-label="Annulla"
+            aria-label={t('common.cancel')}
             className="rounded-lg bg-ember-bg p-2.5 text-ember-cream disabled:opacity-50"
           >
             <Icon name="close" size={18} />

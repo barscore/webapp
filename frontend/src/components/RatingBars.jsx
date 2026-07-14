@@ -1,16 +1,18 @@
 import Icon from './Icon.jsx';
+import { useI18n } from '../i18n/index.js';
 
 // Horizontal rating bars matching EMBER NIGHT card. DB values are 1–5; display
 // uses a 0–10 scale (value * 2). Each axis carries its brand icon.
 const ROWS = [
-  { key: 'prezzo', label: 'Prezzo', icon: 'euro' },
-  { key: 'qualita_drinks', label: 'Drinks', icon: 'bottle' },
-  { key: 'socialita', label: 'Socialità', icon: 'social' },
-  { key: 'varieta', label: 'Varietà', icon: 'cocktail' },
-  { key: 'orari', label: 'Orari', icon: 'bell' },
+  { key: 'prezzo', label: 'axis.prezzo', icon: 'euro' },
+  { key: 'qualita_drinks', label: 'axis.drinksShort', icon: 'bottle' },
+  { key: 'socialita', label: 'axis.socialita', icon: 'social' },
+  { key: 'varieta', label: 'axis.varieta', icon: 'cocktail' },
+  { key: 'orari', label: 'axis.orari', icon: 'bell' },
 ];
 
 export default function RatingBars({ summary }) {
+  const { t } = useI18n();
   return (
     <div className="space-y-2">
       {ROWS.map((r) => {
@@ -20,7 +22,7 @@ export default function RatingBars({ summary }) {
           <div key={r.key} className="flex items-center gap-2.5 text-sm">
             <span className="flex w-[5.5rem] shrink-0 items-center gap-1.5 text-ember-muted">
               <Icon name={r.icon} size={15} className="text-ember-primary" />
-              {r.label}
+              {t(r.label)}
             </span>
             <div className="h-2 flex-1 overflow-hidden rounded-full bg-black/40">
               <div className="h-full rounded-full bg-rating-fill" style={{ width: `${pct}%` }} />

@@ -12,6 +12,8 @@ import Toast from '../components/Toast.jsx';
 import SuggestModal from '../components/SuggestModal.jsx';
 import ReportModal from '../components/ReportModal.jsx';
 import ProposeDrinkModal from '../components/ProposeDrinkModal.jsx';
+import { LanguageMenuRow } from '../components/LanguagePicker.jsx';
+import { useI18n } from '../i18n/index.js';
 
 // Lazy: BarSheet pulls in recharts (radar chart, ~350KB min) — loading it on
 // first bar tap keeps the landing bundle small.
@@ -51,8 +53,6 @@ function writeNearbyCache(lat, lng, r, data) {
   }
 }
 
-const TITLES = { vicini: 'Vicino a me', salvati: 'Salvati', eventi: 'Eventi', drinks: 'Drinks', cerca: 'Cerca' };
-
 // Circular glass control used top-right (account + repositioning).
 function GlassButton({ onClick, label, children }) {
   return (
@@ -69,7 +69,9 @@ function GlassButton({ onClick, label, children }) {
 
 // Search input. On mobile it lives inside the sheet (cerca tab);
 // on desktop it's a persistent bar above the nav rail.
-function SearchPanel({ query, setQuery, autoFocus = false, placeholder = 'Cerca un bar…' }) {
+function SearchPanel({ query, setQuery, autoFocus = false, placeholder }) {
+  const { t } = useI18n();
+  placeholder = placeholder ?? t('home.searchBar');
   return (
     <div className="flex items-center gap-2 rounded-full border border-ember-line/10 bg-ember-line/[0.04] px-3 py-2.5">
       <Icon name="search" size={18} className="text-ember-muted" />
@@ -81,7 +83,7 @@ function SearchPanel({ query, setQuery, autoFocus = false, placeholder = 'Cerca 
         className="w-full bg-transparent text-sm text-ember-cream outline-none placeholder:text-ember-muted"
       />
       {query && (
-        <button onClick={() => setQuery('')} aria-label="Pulisci ricerca" className="text-ember-muted hover:text-ember-cream">
+        <button onClick={() => setQuery('')} aria-label={t('common.clearSearch')} className="text-ember-muted hover:text-ember-cream">
           <Icon name="close" size={16} />
         </button>
       )}
@@ -91,10 +93,11 @@ function SearchPanel({ query, setQuery, autoFocus = false, placeholder = 'Cerca 
 
 // Radius stepper — only in the "Vicino a me" section.
 function RadiusControl({ radius, setRadius }) {
+  const { t } = useI18n();
   return (
     <div className="flex items-center gap-3 px-1 text-xs text-ember-muted">
       <Icon name="funnel" size={14} className="text-ember-primary" />
-      <span className="whitespace-nowrap tabular-nums">Raggio {radius} km</span>
+      <span className="whitespace-nowrap tabular-nums">{t('home.radius', { n: radius })}</span>
       <input
         type="range"
         min="1"
@@ -102,7 +105,7 @@ function RadiusControl({ radius, setRadius }) {
         step="1"
         value={radius}
         onChange={(e) => setRadius(Number(e.target.value))}
-        aria-label="Raggio di ricerca in km"
+        aria-label={t('home.radiusAria')}
         className="ml-auto w-32 accent-ember-primary"
       />
     </div>
@@ -111,6 +114,7 @@ function RadiusControl({ radius, setRadius }) {
 
 // Toggle: show only bars rated by the community (drop the unrated).
 function RatedFilter({ ratedOnly, setRatedOnly }) {
+  const { t } = useI18n();
   return (
     <button
       type="button"
@@ -122,7 +126,7 @@ function RatedFilter({ ratedOnly, setRatedOnly }) {
           : 'border-ember-line/10 text-ember-muted hover:text-ember-cream'
       }`}
     >
-      <Icon name={ratedOnly ? 'check' : 'star'} size={13} /> Solo valutati
+      <Icon name={ratedOnly ? 'check' : 'star'} size={13} /> {t('home.ratedOnly')}
     </button>
   );
 }
@@ -130,6 +134,7 @@ function RatedFilter({ ratedOnly, setRatedOnly }) {
 // Inner content of the sheet / desktop panel. Module-level so the search input
 // keeps focus across re-renders.
 function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, radius, setRadius, ratedOnly, setRatedOnly, onReload, onWiden, onExplore, onSelect, onSuggest, events, eventsLoading, eventsError, drinks, drinksLoading, drinksError, drinkQuery, setDrinkQuery, onProposeDrink }) {
+  const { t } = useI18n();
   // Eventi tab: zone events, soonest first. Separate data path (no map pins,
   // no bar rows) so it doesn't share the bars list flow below.
   if (tab === 'eventi') {
@@ -138,14 +143,14 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
         <div className="mb-2 flex items-center gap-2 px-1">
           <Icon name="bell" size={14} className="text-ember-primary" />
           <span className="font-display text-xs font-bold uppercase tracking-wide text-ember-muted">
-            {TITLES.eventi}
+            {t('tabs.eventi')}
           </span>
           <span className="text-xs text-ember-muted">· {events.length}</span>
         </div>
 
         {eventsLoading && (
           <p className="flex items-center gap-2 px-1 py-3 text-sm text-ember-muted">
-            <Icon name="reload" size={16} className="animate-spin" /> Caricamento…
+            <Icon name="reload" size={16} className="animate-spin" /> {t('common.loading')}
           </p>
         )}
 
@@ -156,16 +161,16 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
               onClick={onReload}
               className="mt-3 inline-flex items-center gap-2 rounded-lg bg-ember-primary px-4 py-2 font-semibold text-ember-bg"
             >
-              <Icon name="reload" size={16} /> Riprova
+              <Icon name="reload" size={16} /> {t('common.retry')}
             </button>
           </div>
         )}
 
         {!eventsLoading && !eventsError && events.length === 0 && (
           <EmptyState
-            title="Nessun evento"
-            hint="Nessun evento in programma qui intorno. Prova ad allargare l'area."
-            ctaLabel="Allarga area"
+            title={t('home.noEvents')}
+            hint={t('home.noEventsHint')}
+            ctaLabel={t('home.widenArea')}
             ctaIcon="funnel"
             onCta={onWiden}
             pin="arancione"
@@ -189,20 +194,20 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
     return (
       <>
         <div className="mb-3">
-          <SearchPanel query={drinkQuery} setQuery={setDrinkQuery} placeholder="Cerca un drink…" />
+          <SearchPanel query={drinkQuery} setQuery={setDrinkQuery} placeholder={t('home.searchDrink')} />
         </div>
 
         <div className="mb-2 flex items-center gap-2 px-1">
           <Icon name="cocktail" size={14} className="text-ember-primary" />
           <span className="font-display text-xs font-bold uppercase tracking-wide text-ember-muted">
-            {TITLES.drinks}
+            {t('tabs.drinks')}
           </span>
           <span className="text-xs text-ember-muted">· {drinks.length}</span>
         </div>
 
         {drinksLoading && (
           <p className="flex items-center gap-2 px-1 py-3 text-sm text-ember-muted">
-            <Icon name="reload" size={16} className="animate-spin" /> Caricamento…
+            <Icon name="reload" size={16} className="animate-spin" /> {t('common.loading')}
           </p>
         )}
 
@@ -213,16 +218,16 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
               onClick={onReload}
               className="mt-3 inline-flex items-center gap-2 rounded-lg bg-ember-primary px-4 py-2 font-semibold text-ember-bg"
             >
-              <Icon name="reload" size={16} /> Riprova
+              <Icon name="reload" size={16} /> {t('common.retry')}
             </button>
           </div>
         )}
 
         {!drinksLoading && !drinksError && drinks.length === 0 && (
           <EmptyState
-            title="Drink non trovato"
-            hint="Manca nel catalogo? Proponilo: sarà visibile dopo l'approvazione dello staff."
-            ctaLabel="Proponi drink"
+            title={t('home.drinkNotFound')}
+            hint={t('home.drinkNotFoundHint')}
+            ctaLabel={t('home.proposeDrink')}
             ctaIcon="plus"
             onCta={onProposeDrink}
             pin="grigio"
@@ -239,7 +244,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
               onClick={onProposeDrink}
               className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-ember-line/15 px-3 py-3 text-sm text-ember-muted transition hover:text-ember-cream"
             >
-              <Icon name="plus" size={15} /> Non trovi un drink? Proponilo
+              <Icon name="plus" size={15} /> {t('home.proposeDrinkRow')}
             </button>
           </div>
         )}
@@ -258,7 +263,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
           <div className="flex items-center gap-2 px-1">
             <Icon name={searchActive ? 'search' : tab === 'salvati' ? 'bookmark' : 'locate'} size={14} className="text-ember-primary" />
             <span className="font-display text-xs font-bold uppercase tracking-wide text-ember-muted">
-              {searchActive ? 'Risultati' : TITLES[tab]}
+              {searchActive ? t('tabs.results') : t(`tabs.${tab}`)}
             </span>
             <span className="text-xs text-ember-muted">· {list.length}</span>
           </div>
@@ -275,7 +280,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
 
       {loading && (
         <p className="flex items-center gap-2 px-1 py-3 text-sm text-ember-muted">
-          <Icon name="reload" size={16} className="animate-spin" /> Caricamento…
+          <Icon name="reload" size={16} className="animate-spin" /> {t('common.loading')}
         </p>
       )}
 
@@ -286,7 +291,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
             onClick={onReload}
             className="mt-3 inline-flex items-center gap-2 rounded-lg bg-ember-primary px-4 py-2 font-semibold text-ember-bg"
           >
-            <Icon name="reload" size={16} /> Riprova
+            <Icon name="reload" size={16} /> {t('common.retry')}
           </button>
         </div>
       )}
@@ -294,27 +299,27 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
       {!loading && !error && list.length === 0 && (
         tab === 'salvati' ? (
           <EmptyState
-            title="Nessun bar salvato"
-            hint="Apri un bar e tocca il segnalibro per ritrovarlo qui."
-            ctaLabel="Esplora vicini"
+            title={t('home.noSaved')}
+            hint={t('home.noSavedHint')}
+            ctaLabel={t('home.exploreNearby')}
             ctaIcon="locate"
             onCta={onExplore}
             pin="arancione"
           />
         ) : searchActive ? (
           <EmptyState
-            title="Nessun risultato"
-            hint="Non trovi il tuo bar di fiducia? Avvisaci e lo aggiungiamo alla mappa."
-            ctaLabel="Avvisaci"
+            title={t('home.noResults')}
+            hint={t('home.noResultsHint')}
+            ctaLabel={t('home.notify')}
             ctaIcon="pin"
             onCta={onSuggest}
             pin="grigio"
           />
         ) : (
           <EmptyState
-            title="Zona ancora vuota"
-            hint="Nessun bar qui intorno. Prova ad allargare la ricerca."
-            ctaLabel="Allarga area"
+            title={t('home.emptyZone')}
+            hint={t('home.emptyZoneHint')}
+            ctaLabel={t('home.widenArea')}
             ctaIcon="funnel"
             onCta={onWiden}
           />
@@ -334,6 +339,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
 
 export default function Home() {
   const navigate = useNavigate();
+  const { t, dateLocale } = useI18n();
   const { isAuthenticated, isAdmin, user, logout } = useAuth();
   const { has, count, savedBars } = useBookmarks();
   const isMobile = useIsMobile();
@@ -433,7 +439,7 @@ export default function Home() {
           // Ignore aborts (superseded request); keep stale cache on real failure,
           // only surface an error when we have nothing to show.
           if (cancelled || err.code === 'ERR_CANCELED') return;
-          if (!cached?.length) setError('Impossibile caricare i bar');
+          if (!cached?.length) setError(t('home.errBars'));
         })
         .finally(() => !cancelled && setLoading(false));
     }, 350);
@@ -454,7 +460,7 @@ export default function Home() {
     eventsApi
       .nearby({ lat: center[0], lng: center[1], radius_km: radius })
       .then((data) => !cancelled && setEvents(data))
-      .catch(() => !cancelled && setEventsError('Impossibile caricare gli eventi'))
+      .catch(() => !cancelled && setEventsError(t('home.errEvents')))
       .finally(() => !cancelled && setEventsLoading(false));
     return () => {
       cancelled = true;
@@ -472,7 +478,7 @@ export default function Home() {
       drinksApi
         .list({ q: drinkQuery.trim() || undefined, limit: 100 })
         .then((r) => !cancelled && setDrinks(r.drinks))
-        .catch(() => !cancelled && setDrinksError('Impossibile caricare i drink'))
+        .catch(() => !cancelled && setDrinksError(t('home.errDrinks')))
         .finally(() => !cancelled && setDrinksLoading(false));
     }, 300);
     return () => {
@@ -553,7 +559,7 @@ export default function Home() {
           if (cancelled) return;
           console.error('[ricerca bar] fallita:', e);
           setSearchResults([]);
-          setSearchError(`Ricerca non riuscita: ${e.response?.status || ''} ${e.message}`);
+          setSearchError(t('home.errSearch', { msg: `${e.response?.status || ''} ${e.message}` }));
         })
         .finally(() => !cancelled && setSearchLoading(false));
     }, 300);
@@ -564,22 +570,22 @@ export default function Home() {
   }, [searchActive, query, center]);
 
   function locateMe() {
-    if (!navigator.geolocation) return setToast({ msg: 'Geolocalizzazione non disponibile', icon: 'info' });
+    if (!navigator.geolocation) return setToast({ msg: t('home.geoUnavailable'), icon: 'info' });
     if (!window.isSecureContext) {
-      return setToast({ msg: 'Posizione disponibile solo su HTTPS', icon: 'info' });
+      return setToast({ msg: t('home.httpsOnly'), icon: 'info' });
     }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const p = [pos.coords.latitude, pos.coords.longitude];
         setUserPos(p);
         setCenter(p);
-        setToast({ msg: 'Posizione aggiornata', icon: 'locate' });
+        setToast({ msg: t('home.positionUpdated'), icon: 'locate' });
       },
       (err) => {
         const msg =
           err.code === err.PERMISSION_DENIED
-            ? 'Permesso posizione negato'
-            : 'Posizione non disponibile';
+            ? t('home.permissionDenied')
+            : t('home.positionUnavailable');
         setToast({ msg, icon: 'info' });
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
@@ -668,7 +674,7 @@ export default function Home() {
       >
         <div ref={accountRef} className="relative">
           <GlassButton
-            label={isAuthenticated ? 'Account' : 'Accedi'}
+            label={isAuthenticated ? t('menu.account') : t('common.login')}
             onClick={() => (isAuthenticated ? setMenuOpen((o) => !o) : navigate('/login'))}
           >
             <Icon name="user" size={22} />
@@ -686,10 +692,10 @@ export default function Home() {
                 <div className="mt-2 flex items-center gap-3 text-xs text-ember-muted">
                   <span className="flex items-center gap-1">
                     <Icon name="review" size={13} className="text-ember-primary" />
-                    {profile ? profile.ratings_count : '…'} valutazioni
+                    {profile ? profile.ratings_count : '…'} {t('menu.ratings')}
                   </span>
                   {profile?.created_at && (
-                    <span>dal {new Date(profile.created_at).toLocaleDateString('it-IT')}</span>
+                    <span>{t('menu.since', { date: new Date(profile.created_at).toLocaleDateString(dateLocale) })}</span>
                   )}
                 </div>
                 {/* Ice cubes → tap to open the leaderboard. */}
@@ -705,7 +711,7 @@ export default function Home() {
                   <span className="font-display font-bold tabular-nums">
                     {profile ? profile.ice_cubes : '…'}
                   </span>
-                  <span className="text-xs text-ember-muted">ice cubes</span>
+                  <span className="text-xs text-ember-muted">{t('menu.iceCubes')}</span>
                   <Icon name="arrow-left" size={13} className="ml-auto rotate-180 text-ember-muted" />
                 </button>
               </div>
@@ -715,7 +721,7 @@ export default function Home() {
                   onClick={() => setMenuOpen(false)}
                   className="flex w-full items-center gap-2 border-b border-ember-line/5 px-3 py-2.5 text-left text-sm font-semibold text-ember-primary hover:bg-ember-line/5"
                 >
-                  <Icon name="filters" size={16} className="text-ember-primary" /> Pannello admin
+                  <Icon name="filters" size={16} className="text-ember-primary" /> {t('menu.admin')}
                 </Link>
               )}
               <Link
@@ -723,14 +729,14 @@ export default function Home() {
                 onClick={() => setMenuOpen(false)}
                 className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-ember-line/5"
               >
-                <Icon name="filters" size={16} className="text-ember-primary" /> Impostazioni
+                <Icon name="filters" size={16} className="text-ember-primary" /> {t('menu.settings')}
               </Link>
               <Link
                 to="/le-tue-valutazioni"
                 onClick={() => setMenuOpen(false)}
                 className="flex w-full items-center gap-2 border-b border-ember-line/5 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-ember-line/5"
               >
-                <Icon name="star" size={16} className="text-ember-primary" /> Le tue valutazioni
+                <Icon name="star" size={16} className="text-ember-primary" /> {t('menu.myRatings')}
               </Link>
               <button
                 type="button"
@@ -740,15 +746,16 @@ export default function Home() {
                 }}
                 className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-ember-line/5"
               >
-                <Icon name="bell" size={16} className="text-ember-primary" /> Segnala
+                <Icon name="bell" size={16} className="text-ember-primary" /> {t('menu.report')}
               </button>
+              <LanguageMenuRow />
               <div className="flex items-center gap-3 border-t border-ember-line/5 px-3 py-2 text-xs text-ember-muted">
                 <Link to="/privacy" onClick={() => setMenuOpen(false)} className="hover:text-ember-primary">
-                  Privacy
+                  {t('common.privacy')}
                 </Link>
                 <span className="text-ember-line/15">·</span>
                 <Link to="/tos" onClick={() => setMenuOpen(false)} className="hover:text-ember-primary">
-                  Termini
+                  {t('common.terms')}
                 </Link>
               </div>
               <button
@@ -758,12 +765,12 @@ export default function Home() {
                 }}
                 className="flex w-full items-center gap-2 border-t border-ember-line/5 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-ember-line/5"
               >
-                <Icon name="arrow-left" size={16} /> Esci
+                <Icon name="arrow-left" size={16} /> {t('common.logout')}
               </button>
             </div>
           )}
         </div>
-        <GlassButton label="La mia posizione" onClick={locateMe}>
+        <GlassButton label={t('home.myLocation')} onClick={locateMe}>
           <Icon name="locate" size={22} />
         </GlassButton>
       </div>
@@ -807,7 +814,7 @@ export default function Home() {
         <div
           {...grabberProps}
           role="separator"
-          aria-label="Trascina per ridimensionare"
+          aria-label={t('common.dragResize')}
           className="flex w-full touch-none justify-center pb-1 pt-2.5"
         >
           <span className="h-1.5 w-10 rounded-full bg-ember-line/25" />
@@ -835,14 +842,14 @@ export default function Home() {
           initialName={query.trim()}
           coords={center}
           onClose={() => setSuggestOpen(false)}
-          onSent={() => setToast({ msg: 'Grazie! Segnalazione inviata', icon: 'check' })}
+          onSent={() => setToast({ msg: t('home.suggestionSent'), icon: 'check' })}
         />
       )}
 
       {reportOpen && (
         <ReportModal
           onClose={() => setReportOpen(false)}
-          onSent={() => setToast({ msg: 'Grazie! Segnalazione inviata', icon: 'check' })}
+          onSent={() => setToast({ msg: t('home.suggestionSent'), icon: 'check' })}
         />
       )}
 
@@ -850,9 +857,7 @@ export default function Home() {
         <ProposeDrinkModal
           initialName={drinkQuery.trim()}
           onClose={() => setProposeDrinkOpen(false)}
-          onSent={() =>
-            setToast({ msg: "Grazie! Proposta inviata — visibile dopo l'approvazione", icon: 'check' })
-          }
+          onSent={() => setToast({ msg: t('home.proposalSent'), icon: 'check' })}
         />
       )}
 

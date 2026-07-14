@@ -13,6 +13,7 @@ import { useBookmarks } from '../hooks/useBookmarks.js';
 import { useSheetDrag, useIsMobile } from '../hooks/useSheetDrag.js';
 import { shareBar } from '../utils/share.js';
 import { barKey, parseOsmToken } from '../utils/score.js';
+import { useI18n } from '../i18n/index.js';
 
 const PAGE_SIZE = 10;
 
@@ -23,6 +24,7 @@ const BAR_STOPS = [88, 100];
 // slides up over the Home menu. `seed` is the bar from the list/map (may be an
 // OSM-only place); it's resolved to a persisted row so ratings can attach.
 export default function BarSheet({ seed, onClose, onChanged }) {
+  const { t } = useI18n();
   const { isAuthenticated, user } = useAuth();
   const { has, toggle } = useBookmarks();
   const isMobile = useIsMobile();
@@ -53,7 +55,7 @@ export default function BarSheet({ seed, onClose, onChanged }) {
       const total = ratingData.total ?? ratingData.pagination?.total;
       setHasMore(total != null ? page * PAGE_SIZE < total : ratingData.ratings.length === PAGE_SIZE);
     } catch {
-      setError('Bar non trovato');
+      setError(t('bar.notFound'));
     } finally {
       setLoading(false);
     }
@@ -79,7 +81,7 @@ export default function BarSheet({ seed, onClose, onChanged }) {
     setPage(1);
     await load();
     onChanged?.();
-    setToast({ msg: 'Valutazione salvata', icon: 'check' });
+    setToast({ msg: t('bar.ratingSaved'), icon: 'check' });
   }
 
   async function deleteRating() {
@@ -88,12 +90,12 @@ export default function BarSheet({ seed, onClose, onChanged }) {
     setShowForm(false);
     await load();
     onChanged?.();
-    setToast({ msg: 'Valutazione eliminata', icon: 'trash' });
+    setToast({ msg: t('bar.ratingDeleted'), icon: 'trash' });
   }
 
   async function onShare() {
     const res = await shareBar(bar);
-    if (res === 'copied') setToast({ msg: 'Link copiato', icon: 'link' });
+    if (res === 'copied') setToast({ msg: t('bar.linkCopied'), icon: 'link' });
   }
 
   const summary = bar?.bar_ratings_summary;
@@ -130,7 +132,7 @@ export default function BarSheet({ seed, onClose, onChanged }) {
           <div
             {...(isMobile ? grabberProps : {})}
             role="separator"
-            aria-label="Trascina per ridimensionare"
+            aria-label={t('common.dragResize')}
             className="flex touch-none justify-center px-8 pb-2 pt-3"
           >
             <span className="h-1.5 w-10 rounded-full bg-ember-line/25" />
@@ -138,7 +140,7 @@ export default function BarSheet({ seed, onClose, onChanged }) {
           <button
             type="button"
             onClick={onClose}
-            aria-label="Chiudi"
+            aria-label={t('common.close')}
             className="absolute right-3 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-ember-line/5 text-ember-cream hover:bg-ember-line/10"
           >
             <Icon name="close" size={16} />
@@ -151,7 +153,7 @@ export default function BarSheet({ seed, onClose, onChanged }) {
         >
           {loading && !bar && (
             <p className="flex items-center gap-2 py-6 text-sm text-ember-muted">
-              <Icon name="reload" size={16} className="animate-spin" /> Caricamento…
+              <Icon name="reload" size={16} className="animate-spin" /> {t('common.loading')}
             </p>
           )}
 
@@ -180,12 +182,12 @@ export default function BarSheet({ seed, onClose, onChanged }) {
               <div className="flex flex-wrap gap-2">
                 {bar.phone && (
                   <a href={`tel:${bar.phone}`} className="flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream">
-                    <Icon name="phone" size={16} className="text-ember-primary" /> Chiama
+                    <Icon name="phone" size={16} className="text-ember-primary" /> {t('bar.call')}
                   </a>
                 )}
                 {bar.website && (
                   <a href={bar.website} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream">
-                    <Icon name="link" size={16} className="text-ember-primary" /> Sito
+                    <Icon name="link" size={16} className="text-ember-primary" /> {t('bar.site')}
                   </a>
                 )}
                 <button
@@ -193,18 +195,18 @@ export default function BarSheet({ seed, onClose, onChanged }) {
                   aria-expanded={showInfo}
                   className="flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream"
                 >
-                  <Icon name="info" size={16} className="text-ember-primary" /> Info
+                  <Icon name="info" size={16} className="text-ember-primary" /> {t('bar.info')}
                   <Icon name={showInfo ? 'chevron-up' : 'chevron-down'} size={14} />
                 </button>
                 <button
                   onClick={() => toggle(bar.id)}
                   aria-pressed={saved}
-                  aria-label={saved ? 'Rimuovi dai salvati' : 'Salva'}
+                  aria-label={saved ? t('bar.removeBookmark') : t('bar.saveBookmark')}
                   className={`flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm ${saved ? 'text-ember-primary' : 'text-ember-cream'}`}
                 >
                   <Icon name="bookmark" size={16} />
                 </button>
-                <button onClick={onShare} aria-label="Condividi" className="flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream">
+                <button onClick={onShare} aria-label={t('common.share')} className="flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream">
                   <Icon name="share" size={16} />
                 </button>
               </div>
@@ -217,7 +219,7 @@ export default function BarSheet({ seed, onClose, onChanged }) {
                   </p>
                   <p className="flex items-center gap-2">
                     <Icon name={bar.is_active === false ? 'close' : 'check'} size={14} className="text-ember-primary" />
-                    {bar.is_active === false ? 'Attualmente chiuso' : 'Aperto'}
+                    {bar.is_active === false ? t('common.currentlyClosed') : t('common.open')}
                   </p>
                   {bar.phone && (
                     <p className="flex items-center gap-2">
@@ -242,9 +244,9 @@ export default function BarSheet({ seed, onClose, onChanged }) {
               <section className="rounded-card border border-ember-line/5 bg-ember-card p-4">
                 <h2 className="mb-3 flex items-center gap-2 font-display font-bold text-ember-cream">
                   <Icon name="star" size={18} className="text-ember-primary" />
-                  Community
+                  {t('bar.community')}
                   <span className="ml-auto text-sm font-normal text-ember-muted">
-                    {summary?.total_ratings || 0} voti
+                    {summary?.total_ratings || 0} {t('common.votes')}
                   </span>
                 </h2>
                 <RatingBars summary={summary} />
@@ -271,13 +273,13 @@ export default function BarSheet({ seed, onClose, onChanged }) {
                     className="flex w-full items-center justify-center gap-2 rounded-lg bg-ember-primary py-3 font-semibold text-ember-bg active:scale-[0.99]"
                   >
                     <Icon name={myRating ? 'edit' : 'star'} size={18} />
-                    {myRating ? 'Modifica valutazione' : 'Valuta questo bar'}
+                    {myRating ? t('bar.editRating') : t('bar.rateThis')}
                   </button>
                 )
               ) : (
                 <Link to="/login" className="flex items-center justify-center gap-2 rounded-lg bg-ember-card py-3 text-center text-ember-cream">
                   <Icon name="user" size={18} className="text-ember-primary" />
-                  Accedi per valutare
+                  {t('bar.loginToRate')}
                 </Link>
               )}
 
@@ -285,10 +287,10 @@ export default function BarSheet({ seed, onClose, onChanged }) {
               <section>
                 <h2 className="mb-2 flex items-center gap-2 font-display font-bold text-ember-cream">
                   <Icon name="review" size={18} className="text-ember-primary" />
-                  Recensioni
+                  {t('bar.reviews')}
                 </h2>
                 {ratings.length === 0 ? (
-                  <EmptyState title="Sii il primo" hint="Nessuna recensione ancora." pin="arancione" />
+                  <EmptyState title={t('bar.beFirst')} hint={t('bar.noReviewsYet')} pin="arancione" />
                 ) : (
                   <div className="space-y-2">
                     {ratings.map((r) => (
@@ -296,7 +298,7 @@ export default function BarSheet({ seed, onClose, onChanged }) {
                         <div className="flex items-center justify-between">
                           <span className="flex items-center gap-1.5 font-medium text-ember-cream">
                             <Icon name="user" size={14} className="text-ember-muted" />
-                            @{r.profiles?.username || 'utente'}
+                            @{r.profiles?.username || t('common.user')}
                           </span>
                           <span className="flex items-center gap-2 text-xs text-ember-primary">
                             <span className="flex items-center gap-0.5"><Icon name="euro" size={12} />{r.prezzo}</span>
@@ -321,15 +323,15 @@ export default function BarSheet({ seed, onClose, onChanged }) {
                           disabled={page === 1}
                           className="flex items-center gap-1 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream disabled:opacity-40"
                         >
-                          <Icon name="arrow-left" size={16} /> Prec.
+                          <Icon name="arrow-left" size={16} /> {t('common.prev')}
                         </button>
-                        <span className="text-xs text-ember-muted">Pagina {page}</span>
+                        <span className="text-xs text-ember-muted">{t('common.page', { n: page })}</span>
                         <button
                           onClick={() => setPage((p) => p + 1)}
                           disabled={!hasMore}
                           className="flex items-center gap-1 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream disabled:opacity-40"
                         >
-                          Succ. <Icon name="arrow-right" size={16} />
+                          {t('common.next')} <Icon name="arrow-right" size={16} />
                         </button>
                       </div>
                     )}

@@ -35,9 +35,9 @@ const DEFAULT_ZOOM = Number(import.meta.env.VITE_DEFAULT_ZOOM) || 14;
 // Instant-paint cache: last nearby result per rounded coord+radius, in
 // localStorage. Overpass is slow, so we show the previous result immediately and
 // refresh in the background — the user sees bars in ~0ms on repeat visits.
-// `v3` schema version: bump when the nearby payload changes (e.g. nightclubs
+// `v4` schema version: bump when the nearby payload changes (e.g. cafes
 // added) so stale localStorage entries without the new POIs are ignored.
-const nearbyKey = (lat, lng, r) => `rabar:nearby:v3:${lat.toFixed(2)},${lng.toFixed(2)},${r}`;
+const nearbyKey = (lat, lng, r) => `rabar:nearby:v4:${lat.toFixed(2)},${lng.toFixed(2)},${r}`;
 function readNearbyCache(lat, lng, r) {
   try {
     return JSON.parse(localStorage.getItem(nearbyKey(lat, lng, r)));

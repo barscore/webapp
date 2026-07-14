@@ -1,4 +1,4 @@
-start:  npm run dev
+3start:  npm run dev
         npm run dev -- --host 0.0.0.0
 
 -------------------------------

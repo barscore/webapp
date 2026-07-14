@@ -63,7 +63,7 @@ BEGIN
   );
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = '';
 
 CREATE TRIGGER on_auth_user_created
 AFTER INSERT ON auth.users
@@ -227,9 +227,12 @@ CREATE POLICY "bars_select_all" ON public.bars FOR SELECT USING (is_active = TRU
 CREATE POLICY "ratings_select_all" ON public.ratings FOR SELECT USING (TRUE);
 CREATE POLICY "summary_select_all" ON public.bar_ratings_summary FOR SELECT USING (TRUE);
 CREATE POLICY "images_select_all" ON public.bar_images FOR SELECT USING (TRUE);
-CREATE POLICY "profiles_select_all" ON public.profiles FOR SELECT USING (TRUE);
-
--- A user may read/update only their own profile.
+-- A user may read/update only their own profile. No public SELECT: profiles
+-- hold email + moderation fields and RLS is row-level, not column-level.
+-- Public profile data (usernames on reviews, leaderboard) is served by the
+-- backend via the service-role key, which selects only safe columns.
+CREATE POLICY "profiles_select_own" ON public.profiles
+  FOR SELECT USING (auth.uid() = id);
 CREATE POLICY "profiles_update_own" ON public.profiles
   FOR UPDATE USING (auth.uid() = id);
 

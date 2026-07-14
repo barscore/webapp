@@ -44,6 +44,18 @@ export const THEMES = [
 const DEFAULT_THEME = 'rabar';
 const VALID_IDS = new Set(THEMES.map((t) => t.id));
 
+// Google Fonts query for each theme's two families (display + body, matching
+// index.css --font-display/--font-body). Only the active theme's fonts are
+// requested; index.html injects the initial #rabar-fonts link with the same
+// map, applyTheme swaps its href on theme change.
+const THEME_FONTS = {
+  rabar: 'family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;700',
+  'midnight-red': 'family=Space+Grotesk:wght@600;700&family=Source+Sans+3:wght@400;600;700',
+  'gold-rush': 'family=Barlow+Condensed:wght@700;900&family=DM+Sans:wght@400;500;700',
+  'electric-blue': 'family=Unbounded:wght@600;700&family=Karla:wght@400;500;700',
+  aperitif: 'family=Archivo:wght@400;700;800&family=Instrument+Sans:wght@400;500;600;700',
+};
+
 export function getTheme() {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -61,6 +73,10 @@ function applyTheme(id) {
   const meta = document.querySelector('meta[name="theme-color"]');
   const theme = THEMES.find((t) => t.id === id);
   if (meta && theme) meta.setAttribute('content', theme.metaColor);
+
+  const fontLink = document.getElementById('rabar-fonts');
+  const href = `https://fonts.googleapis.com/css2?${THEME_FONTS[id] || THEME_FONTS[DEFAULT_THEME]}&display=swap`;
+  if (fontLink && fontLink.getAttribute('href') !== href) fontLink.setAttribute('href', href);
 }
 
 export function useTheme() {

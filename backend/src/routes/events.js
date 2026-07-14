@@ -1,3 +1,4 @@
+import { uuidParam } from '../schemas/common.js';
 import { Hono } from 'hono';
 import { supabase } from '../lib/supabase.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
@@ -92,7 +93,7 @@ events.post('/', requireAuth, requireRole('admin', 'moderator'), async (c) => {
 
 /** PUT /events/:id — update (admin/moderator only). */
 events.put('/:id', requireAuth, requireRole('admin', 'moderator'), async (c) => {
-  const id = c.req.param('id');
+  const id = uuidParam(c);
   const body = updateEventSchema.parse(await c.req.json());
 
   const { data, error } = await supabase
@@ -109,7 +110,7 @@ events.put('/:id', requireAuth, requireRole('admin', 'moderator'), async (c) => 
 
 /** DELETE /events/:id — delete (admin/moderator only). */
 events.delete('/:id', requireAuth, requireRole('admin', 'moderator'), async (c) => {
-  const id = c.req.param('id');
+  const id = uuidParam(c);
   const { data, error } = await supabase
     .from('events')
     .delete()

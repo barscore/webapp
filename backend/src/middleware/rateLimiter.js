@@ -6,11 +6,15 @@ const DEFAULT_WINDOW_MS = Number(process.env.RATE_LIMIT_WINDOW_MS) || 60_000;
 const DEFAULT_MAX = Number(process.env.RATE_LIMIT_MAX_REQUESTS) || 120;
 
 function clientIp(c) {
-  return (
-    c.req.header('x-forwarded-for')?.split(',')[0]?.trim() ||
-    c.req.header('x-real-ip') ||
-    'unknown'
-  );
+  // x-forwarded-for is client-forgeable: any caller can pre-fill it and rotate
+  // values to get a fresh bucket per request. Only the LAST entry was appended
+  // by the trusted proxy in front of us, so that's the only hop to key on.
+  const xff = c.req.header('x-forwarded-for');
+  if (xff) {
+    const hops = xff.split(',');
+    return hops[hops.length - 1].trim() || 'unknown';
+  }
+  return c.req.header('x-real-ip') || 'unknown';
 }
 
 /**

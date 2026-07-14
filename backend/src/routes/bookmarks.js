@@ -1,3 +1,4 @@
+import { uuidParam } from '../schemas/common.js';
 import { Hono } from 'hono';
 import { supabase } from '../lib/supabase.js';
 import { requireAuth } from '../middleware/auth.js';
@@ -36,7 +37,7 @@ bookmarks.get('/', async (c) => {
 /** POST /bookmarks/:barId — save a bar (idempotent). */
 bookmarks.post('/:barId', async (c) => {
   const user = c.get('user');
-  const barId = c.req.param('barId');
+  const barId = uuidParam(c, 'barId');
 
   const { error } = await supabase
     .from('bookmarks')
@@ -52,7 +53,7 @@ bookmarks.post('/:barId', async (c) => {
 /** DELETE /bookmarks/:barId — unsave a bar. */
 bookmarks.delete('/:barId', async (c) => {
   const user = c.get('user');
-  const barId = c.req.param('barId');
+  const barId = uuidParam(c, 'barId');
 
   const { error } = await supabase
     .from('bookmarks')

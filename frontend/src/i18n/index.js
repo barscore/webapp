@@ -1,9 +1,5 @@
 import { useSyncExternalStore } from 'react';
 import it from './locales/it.js';
-import en from './locales/en.js';
-import es from './locales/es.js';
-import ru from './locales/ru.js';
-import zh from './locales/zh.js';
 
 // UI language store. External to React (useSyncExternalStore) so:
 //   - t() works from plain modules too (utils/score.js, utils/share.js);
@@ -20,13 +16,22 @@ export const LANGUAGES = [
   { code: 'zh', label: '中文', flag: '🇨🇳' },
 ];
 
-const DICTS = { it, en, es, ru, zh };
+// Only Italian (the source copy and t() fallback) ships in the eager bundle;
+// the other dictionaries (~70 KB total) are code-split and fetched on demand —
+// a user only ever needs one. Explicit loader map so Vite emits one chunk each.
+const DICTS = { it };
+const LOADERS = {
+  en: () => import('./locales/en.js'),
+  es: () => import('./locales/es.js'),
+  ru: () => import('./locales/ru.js'),
+  zh: () => import('./locales/zh.js'),
+};
 
 // Locale tags for Intl date/number formatting per UI language.
 export const DATE_LOCALES = { it: 'it-IT', en: 'en-US', es: 'es-ES', ru: 'ru-RU', zh: 'zh-CN' };
 
 const STORAGE_KEY = 'rabar-lang';
-const VALID = new Set(Object.keys(DICTS));
+const VALID = new Set(['it', ...Object.keys(LOADERS)]);
 
 // ---------------------------------------------------------------------------
 // Default-language detection: the language of the country the user is in.
@@ -109,11 +114,37 @@ function detectLang() {
 
 let lang = detectLang();
 const listeners = new Set();
+// Store revision: bumped on language change AND on async dictionary arrival,
+// so useSyncExternalStore re-renders subscribers in both cases (the lang
+// string alone wouldn't change when a pending dictionary finishes loading).
+let rev = 0;
+
+function notify() {
+  rev += 1;
+  listeners.forEach((fn) => fn());
+}
+
+const pendingDicts = new Set();
+function ensureDict(code) {
+  if (DICTS[code] || pendingDicts.has(code) || !LOADERS[code]) return;
+  pendingDicts.add(code);
+  LOADERS[code]()
+    .then((m) => {
+      DICTS[code] = m.default;
+      if (code === lang) notify();
+    })
+    .catch(() => {
+      /* fetch failed (offline before first load) — Italian fallback stays;
+         removing from pending lets a later setLang retry */
+    })
+    .finally(() => pendingDicts.delete(code));
+}
 
 function apply(code) {
   document.documentElement.lang = code;
 }
 apply(lang);
+ensureDict(lang);
 
 export function getLang() {
   return lang;
@@ -123,18 +154,19 @@ export function setLang(code) {
   if (!VALID.has(code) || code === lang) return;
   lang = code;
   apply(code);
+  ensureDict(code);
   try {
     localStorage.setItem(STORAGE_KEY, code);
   } catch {
     /* private mode: choice just won't persist */
   }
-  listeners.forEach((fn) => fn());
+  notify();
 }
 
 // Translate. Falls back to Italian (the source copy), then to the key itself.
 // Params interpolate "{name}" placeholders: t('home.radius', { n: 2 }).
 export function t(key, params) {
-  let s = DICTS[lang][key] ?? DICTS.it[key] ?? key;
+  let s = DICTS[lang]?.[key] ?? DICTS.it[key] ?? key;
   if (params) {
     for (const [k, v] of Object.entries(params)) s = s.replaceAll(`{${k}}`, String(v));
   }
@@ -151,8 +183,9 @@ const subscribe = (fn) => {
   return () => listeners.delete(fn);
 };
 
-// Hook: subscribes the component to language changes (works inside memo()).
+// Hook: subscribes the component to language changes and to async dictionary
+// arrivals (works inside memo()).
 export function useI18n() {
-  const current = useSyncExternalStore(subscribe, getLang);
-  return { lang: current, t, setLang, dateLocale: DATE_LOCALES[current] };
+  useSyncExternalStore(subscribe, () => rev);
+  return { lang, t, setLang, dateLocale: DATE_LOCALES[lang] };
 }

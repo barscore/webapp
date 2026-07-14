@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { serve } from '@hono/node-server';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
+import { secureHeaders } from 'hono/secure-headers';
 import { errorHandler, AppError } from './middleware/errorHandler.js';
 import { rateLimiter } from './middleware/rateLimiter.js';
 import { supabase } from './lib/supabase.js';
@@ -29,6 +30,7 @@ const allowedOrigins = (process.env.FRONTEND_URL || 'http://localhost:5173')
   .filter(Boolean);
 
 app.use('*', logger());
+app.use('*', secureHeaders());
 
 app.use(
   '*',

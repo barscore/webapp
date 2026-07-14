@@ -1,3 +1,4 @@
+import { uuidParam } from '../schemas/common.js';
 import { Hono } from 'hono';
 import { supabase } from '../lib/supabase.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
@@ -65,7 +66,7 @@ reports.get('/', async (c) => {
 
 /** PATCH /reports/:id — set moderation status (new/done/rejected). */
 reports.patch('/:id', async (c) => {
-  const id = c.req.param('id');
+  const id = uuidParam(c);
   const { status } = updateReportSchema.parse(await c.req.json());
   const { data, error } = await supabase
     .from('user_reports')
@@ -80,7 +81,7 @@ reports.patch('/:id', async (c) => {
 
 /** DELETE /reports/:id — drop a handled/spam report. */
 reports.delete('/:id', async (c) => {
-  const id = c.req.param('id');
+  const id = uuidParam(c);
   const { data, error } = await supabase
     .from('user_reports')
     .delete()

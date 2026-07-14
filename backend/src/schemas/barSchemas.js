@@ -25,10 +25,24 @@ export const updateBarSchema = createBarSchema.partial().extend({
   is_active: z.boolean().optional(),
 });
 
+// Keep only well-formed http(s) URLs; anything else (javascript:, data:,
+// malformed OSM tags) becomes null. Used at the /bars/resolve insert instead of
+// schema-level .url() because raw OSM tags are frequently malformed and a bad
+// tag must not reject the whole bar.
+export function sanitizeHttpUrl(v) {
+  if (typeof v !== 'string') return null;
+  try {
+    const u = new URL(v.trim());
+    return u.protocol === 'http:' || u.protocol === 'https:' ? u.href : null;
+  } catch {
+    return null;
+  }
+}
+
 // Find-or-create a bar from an OpenStreetMap place. Fields beyond the OSM id
 // are optional hints from the client; anything missing is backfilled from
-// Overpass server-side. `website`/`cover_image_url` are NOT url-validated
-// because raw OSM tags are frequently malformed.
+// Overpass server-side. `website`/`cover_image_url` are sanitized (not
+// rejected) at insert time via sanitizeHttpUrl.
 export const resolveBarSchema = z.object({
   osm_node_id: z.coerce.number().int(),
   osm_type: z.enum(['node', 'way', 'relation']).optional().default('node'),

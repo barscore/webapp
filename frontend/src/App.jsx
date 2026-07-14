@@ -7,13 +7,12 @@ import BanBanner from './components/BanBanner.jsx';
 import TutorialSplash from './components/TutorialSplash.jsx';
 import InstallHint from './components/InstallHint.jsx';
 import CookieBanner from './components/CookieBanner.jsx';
-import { loadAdsense } from './services/adsense.js';
-import { onConsentChange } from './services/consent.js';
+import { loadAdsense, adsenseLoaded } from './services/adsense.js';
+import { consentGranted, onConsentChange } from './services/consent.js';
 
 // Route-level code splitting: only Home (the landing map) ships in the initial
 // bundle; every other page loads on first navigation. Keeps heavy deps out of
-// the critical path — recharts in particular only loads when a bar detail (or
-// the admin panel) is opened.
+// the critical path.
 const BarDetail = lazy(() => import('./pages/BarDetail.jsx'));
 const DrinkDetail = lazy(() => import('./pages/DrinkDetail.jsx'));
 const Login = lazy(() => import('./pages/Login.jsx'));
@@ -35,11 +34,15 @@ export default function App() {
   const location = useLocation();
   const [maint, setMaint] = useState(null); // { maintenance_mode, maintenance_reason, maintenance_eta, beta_mode }
 
-  // Load AdSense once, globally, so Auto Ads can appear on every route. Re-run on
-  // consent change to (re)set the non-personalized flag for the next requests.
+  // AdSense strictly after consent (EU ePrivacy prior-blocking): no ad script,
+  // no ad requests, no ad cookies until the user hits "Accetta". A revoke after
+  // the script is already in the page needs a reload to actually drop it.
   useEffect(() => {
-    loadAdsense();
-    return onConsentChange(() => loadAdsense());
+    if (consentGranted()) loadAdsense();
+    return onConsentChange(() => {
+      if (consentGranted()) loadAdsense();
+      else if (adsenseLoaded()) window.location.reload();
+    });
   }, []);
 
   // Poll the maintenance/beta switches on every navigation so a non-admin user

@@ -1,3 +1,4 @@
+import { uuidParam } from '../schemas/common.js';
 import { Hono } from 'hono';
 import { supabase } from '../lib/supabase.js';
 import { requireAuth } from '../middleware/auth.js';
@@ -31,7 +32,7 @@ export async function assertRatingsEnabled() {
 
 /** GET /bars/:id/ratings — paginated list. */
 ratings.get('/', async (c) => {
-  const barId = c.req.param('id');
+  const barId = uuidParam(c);
   const { page, limit } = listRatingsQuerySchema.parse(
     Object.fromEntries(new URL(c.req.url).searchParams),
   );
@@ -53,7 +54,7 @@ ratings.get('/', async (c) => {
 
 /** POST /bars/:id/ratings — create own rating (one per bar). */
 ratings.post('/', requireAuth, async (c) => {
-  const barId = c.req.param('id');
+  const barId = uuidParam(c);
   const user = c.get('user');
   const body = createRatingSchema.parse(await c.req.json());
   await assertRatingsEnabled();
@@ -75,8 +76,8 @@ ratings.post('/', requireAuth, async (c) => {
 
 /** PUT /bars/:id/ratings/:rid — update own rating. */
 ratings.put('/:rid', requireAuth, async (c) => {
-  const barId = c.req.param('id');
-  const rid = c.req.param('rid');
+  const barId = uuidParam(c);
+  const rid = uuidParam(c, 'rid');
   const user = c.get('user');
   const body = updateRatingSchema.parse(await c.req.json());
   await assertRatingsEnabled();
@@ -104,8 +105,8 @@ ratings.put('/:rid', requireAuth, async (c) => {
 
 /** DELETE /bars/:id/ratings/:rid — delete own rating, or any rating if admin. */
 ratings.delete('/:rid', requireAuth, async (c) => {
-  const barId = c.req.param('id');
-  const rid = c.req.param('rid');
+  const barId = uuidParam(c);
+  const rid = uuidParam(c, 'rid');
   const user = c.get('user');
 
   const { data: existing } = await supabase

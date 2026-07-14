@@ -1,12 +1,15 @@
+import { uuidParam } from '../schemas/common.js';
 import { Hono } from 'hono';
 import { supabase } from '../lib/supabase.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
 import { AppError } from '../middleware/errorHandler.js';
+import { rateLimiter } from '../middleware/rateLimiter.js';
 import {
   nearbyQuerySchema,
   createBarSchema,
   updateBarSchema,
   resolveBarSchema,
+  sanitizeHttpUrl,
 } from '../schemas/barSchemas.js';
 import { listTopQuerySchema } from '../schemas/drinkSchemas.js';
 import { fetchElement } from '../lib/osm.js';
@@ -21,7 +24,7 @@ bars.route('/:id/ratings', ratings);
 
 /** GET /bars/:id/drinks — the best drinks at this bar (trigger-maintained summary). */
 bars.get('/:id/drinks', async (c) => {
-  const barId = c.req.param('id');
+  const barId = uuidParam(c);
   const { page, limit } = listTopQuerySchema.parse(
     Object.fromEntries(new URL(c.req.url).searchParams),
   );
@@ -52,9 +55,11 @@ bars.get('/:id/drinks', async (c) => {
  * Bars shown on the map come straight from Overpass and may not be persisted
  * yet; the first time anyone opens/rates one, we materialize it here (keyed by
  * osm_node_id) so ratings have a stable bar to attach to. Public: viewing an
- * unrated OSM bar must work without auth.
+ * unrated OSM bar must work without auth, so instead of requireAuth it gets a
+ * strict per-IP limit — browsing stays smooth, anonymous mass-creation of rows
+ * doesn't (the global limiter alone would allow 120/min).
  */
-bars.post('/resolve', async (c) => {
+bars.post('/resolve', rateLimiter({ windowMs: 60_000, max: 30 }), async (c) => {
   const body = resolveBarSchema.parse(await c.req.json());
 
   // Already persisted? Return it with full detail.
@@ -84,8 +89,11 @@ bars.post('/resolve', async (c) => {
     lng: info.lng,
     osm_node_id: body.osm_node_id,
     phone: info.phone || null,
-    website: info.website || null,
-    cover_image_url: info.cover_image_url || null,
+    // Sanitized at the insert so both sources (client body and Overpass
+    // backfill) are covered: only well-formed http(s) URLs are stored, anything
+    // else (javascript:, data:, malformed OSM tags) is dropped.
+    website: sanitizeHttpUrl(info.website),
+    cover_image_url: sanitizeHttpUrl(info.cover_image_url),
   };
 
   const { data, error } = await supabase
@@ -146,7 +154,7 @@ bars.get('/', async (c) => {
 
 /** GET /bars/:id — full detail incl. summary + images. */
 bars.get('/:id', async (c) => {
-  const id = c.req.param('id');
+  const id = uuidParam(c);
   const { data, error } = await supabase
     .from('bars')
     .select(
@@ -181,7 +189,7 @@ bars.post('/', requireAuth, requireRole('admin', 'moderator'), async (c) => {
 
 /** PUT /bars/:id — update (admin/moderator only). */
 bars.put('/:id', requireAuth, requireRole('admin', 'moderator'), async (c) => {
-  const id = c.req.param('id');
+  const id = uuidParam(c);
   const body = updateBarSchema.parse(await c.req.json());
 
   const { data, error } = await supabase
@@ -198,7 +206,7 @@ bars.put('/:id', requireAuth, requireRole('admin', 'moderator'), async (c) => {
 
 /** DELETE /bars/:id — delete (admin only). */
 bars.delete('/:id', requireAuth, requireRole('admin'), async (c) => {
-  const id = c.req.param('id');
+  const id = uuidParam(c);
   const { data, error } = await supabase
     .from('bars')
     .delete()

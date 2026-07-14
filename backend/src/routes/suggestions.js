@@ -1,3 +1,4 @@
+import { uuidParam } from '../schemas/common.js';
 import { Hono } from 'hono';
 import { supabase } from '../lib/supabase.js';
 import { requireAuth, requireRole, optionalUser } from '../middleware/auth.js';
@@ -74,7 +75,7 @@ suggestions.get('/', async (c) => {
 
 /** PATCH /suggestions/:id — set moderation status (new/done/rejected). */
 suggestions.patch('/:id', async (c) => {
-  const id = c.req.param('id');
+  const id = uuidParam(c);
   const { status } = updateSuggestionSchema.parse(await c.req.json());
   const { data, error } = await supabase
     .from('bar_suggestions')
@@ -89,7 +90,7 @@ suggestions.patch('/:id', async (c) => {
 
 /** DELETE /suggestions/:id — drop a handled/spam suggestion. */
 suggestions.delete('/:id', async (c) => {
-  const id = c.req.param('id');
+  const id = uuidParam(c);
   const { data, error } = await supabase
     .from('bar_suggestions')
     .delete()

@@ -1,3 +1,4 @@
+import { uuidParam } from '../schemas/common.js';
 import { Hono } from 'hono';
 import { supabase } from '../lib/supabase.js';
 import { requireAuth, requireRole, optionalUser } from '../middleware/auth.js';
@@ -87,7 +88,7 @@ suggestions.get('/', async (c) => {
  * and the status change still goes through.
  */
 suggestions.patch('/:id', async (c) => {
-  const id = c.req.param('id');
+  const id = uuidParam(c);
   const { status } = updateDrinkSuggestionSchema.parse(await c.req.json());
 
   const { data: sugg, error: loadErr } = await supabase
@@ -123,7 +124,7 @@ suggestions.patch('/:id', async (c) => {
 
 /** DELETE /drinks/suggestions/:id — drop a handled/spam proposal. */
 suggestions.delete('/:id', async (c) => {
-  const id = c.req.param('id');
+  const id = uuidParam(c);
   const { data, error } = await supabase
     .from('drink_suggestions')
     .delete()
@@ -180,7 +181,7 @@ drinks.get('/', async (c) => {
 
 /** GET /drinks/:id — single drink. */
 drinks.get('/:id', async (c) => {
-  const id = c.req.param('id');
+  const id = uuidParam(c);
   const { data, error } = await supabase
     .from('drinks')
     .select('id, name, description, created_at')
@@ -202,7 +203,7 @@ const RANKING_RADIUS_KM = 30;
  * !inner / the RPC keep deactivated bars out.
  */
 drinks.get('/:id/bars', async (c) => {
-  const id = c.req.param('id');
+  const id = uuidParam(c);
   const { page, limit, lat, lng } = listTopQuerySchema.parse(
     Object.fromEntries(new URL(c.req.url).searchParams),
   );
@@ -259,7 +260,7 @@ drinks.get('/:id/bars', async (c) => {
  * and edit (no rating-id lifecycle like bar ratings).
  */
 drinks.post('/:id/votes', requireAuth, async (c) => {
-  const drinkId = c.req.param('id');
+  const drinkId = uuidParam(c);
   const user = c.get('user');
   const { bar_id, rating } = createDrinkVoteSchema.parse(await c.req.json());
   await assertRatingsEnabled();
@@ -292,8 +293,8 @@ drinks.post('/:id/votes', requireAuth, async (c) => {
 
 /** DELETE /drinks/:id/votes/:barId — remove own vote for this (drink, bar). */
 drinks.delete('/:id/votes/:barId', requireAuth, async (c) => {
-  const drinkId = c.req.param('id');
-  const barId = c.req.param('barId');
+  const drinkId = uuidParam(c);
+  const barId = uuidParam(c, 'barId');
   const user = c.get('user');
 
   const { data, error } = await supabase

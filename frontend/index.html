@@ -6,7 +6,10 @@
     <meta name="theme-color" content="#E07B1A" />
 
     <!-- Apply the saved theme before first paint to avoid a flash of the
-         default palette. Kept in sync with src/hooks/useTheme.js. -->
+         default palette, and request ONLY the active theme's two font families
+         (loading all 9 in one stylesheet cost a blocking CSS round-trip for
+         fonts the user never sees). Kept in sync with src/hooks/useTheme.js,
+         which swaps the same #rabar-fonts link on theme change. -->
     <script>
       try {
         var t = localStorage.getItem('rabar-theme');
@@ -22,6 +25,21 @@
           if (meta) meta.setAttribute('content', themeColors[t]);
         }
       } catch (e) {}
+      var themeFonts = {
+        rabar: 'family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;700',
+        'midnight-red': 'family=Space+Grotesk:wght@600;700&family=Source+Sans+3:wght@400;600;700',
+        'gold-rush': 'family=Barlow+Condensed:wght@700;900&family=DM+Sans:wght@400;500;700',
+        'electric-blue': 'family=Unbounded:wght@600;700&family=Karla:wght@400;500;700',
+        aperitif: 'family=Archivo:wght@400;700;800&family=Instrument+Sans:wght@400;500;600;700',
+      };
+      var fontLink = document.createElement('link');
+      fontLink.rel = 'stylesheet';
+      fontLink.id = 'rabar-fonts';
+      fontLink.href =
+        'https://fonts.googleapis.com/css2?' +
+        (themeFonts[t] || themeFonts.rabar) +
+        '&display=swap';
+      document.head.appendChild(fontLink);
     </script>
 
     <!-- Primary SEO -->
@@ -64,10 +82,11 @@
     <link rel="icon" type="image/png" href="/icons/icon-192.png" />
     <link rel="apple-touch-icon" href="/icons/icon-180.png" />
 
-    <!-- Theme type systems (browsers only download the families actually used
-         by the active theme): rabar = Syne + DM Sans · midnight-red = Space
+    <!-- Theme type systems: rabar = Syne + DM Sans · midnight-red = Space
          Grotesk + Source Sans 3 · gold-rush = Barlow Condensed + DM Sans ·
-         electric-blue = Unbounded + Karla · aperitif = Archivo + Instrument Sans. -->
+         electric-blue = Unbounded + Karla · aperitif = Archivo + Instrument
+         Sans. The stylesheet link (#rabar-fonts) is injected by the theme
+         bootstrap script above with only the active theme's families. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
@@ -77,10 +96,6 @@
     <link rel="preconnect" href="https://b.basemaps.cartocdn.com" />
     <link rel="dns-prefetch" href="https://c.basemaps.cartocdn.com" />
     <link rel="dns-prefetch" href="https://d.basemaps.cartocdn.com" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;700;800&family=Barlow+Condensed:wght@700;900&family=DM+Sans:wght@400;500;700&family=Instrument+Sans:wght@400;500;600;700&family=Karla:wght@400;500;700&family=Source+Sans+3:wght@400;600;700&family=Space+Grotesk:wght@600;700&family=Syne:wght@600;700;800&family=Unbounded:wght@600;700&display=swap"
-      rel="stylesheet"
-    />
 
     <!-- Structured data: helps search engines understand the app. -->
     <script type="application/ld+json">
@@ -96,9 +111,10 @@
       }
     </script>
 
-    <!-- Google AdSense loads lazily from AdBanner.jsx, only when
-         VITE_ADSENSE_CLIENT_ID is set (see the component). Nothing to configure
-         here — leave the env var empty to disable ads. -->
+    <!-- Google AdSense (Auto Ads) is injected at runtime by services/adsense.js,
+         only when VITE_ADSENSE_CLIENT_ID is set AND the user granted consent
+         (prior-blocking, see services/consent.js). Nothing to configure here —
+         leave the env var empty to disable ads. -->
   </head>
   <body>
     <div id="root"></div>

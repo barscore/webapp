@@ -1,14 +1,25 @@
-// Ad consent (ePrivacy + GDPR + Garante). Ads ALWAYS show — consent only
-// decides personalized vs non-personalized (NPA). GDPR forbids *profiling*
-// cookies without consent, not advertising itself: Google AdSense serves NPA to
-// non-consented users, so revenue is preserved (lower, not zero). The choice
-// persists in localStorage; a window event lets adsense.js react without reload.
-const KEY = 'rabar_ad_consent'; // 'granted' (personalized) | 'denied' (NPA)
+// Ad consent, prior-blocking model (ePrivacy/GDPR + CPRA):
+//   - no consent (null) or denied → the AdSense script is NEVER loaded, so no
+//     ad requests and no ad cookies at all;
+//   - granted → App loads the script (see adsense.js).
+// The choice persists in localStorage; a window event lets App react without a
+// reload. Settings can reset the choice to reopen the banner (withdrawing
+// consent must be as easy as giving it).
+const KEY = 'rabar_ad_consent'; // 'granted' | 'denied'
 const EVENT = 'rabar-consent';
 
+// CPRA: a Global Privacy Control signal is a binding opt-out of "sharing"
+// personal data for targeted ads. Treat it as a standing "denied" that the
+// banner/Settings cannot override — getConsent() short-circuits, so the banner
+// never shows and a stored "granted" stops counting.
+function gpcDenied() {
+  return typeof navigator !== 'undefined' && navigator.globalPrivacyControl === true;
+}
+
 export function getConsent() {
+  if (gpcDenied()) return 'denied';
   try {
-    return localStorage.getItem(KEY); // null until the user chooses → treated as NPA
+    return localStorage.getItem(KEY); // null until the user chooses
   } catch {
     return null;
   }
@@ -18,8 +29,8 @@ export function hasChosen() {
   return getConsent() !== null;
 }
 
-// True → personalized ads allowed. Null/denied → non-personalized only.
-export function personalizedAds() {
+// True → the ad script may load.
+export function consentGranted() {
   return getConsent() === 'granted';
 }
 
@@ -28,8 +39,22 @@ export function setConsent(granted) {
   try {
     localStorage.setItem(KEY, value);
   } catch {
-    /* storage blocked — treat as session-only NPA */
+    /* storage blocked — treat as session-only choice */
   }
+  emit(value);
+}
+
+// Forget the choice and reopen the banner (Settings → "Preferenze cookie").
+export function resetConsent() {
+  try {
+    localStorage.removeItem(KEY);
+  } catch {
+    /* storage blocked */
+  }
+  emit(null);
+}
+
+function emit(value) {
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent(EVENT, { detail: value }));
   }

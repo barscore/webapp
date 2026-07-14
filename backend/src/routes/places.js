@@ -165,7 +165,7 @@ places.get('/nearby', async (c) => {
       const enriched = await enrichWithRatings(cached.places, lat, lng);
       return c.json({ places: enriched, stale: true });
     }
-    throw new AppError(502, 'UPSTREAM_ERROR', `OpenStreetMap query failed: ${e.message}`);
+    throw new AppError(502, 'UPSTREAM_ERROR', 'OpenStreetMap query failed');
   }
 });
 
@@ -184,7 +184,7 @@ places.get('/bars', async (c) => {
     const enriched = await enrichWithRatings(results, lat ?? null, lng ?? null);
     return c.json({ places: enriched });
   } catch (e) {
-    throw new AppError(502, 'UPSTREAM_ERROR', `Bar search failed: ${e.message}`);
+    throw new AppError(502, 'UPSTREAM_ERROR', 'Bar search failed');
   }
 });
 
@@ -197,7 +197,7 @@ places.get('/search', async (c) => {
     const results = await geocode(q, limit);
     return c.json({ results });
   } catch (e) {
-    throw new AppError(502, 'UPSTREAM_ERROR', `Geocoding failed: ${e.message}`);
+    throw new AppError(502, 'UPSTREAM_ERROR', 'Geocoding failed');
   }
 });
 

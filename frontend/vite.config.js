@@ -8,9 +8,7 @@ export default defineConfig({
     rollupOptions: {
       output: {
         // Split stable vendors into their own chunks so a small app change
-        // doesn't bust the whole cached bundle. recharts is NOT listed here on
-        // purpose: it's only reached via lazy imports (BarSheet/BarDetail), so
-        // Rollup already keeps it out of the initial load.
+        // doesn't bust the whole cached bundle.
         manualChunks: {
           react: ['react', 'react-dom', 'react-router-dom'],
           leaflet: ['leaflet', 'react-leaflet'],

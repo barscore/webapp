@@ -1,11 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { hasChosen, setConsent } from '../services/consent.js';
+import { hasChosen, setConsent, onConsentChange } from '../services/consent.js';
 
-// Cookie consent banner. Shows once until the user accepts or rejects
-// advertising cookies. AdSense loads globally; consent only toggles NPA (see adsense.js).
+// Cookie consent banner. Shows until the user accepts or rejects advertising
+// cookies — nothing ad-related loads before "Accetta" (prior-blocking, see
+// adsense.js). Reappears when Settings resets the choice.
 export default function CookieBanner() {
   const [visible, setVisible] = useState(() => !hasChosen());
+  useEffect(() => onConsentChange(() => setVisible(!hasChosen())), []);
   if (!visible) return null;
 
   function choose(granted) {
@@ -17,8 +19,9 @@ export default function CookieBanner() {
     <div className="fixed inset-x-0 bottom-0 z-[1000] border-t border-ember-line/10 bg-ember-card/95 p-4 backdrop-blur">
       <div className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center">
         <p className="flex-1 text-sm text-ember-muted">
-          Usiamo cookie tecnici e mostriamo pubblicità di Google. Con il tuo consenso gli
-          annunci sono personalizzati; altrimenti restano non personalizzati. Vedi la{' '}
+          Usiamo solo cookie tecnici. Con il tuo consenso carichiamo la pubblicità di
+          Google (con i relativi cookie); se rifiuti, nessun annuncio e nessun cookie
+          pubblicitario. Puoi cambiare idea da Impostazioni. Vedi la{' '}
           <Link to="/privacy" className="text-ember-primary underline">Privacy</Link>.
         </p>
         <div className="flex gap-2">

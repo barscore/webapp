@@ -15,8 +15,7 @@ import ProposeDrinkModal from '../components/ProposeDrinkModal.jsx';
 import { LanguageMenuRow } from '../components/LanguagePicker.jsx';
 import { useI18n } from '../i18n/index.js';
 
-// Lazy: BarSheet pulls in recharts (radar chart, ~350KB min) — loading it on
-// first bar tap keeps the landing bundle small.
+// Lazy: loading BarSheet on first bar tap keeps the landing bundle small.
 const BarSheet = lazy(() => import('../components/BarSheet.jsx'));
 import { placesApi, eventsApi, meApi, drinksApi } from '../services/api.js';
 import { barKey } from '../utils/score.js';

@@ -1,3 +1,4 @@
+import { uuidParam } from '../schemas/common.js';
 import { Hono } from 'hono';
 import { supabase } from '../lib/supabase.js';
 import { requireAuth, requireRole } from '../middleware/auth.js';
@@ -117,7 +118,7 @@ async function assertUserExists(id) {
 
 /** POST /admin/users/:id/ban — permanent ban (locked out until unbanned). */
 admin.post('/users/:id/ban', async (c) => {
-  const id = c.req.param('id');
+  const id = uuidParam(c);
   assertNotSelf(c, id);
   await assertUserExists(id);
   const { reason } = banSchema.parse(await c.req.json().catch(() => ({})));
@@ -139,7 +140,7 @@ admin.post('/users/:id/ban', async (c) => {
 
 /** POST /admin/users/:id/suspend — temporary suspension for N hours. */
 admin.post('/users/:id/suspend', async (c) => {
-  const id = c.req.param('id');
+  const id = uuidParam(c);
   assertNotSelf(c, id);
   await assertUserExists(id);
   const { hours, reason } = suspendSchema.parse(await c.req.json());
@@ -162,7 +163,7 @@ admin.post('/users/:id/suspend', async (c) => {
 
 /** POST /admin/users/:id/unban — lift ban and suspension. */
 admin.post('/users/:id/unban', async (c) => {
-  const id = c.req.param('id');
+  const id = uuidParam(c);
   await assertUserExists(id);
 
   const { data, error } = await supabase
@@ -182,7 +183,7 @@ admin.post('/users/:id/unban', async (c) => {
 
 /** PUT /admin/users/:id/role — change app role. */
 admin.put('/users/:id/role', async (c) => {
-  const id = c.req.param('id');
+  const id = uuidParam(c);
   assertNotSelf(c, id);
   await assertUserExists(id);
   const { role } = roleSchema.parse(await c.req.json());
@@ -199,7 +200,7 @@ admin.put('/users/:id/role', async (c) => {
 
 /** DELETE /admin/users/:id — hard-delete the account (auth + cascade). Emergency. */
 admin.delete('/users/:id', async (c) => {
-  const id = c.req.param('id');
+  const id = uuidParam(c);
   assertNotSelf(c, id);
   await assertUserExists(id);
 
@@ -247,7 +248,7 @@ admin.get('/ratings', async (c) => {
 
 /** DELETE /admin/ratings/:id — remove any rating. */
 admin.delete('/ratings/:id', async (c) => {
-  const id = c.req.param('id');
+  const id = uuidParam(c);
   const { data, error } = await supabase
     .from('ratings')
     .delete()
@@ -293,7 +294,7 @@ admin.put('/settings', async (c) => {
  * affected bars automatically.
  */
 admin.post('/emergency/purge-user-ratings/:id', async (c) => {
-  const id = c.req.param('id');
+  const id = uuidParam(c);
   await assertUserExists(id);
   const { data, error } = await supabase
     .from('ratings')

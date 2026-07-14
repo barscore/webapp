@@ -7,6 +7,7 @@ import { meApi } from '../services/api.js';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import Toast from '../components/Toast.jsx';
+import { getConsent, resetConsent, onConsentChange } from '../services/consent.js';
 
 // Account settings: read-only account details + credential changes (email /
 // password) via supabase-js. Credential updates never go through the backend.
@@ -129,6 +130,9 @@ export default function Settings() {
         {/* Theme picker — client-side preference, saved in localStorage */}
         <ThemeSection />
 
+        {/* Ad-consent management — GDPR: withdrawing must be as easy as giving */}
+        <CookieSection />
+
         {/* Change email */}
         <form onSubmit={changeEmail} className="space-y-3 rounded-card border border-ember-line/5 bg-ember-card p-4">
           <h2 className="font-display font-bold text-ember-cream">Cambia email</h2>
@@ -243,6 +247,32 @@ function ThemeSection() {
           );
         })}
       </div>
+    </section>
+  );
+}
+
+// Current ad-consent state + a reset that reopens the global CookieBanner so
+// the user can pick again (a revoke after ads loaded triggers a reload in App).
+function CookieSection() {
+  const [choice, setChoice] = useState(getConsent);
+  useEffect(() => onConsentChange(() => setChoice(getConsent())), []);
+  const label =
+    choice === 'granted'
+      ? 'Hai accettato: la pubblicità di Google è attiva.'
+      : choice === 'denied'
+        ? 'Hai rifiutato: nessuna pubblicità e nessun cookie pubblicitario.'
+        : 'Nessuna scelta ancora: nessuna pubblicità caricata.';
+  return (
+    <section className="space-y-3 rounded-card border border-ember-line/5 bg-ember-card p-4">
+      <h2 className="font-display font-bold text-ember-cream">Preferenze cookie</h2>
+      <p className="text-sm text-ember-muted">{label}</p>
+      <button
+        type="button"
+        onClick={resetConsent}
+        className="w-full rounded-lg border border-ember-line/10 py-2 font-semibold text-ember-cream"
+      >
+        Modifica scelta
+      </button>
     </section>
   );
 }

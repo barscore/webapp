@@ -191,18 +191,44 @@ drinks.get('/:id', async (c) => {
   return c.json({ drink: data });
 });
 
+// With user coords the drink ranking only shows bars within this radius.
+const RANKING_RADIUS_KM = 30;
+
 /**
  * GET /drinks/:id/bars — ranking: the bars that make this drink best.
- * Plain ORDER BY on the trigger-maintained summary; !inner keeps
- * deactivated bars out.
+ * With lat/lng the list is restricted to bars within RANKING_RADIUS_KM
+ * via the get_drink_top_bars PostGIS RPC (adds distance_km per bar);
+ * without coords it's a plain ORDER BY on the trigger-maintained summary.
+ * !inner / the RPC keep deactivated bars out.
  */
 drinks.get('/:id/bars', async (c) => {
   const id = c.req.param('id');
-  const { page, limit } = listTopQuerySchema.parse(
+  const { page, limit, lat, lng } = listTopQuerySchema.parse(
     Object.fromEntries(new URL(c.req.url).searchParams),
   );
   const from = (page - 1) * limit;
   const to = from + limit - 1;
+
+  if (lat !== undefined && lng !== undefined) {
+    const { data, error } = await supabase.rpc('get_drink_top_bars', {
+      target_drink_id: id,
+      user_lat: lat,
+      user_lng: lng,
+      radius_km: RANKING_RADIUS_KM,
+      page_limit: limit,
+      page_offset: from,
+    });
+    if (error) throw new AppError(500, 'INTERNAL_ERROR', 'Could not load ranking');
+
+    const bars = (data ?? []).map(({ total_count, ...bar }) => bar);
+    return c.json({
+      bars,
+      page,
+      limit,
+      total: Number(data?.[0]?.total_count ?? 0),
+      radius_km: RANKING_RADIUS_KM,
+    });
+  }
 
   const { data, error, count } = await supabase
     .from('drink_bar_summary')

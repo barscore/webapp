@@ -68,7 +68,7 @@ export default function Leaderboard() {
                 <li
                   key={u.id}
                   className={`flex items-center gap-3 rounded-card border p-3 ${
-                    me ? 'border-ember-primary/60 bg-ember-primary/10' : 'border-white/5 bg-ember-card'
+                    me ? 'border-ember-primary/60 bg-ember-primary/10' : 'border-ember-line/5 bg-ember-card'
                   }`}
                 >
                   <span className="w-6 text-center font-display font-bold tabular-nums text-ember-muted">
@@ -77,7 +77,7 @@ export default function Leaderboard() {
                   {u.avatar_url ? (
                     <img src={u.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
                   ) : (
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white/5 text-ember-primary">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ember-line/5 text-ember-primary">
                       <Icon name="user" size={16} />
                     </span>
                   )}

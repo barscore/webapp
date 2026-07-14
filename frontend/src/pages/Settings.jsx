@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
+import { useTheme } from '../hooks/useTheme.js';
 import { supabase } from '../services/supabase.js';
 import { meApi } from '../services/api.js';
 import Logo from '../components/Logo.jsx';
@@ -107,7 +108,7 @@ export default function Settings() {
         </div>
 
         {/* Account details */}
-        <section className="rounded-card border border-white/5 bg-ember-card p-4">
+        <section className="rounded-card border border-ember-line/5 bg-ember-card p-4">
           <h2 className="mb-3 font-display font-bold text-ember-cream">Dettagli account</h2>
           <dl className="space-y-2 text-sm">
             <Detail icon="user" label="Username" value={profile ? `@${profile.username}` : '…'} />
@@ -125,8 +126,11 @@ export default function Settings() {
           </dl>
         </section>
 
+        {/* Theme picker — client-side preference, saved in localStorage */}
+        <ThemeSection />
+
         {/* Change email */}
-        <form onSubmit={changeEmail} className="space-y-3 rounded-card border border-white/5 bg-ember-card p-4">
+        <form onSubmit={changeEmail} className="space-y-3 rounded-card border border-ember-line/5 bg-ember-card p-4">
           <h2 className="font-display font-bold text-ember-cream">Cambia email</h2>
           <SettingsField label="Nuova email" type="email" value={email} onChange={setEmail} />
           {emailErr && <p className="text-sm text-ember-accent">{emailErr}</p>}
@@ -140,7 +144,7 @@ export default function Settings() {
         </form>
 
         {/* Change password */}
-        <form onSubmit={changePassword} className="space-y-3 rounded-card border border-white/5 bg-ember-card p-4">
+        <form onSubmit={changePassword} className="space-y-3 rounded-card border border-ember-line/5 bg-ember-card p-4">
           <h2 className="font-display font-bold text-ember-cream">Cambia password</h2>
           <SettingsField label="Nuova password" type="password" value={password} onChange={setPassword} />
           <SettingsField label="Conferma password" type="password" value={password2} onChange={setPassword2} />
@@ -178,7 +182,7 @@ export default function Settings() {
                   type="button"
                   onClick={() => setDelConfirm(false)}
                   disabled={delBusy}
-                  className="flex-1 rounded-lg border border-white/10 py-2 font-semibold text-ember-cream disabled:opacity-50"
+                  className="flex-1 rounded-lg border border-ember-line/10 py-2 font-semibold text-ember-cream disabled:opacity-50"
                 >
                   Annulla
                 </button>
@@ -198,6 +202,48 @@ export default function Settings() {
 
       <Toast message={toast?.msg} icon={toast?.icon} onDone={() => setToast(null)} />
     </div>
+  );
+}
+
+function ThemeSection() {
+  const { theme, setTheme, themes } = useTheme();
+  return (
+    <section className="rounded-card border border-ember-line/5 bg-ember-card p-4">
+      <h2 className="mb-3 font-display font-bold text-ember-cream">Tema</h2>
+      <div className="grid grid-cols-3 gap-2">
+        {themes.map((t) => {
+          const active = t.id === theme;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTheme(t.id)}
+              aria-pressed={active}
+              className={`flex flex-col items-center gap-2 rounded-lg border p-3 transition-colors ${
+                active
+                  ? 'border-ember-primary bg-ember-primary/10'
+                  : 'border-ember-line/10 hover:border-ember-line/25'
+              }`}
+            >
+              <span className="flex -space-x-1.5">
+                {t.swatch.map((c) => (
+                  <span
+                    key={c}
+                    className="h-5 w-5 rounded-full border border-ember-line/20"
+                    style={{ backgroundColor: c }}
+                  />
+                ))}
+              </span>
+              <span
+                className={`text-xs font-semibold ${active ? 'text-ember-primary' : 'text-ember-cream'}`}
+              >
+                {t.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 

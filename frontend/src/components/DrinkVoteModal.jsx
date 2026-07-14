@@ -122,7 +122,7 @@ export default function DrinkVoteModal({ drink, bar, onClose, onVoted, onPropose
     <div className="fixed inset-0 z-[2100] flex items-end justify-center bg-black/60 p-4 sm:items-center" onClick={onClose}>
       <div
         onClick={(e) => e.stopPropagation()}
-        className="flex max-h-[80dvh] w-full max-w-md flex-col rounded-2xl border border-white/10 bg-ember-card p-5"
+        className="flex max-h-[80dvh] w-full max-w-md flex-col rounded-2xl border border-ember-line/10 bg-ember-card p-5"
       >
         <div className="flex items-center gap-2">
           <Icon name="cocktail" size={20} className="text-ember-primary" />
@@ -141,7 +141,7 @@ export default function DrinkVoteModal({ drink, bar, onClose, onVoted, onPropose
 
         {(pickingDrink || pickingBar) && (
           <>
-            <div className="mt-3 flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.04] px-3 py-2.5">
+            <div className="mt-3 flex items-center gap-2 rounded-full border border-ember-line/10 bg-ember-line/[0.04] px-3 py-2.5">
               <Icon name="search" size={18} className="text-ember-muted" />
               <input
                 value={search}
@@ -177,7 +177,7 @@ export default function DrinkVoteModal({ drink, bar, onClose, onVoted, onPropose
                     type="button"
                     disabled={busy}
                     onClick={() => (pickingDrink ? setPickedDrink(item) : pickBar(item))}
-                    className="flex w-full items-center gap-2 rounded-xl border border-white/5 bg-white/[0.03] px-3 py-2.5 text-left text-sm transition hover:border-white/10 hover:bg-white/[0.06] disabled:opacity-50"
+                    className="flex w-full items-center gap-2 rounded-xl border border-ember-line/5 bg-ember-line/[0.03] px-3 py-2.5 text-left text-sm transition hover:border-ember-line/10 hover:bg-ember-line/[0.06] disabled:opacity-50"
                   >
                     <Icon name={pickingDrink ? 'cocktail' : 'pin'} size={15} className="shrink-0 text-ember-primary" />
                     <span className="min-w-0 flex-1">
@@ -194,7 +194,7 @@ export default function DrinkVoteModal({ drink, bar, onClose, onVoted, onPropose
                 <button
                   type="button"
                   onClick={onPropose}
-                  className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-white/15 px-3 py-2.5 text-sm text-ember-muted transition hover:text-ember-cream"
+                  className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-ember-line/15 px-3 py-2.5 text-sm text-ember-muted transition hover:text-ember-cream"
                 >
                   <Icon name="plus" size={15} /> Non trovi il drink? Proponilo
                 </button>
@@ -215,7 +215,7 @@ export default function DrinkVoteModal({ drink, bar, onClose, onVoted, onPropose
                   aria-label={`${v} su 5`}
                   aria-pressed={rating >= v}
                   className={`rounded-lg p-1.5 transition active:scale-95 ${
-                    rating >= v ? 'text-ember-primary' : 'text-white/20 hover:text-white/40'
+                    rating >= v ? 'text-ember-primary' : 'text-ember-line/20 hover:text-ember-line/40'
                   }`}
                 >
                   <Icon name="star" size={30} />
@@ -264,7 +264,7 @@ export default function DrinkVoteModal({ drink, bar, onClose, onVoted, onPropose
                   onClick={removeVote}
                   disabled={busy}
                   aria-label="Elimina il tuo voto"
-                  className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-white/5 text-ember-accent disabled:opacity-50"
+                  className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-ember-line/5 text-ember-accent disabled:opacity-50"
                 >
                   <Icon name="trash" size={18} />
                 </button>

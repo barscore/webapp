@@ -126,6 +126,53 @@ AFTER INSERT OR UPDATE OR DELETE ON public.drink_ratings
 FOR EACH ROW EXECUTE FUNCTION update_drink_bar_summary();
 
 -- ---------------------------------------------
+-- get_drink_top_bars — ranking "dove lo fanno meglio" limitato ai bar entro
+-- radius_km dalla posizione utente. Stesso ordinamento del ranking globale
+-- (avg_rating DESC, total_ratings DESC); total_count (window) serve alla
+-- paginazione lato API. Chiamata dal backend quando arrivano lat/lng.
+-- ---------------------------------------------
+CREATE OR REPLACE FUNCTION get_drink_top_bars(
+  target_drink_id UUID,
+  user_lat DOUBLE PRECISION,
+  user_lng DOUBLE PRECISION,
+  radius_km DOUBLE PRECISION DEFAULT 30.0,
+  page_limit INTEGER DEFAULT 20,
+  page_offset INTEGER DEFAULT 0
+)
+RETURNS TABLE (
+  id UUID, name TEXT, address TEXT, city TEXT,
+  lat DOUBLE PRECISION, lng DOUBLE PRECISION,
+  cover_image_url TEXT,
+  avg_rating NUMERIC, total_ratings INTEGER,
+  distance_km DOUBLE PRECISION,
+  total_count BIGINT
+) AS $$
+BEGIN
+  RETURN QUERY
+  SELECT
+    b.id, b.name, b.address, b.city, b.lat, b.lng, b.cover_image_url,
+    s.avg_rating, s.total_ratings,
+    ROUND((ST_Distance(
+      ST_SetSRID(ST_MakePoint(b.lng, b.lat), 4326)::geography,
+      ST_SetSRID(ST_MakePoint(user_lng, user_lat), 4326)::geography
+    ) / 1000)::NUMERIC, 2)::DOUBLE PRECISION AS distance_km,
+    COUNT(*) OVER () AS total_count
+  FROM public.drink_bar_summary s
+  JOIN public.bars b ON b.id = s.bar_id
+  WHERE s.drink_id = target_drink_id
+    AND s.total_ratings > 0
+    AND b.is_active = TRUE
+    AND ST_DWithin(
+      ST_SetSRID(ST_MakePoint(b.lng, b.lat), 4326)::geography,
+      ST_SetSRID(ST_MakePoint(user_lng, user_lat), 4326)::geography,
+      radius_km * 1000
+    )
+  ORDER BY s.avg_rating DESC, s.total_ratings DESC
+  LIMIT page_limit OFFSET page_offset;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ---------------------------------------------
 -- Row Level Security — public read, no public writes (backend service-role
 -- bypasses RLS). drink_suggestions has RLS on and NO policies on purpose:
 -- only the backend can touch it, nothing is exposed to the client.

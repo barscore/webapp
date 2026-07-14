@@ -14,6 +14,7 @@ import meRoutes from './routes/me.js';
 import leaderboardRoutes from './routes/leaderboard.js';
 import adminRoutes from './routes/admin.js';
 import suggestionRoutes from './routes/suggestions.js';
+import reportRoutes from './routes/reports.js';
 import drinkRoutes from './routes/drinks.js';
 import healthRoutes from './routes/health.js';
 
@@ -114,6 +115,7 @@ app.route('/me', meRoutes);
 app.route('/leaderboard', leaderboardRoutes);
 app.route('/admin', adminRoutes);
 app.route('/suggestions', suggestionRoutes);
+app.route('/reports', reportRoutes);
 app.route('/drinks', drinkRoutes);
 
 app.notFound((c) =>

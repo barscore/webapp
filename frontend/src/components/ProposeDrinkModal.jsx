@@ -35,7 +35,7 @@ export default function ProposeDrinkModal({ initialName = '', onClose, onSent })
       <form
         onSubmit={submit}
         onClick={(e) => e.stopPropagation()}
-        className="w-full max-w-md rounded-2xl border border-white/10 bg-ember-card p-5"
+        className="w-full max-w-md rounded-2xl border border-ember-line/10 bg-ember-card p-5"
       >
         <div className="flex items-center gap-2">
           <Icon name="cocktail" size={20} className="text-ember-primary" />

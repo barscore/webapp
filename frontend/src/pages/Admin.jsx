@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
-import { adminApi, suggestionsApi, drinksApi } from '../services/api.js';
+import { adminApi, suggestionsApi, reportsApi, drinksApi } from '../services/api.js';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import Toast from '../components/Toast.jsx';
@@ -12,6 +12,7 @@ const TABS = [
   { key: 'users', label: 'Utenti', icon: 'user' },
   { key: 'ratings', label: 'Valutazioni', icon: 'review' },
   { key: 'suggestions', label: 'Segnalazioni', icon: 'pin' },
+  { key: 'reports', label: 'Report', icon: 'info' },
   { key: 'drinks', label: 'Drinks', icon: 'cocktail' },
   { key: 'security', label: 'Sicurezza', icon: 'filters' },
   { key: 'emergency', label: 'Emergenza', icon: 'bell' },
@@ -65,7 +66,7 @@ export default function Admin() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 overflow-x-auto rounded-xl border border-white/5 bg-ember-card p-1">
+        <div className="flex gap-1 overflow-x-auto rounded-xl border border-ember-line/5 bg-ember-card p-1">
           {TABS.map((t) => (
             <button
               key={t.key}
@@ -84,6 +85,7 @@ export default function Admin() {
         {tab === 'users' && <UsersTab notify={notify} onChange={loadStats} />}
         {tab === 'ratings' && <RatingsTab notify={notify} onChange={loadStats} />}
         {tab === 'suggestions' && <SuggestionsTab notify={notify} />}
+        {tab === 'reports' && <ReportsTab notify={notify} />}
         {tab === 'drinks' && <DrinkSuggestionsTab notify={notify} />}
         {tab === 'security' && <SecurityTab notify={notify} />}
         {tab === 'emergency' && <EmergencyTab notify={notify} onChange={loadStats} />}
@@ -96,7 +98,7 @@ export default function Admin() {
 
 function Stat({ label, value, accent }) {
   return (
-    <div className="rounded-card border border-white/5 bg-ember-card p-3 text-center">
+    <div className="rounded-card border border-ember-line/5 bg-ember-card p-3 text-center">
       <div className={`font-display text-xl font-bold ${accent ? 'text-ember-accent' : 'text-ember-cream'}`}>
         {value ?? '…'}
       </div>
@@ -167,7 +169,7 @@ function UsersTab({ notify, onChange }) {
         ))}
       </div>
 
-      <div className="divide-y divide-white/5 overflow-hidden rounded-card border border-white/5 bg-ember-card">
+      <div className="divide-y divide-ember-line/5 overflow-hidden rounded-card border border-ember-line/5 bg-ember-card">
         {busy && !users.length && <p className="p-4 text-sm text-ember-muted">Caricamento…</p>}
         {!busy && !users.length && <p className="p-4 text-sm text-ember-muted">Nessun utente.</p>}
         {users.map((u) => (
@@ -296,7 +298,7 @@ function RatingsTab({ notify, onChange }) {
   return (
     <section className="space-y-3">
       <SearchBar value={q} onChange={setQ} placeholder="Cerca nei commenti…" />
-      <div className="divide-y divide-white/5 overflow-hidden rounded-card border border-white/5 bg-ember-card">
+      <div className="divide-y divide-ember-line/5 overflow-hidden rounded-card border border-ember-line/5 bg-ember-card">
         {busy && !ratings.length && <p className="p-4 text-sm text-ember-muted">Caricamento…</p>}
         {!busy && !ratings.length && <p className="p-4 text-sm text-ember-muted">Nessuna valutazione.</p>}
         {ratings.map((r) => (
@@ -318,7 +320,7 @@ function RatingsTab({ notify, onChange }) {
             </div>
             <button
               onClick={() => setConfirm(r)}
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ember-muted hover:bg-white/5 hover:text-ember-accent"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ember-muted hover:bg-ember-line/5 hover:text-ember-accent"
               title="Elimina"
             >
               <Icon name="trash" size={16} />
@@ -411,7 +413,7 @@ function SuggestionsTab({ notify }) {
         ))}
       </div>
 
-      <div className="divide-y divide-white/5 overflow-hidden rounded-card border border-white/5 bg-ember-card">
+      <div className="divide-y divide-ember-line/5 overflow-hidden rounded-card border border-ember-line/5 bg-ember-card">
         {busy && !items.length && <p className="p-4 text-sm text-ember-muted">Caricamento…</p>}
         {!busy && !items.length && <p className="p-4 text-sm text-ember-muted">Nessuna segnalazione.</p>}
         {items.map((s) => (
@@ -450,7 +452,7 @@ function SuggestionsTab({ notify }) {
               <button
                 onClick={() => setConfirm(s)}
                 title="Elimina"
-                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ember-muted hover:bg-white/5 hover:text-ember-accent"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ember-muted hover:bg-ember-line/5 hover:text-ember-accent"
               >
                 <Icon name="trash" size={16} />
               </button>
@@ -467,7 +469,7 @@ function SuggestionsTab({ notify }) {
                 {s.status !== 'rejected' && (
                   <button
                     onClick={() => setState(s.id, 'rejected', 'Segnalazione rifiutata')}
-                    className="flex-1 rounded-lg bg-white/5 py-1.5 text-xs font-semibold text-ember-muted hover:text-ember-cream"
+                    className="flex-1 rounded-lg bg-ember-line/5 py-1.5 text-xs font-semibold text-ember-muted hover:text-ember-cream"
                   >
                     Rifiuta
                   </button>
@@ -482,6 +484,154 @@ function SuggestionsTab({ notify }) {
         <ConfirmModal
           title="Elimina segnalazione?"
           desc="La segnalazione sarà rimossa definitivamente."
+          confirmLabel="Elimina"
+          danger
+          onClose={() => setConfirm(null)}
+          onConfirm={() => del(confirm.id)}
+        />
+      )}
+    </section>
+  );
+}
+
+// =========================================================================
+// User reports ("segnala" from the account menu)
+// =========================================================================
+const REPORT_FILTERS = [
+  { v: 'new', label: 'Nuovi' },
+  { v: 'done', label: 'Risolti' },
+  { v: 'rejected', label: 'Scartati' },
+  { v: '', label: 'Tutti' },
+];
+
+const REPORT_TYPE_LABELS = {
+  bug: 'Bug',
+  contenuto: 'Contenuto inappropriato',
+  account: 'Account',
+  suggerimento: 'Suggerimento',
+  altro: 'Altro',
+};
+
+function ReportsTab({ notify }) {
+  const [q, setQ] = useState('');
+  const [status, setStatus] = useState('new');
+  const [items, setItems] = useState([]);
+  const [busy, setBusy] = useState(false);
+  const [confirm, setConfirm] = useState(null);
+
+  const load = useCallback(() => {
+    setBusy(true);
+    reportsApi
+      .list({ q: q || undefined, status: status || undefined, limit: 100 })
+      .then((r) => setItems(r.reports))
+      .catch(() => notify('Errore caricamento report', 'info'))
+      .finally(() => setBusy(false));
+  }, [q, status, notify]);
+
+  useEffect(() => {
+    const t = setTimeout(load, 250);
+    return () => clearTimeout(t);
+  }, [load]);
+
+  async function setState(id, next, okMsg) {
+    try {
+      await reportsApi.setStatus(id, next);
+      notify(okMsg);
+      load();
+    } catch {
+      notify('Operazione fallita', 'info');
+    }
+  }
+
+  async function del(id) {
+    try {
+      await reportsApi.remove(id);
+      notify('Report eliminato');
+      setConfirm(null);
+      load();
+    } catch {
+      notify('Eliminazione fallita', 'info');
+    }
+  }
+
+  return (
+    <section className="space-y-3">
+      <SearchBar value={q} onChange={setQ} placeholder="Cerca nel testo…" />
+
+      <div className="flex flex-wrap gap-1.5">
+        {REPORT_FILTERS.map((f) => (
+          <button
+            key={f.v}
+            onClick={() => setStatus(f.v)}
+            className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+              status === f.v ? 'bg-ember-primary text-ember-bg' : 'bg-ember-card text-ember-muted hover:text-ember-cream'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <div className="divide-y divide-ember-line/5 overflow-hidden rounded-card border border-ember-line/5 bg-ember-card">
+        {busy && !items.length && <p className="p-4 text-sm text-ember-muted">Caricamento…</p>}
+        {!busy && !items.length && <p className="p-4 text-sm text-ember-muted">Nessun report.</p>}
+        {items.map((r) => (
+          <div key={r.id} className="p-3">
+            <div className="flex items-start gap-2">
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Tag color="primary">{REPORT_TYPE_LABELS[r.type] || r.type}</Tag>
+                  {r.status !== 'new' && (
+                    <Tag color={r.status === 'done' ? 'primary' : 'accent'}>
+                      {r.status === 'done' ? 'risolto' : 'scartato'}
+                    </Tag>
+                  )}
+                </div>
+                <p className="mt-1 text-sm text-ember-cream/90">{r.message}</p>
+                <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-xs text-ember-muted">
+                  {r.profiles?.username && (
+                    <span className="flex items-center gap-1">
+                      <Icon name="user" size={11} /> @{r.profiles.username}
+                    </span>
+                  )}
+                  <span>{new Date(r.created_at).toLocaleDateString('it-IT')}</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setConfirm(r)}
+                title="Elimina"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ember-muted hover:bg-ember-line/5 hover:text-ember-accent"
+              >
+                <Icon name="trash" size={16} />
+              </button>
+            </div>
+
+            {r.status !== 'done' && (
+              <div className="mt-2 flex gap-2">
+                <button
+                  onClick={() => setState(r.id, 'done', 'Segnato come risolto')}
+                  className="flex-1 rounded-lg bg-ember-primary/15 py-1.5 text-xs font-semibold text-ember-primary hover:bg-ember-primary/25"
+                >
+                  Segna come risolto
+                </button>
+                {r.status !== 'rejected' && (
+                  <button
+                    onClick={() => setState(r.id, 'rejected', 'Report scartato')}
+                    className="flex-1 rounded-lg bg-ember-line/5 py-1.5 text-xs font-semibold text-ember-muted hover:text-ember-cream"
+                  >
+                    Scarta
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {confirm && (
+        <ConfirmModal
+          title="Elimina report?"
+          desc="Il report sarà rimosso definitivamente."
           confirmLabel="Elimina"
           danger
           onClose={() => setConfirm(null)}
@@ -563,7 +713,7 @@ function DrinkSuggestionsTab({ notify }) {
         ))}
       </div>
 
-      <div className="divide-y divide-white/5 overflow-hidden rounded-card border border-white/5 bg-ember-card">
+      <div className="divide-y divide-ember-line/5 overflow-hidden rounded-card border border-ember-line/5 bg-ember-card">
         {busy && !items.length && <p className="p-4 text-sm text-ember-muted">Caricamento…</p>}
         {!busy && !items.length && <p className="p-4 text-sm text-ember-muted">Nessuna proposta.</p>}
         {items.map((s) => (
@@ -587,7 +737,7 @@ function DrinkSuggestionsTab({ notify }) {
               <button
                 onClick={() => setConfirm(s)}
                 title="Elimina"
-                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ember-muted hover:bg-white/5 hover:text-ember-accent"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ember-muted hover:bg-ember-line/5 hover:text-ember-accent"
               >
                 <Icon name="trash" size={16} />
               </button>
@@ -604,7 +754,7 @@ function DrinkSuggestionsTab({ notify }) {
                 {s.status !== 'rejected' && (
                   <button
                     onClick={() => setState(s.id, 'rejected', 'Proposta rifiutata')}
-                    className="flex-1 rounded-lg bg-white/5 py-1.5 text-xs font-semibold text-ember-muted hover:text-ember-cream"
+                    className="flex-1 rounded-lg bg-ember-line/5 py-1.5 text-xs font-semibold text-ember-muted hover:text-ember-cream"
                   >
                     Rifiuta
                   </button>
@@ -757,7 +907,7 @@ function EmergencyTab({ notify, onChange }) {
 
   return (
     <section className="space-y-4">
-      <div className={`rounded-card border p-4 ${settings?.maintenance_mode ? 'border-ember-accent/60 bg-ember-accent/10' : 'border-white/5 bg-ember-card'}`}>
+      <div className={`rounded-card border p-4 ${settings?.maintenance_mode ? 'border-ember-accent/60 bg-ember-accent/10' : 'border-ember-line/5 bg-ember-card'}`}>
         <div className="flex items-center gap-2 font-display font-bold text-ember-cream">
           <Icon name="bell" size={18} className="text-ember-accent" /> Modalità manutenzione
         </div>
@@ -786,7 +936,7 @@ function EmergencyTab({ notify, onChange }) {
           {settings?.maintenance_mode && (
             <button
               onClick={saveDetails}
-              className="flex-1 rounded-lg bg-white/10 py-2 font-semibold text-ember-cream hover:bg-white/15"
+              className="flex-1 rounded-lg bg-ember-line/10 py-2 font-semibold text-ember-cream hover:bg-ember-line/15"
             >
               Salva dettagli
             </button>
@@ -806,7 +956,7 @@ function EmergencyTab({ notify, onChange }) {
       </div>
 
       {/* Beta test — private beta gate, separate from maintenance. */}
-      <div className={`rounded-card border p-4 ${settings?.beta_mode ? 'border-ember-primary/60 bg-ember-primary/10' : 'border-white/5 bg-ember-card'}`}>
+      <div className={`rounded-card border p-4 ${settings?.beta_mode ? 'border-ember-primary/60 bg-ember-primary/10' : 'border-ember-line/5 bg-ember-card'}`}>
         <div className="flex items-center gap-2 font-display font-bold text-ember-cream">
           <Icon name="star" size={18} className="text-ember-primary" /> Beta test
         </div>
@@ -819,14 +969,14 @@ function EmergencyTab({ notify, onChange }) {
           onClick={toggleBeta}
           disabled={!settings}
           className={`mt-3 w-full rounded-lg py-2 font-semibold ${
-            settings?.beta_mode ? 'bg-ember-primary text-ember-bg' : 'bg-white/10 text-ember-cream hover:bg-white/15'
+            settings?.beta_mode ? 'bg-ember-primary text-ember-bg' : 'bg-ember-line/10 text-ember-cream hover:bg-ember-line/15'
           } disabled:opacity-50`}
         >
           {settings?.beta_mode ? 'Termina beta test' : 'Avvia beta test'}
         </button>
       </div>
 
-      <div className="rounded-card border border-white/5 bg-ember-card p-4">
+      <div className="rounded-card border border-ember-line/5 bg-ember-card p-4">
         <div className="flex items-center gap-2 font-display font-bold text-ember-cream">
           <Icon name="trash" size={18} className="text-ember-accent" /> Elimina valutazioni utente
         </div>
@@ -867,7 +1017,7 @@ function EmergencyTab({ notify, onChange }) {
 // =========================================================================
 function SearchBar({ value, onChange, placeholder }) {
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-white/5 bg-ember-card px-3">
+    <div className="flex items-center gap-2 rounded-lg border border-ember-line/5 bg-ember-card px-3">
       <Icon name="search" size={16} className="text-ember-muted" />
       <input
         value={value}
@@ -910,7 +1060,7 @@ function KebabMenu({ items, disabled, title }) {
         onClick={() => (pos ? setPos(null) : place())}
         disabled={disabled}
         title={title}
-        className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-lg leading-none text-ember-muted hover:bg-white/5 hover:text-ember-cream disabled:opacity-30"
+        className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-lg leading-none text-ember-muted hover:bg-ember-line/5 hover:text-ember-cream disabled:opacity-30"
       >
         ⋮
       </button>
@@ -919,7 +1069,7 @@ function KebabMenu({ items, disabled, title }) {
           <>
             <div className="fixed inset-0 z-[1900]" onClick={() => setPos(null)} />
             <div
-              className="fixed z-[2000] w-52 overflow-hidden rounded-xl border border-white/10 bg-ember-card shadow-xl"
+              className="fixed z-[2000] w-52 overflow-hidden rounded-xl border border-ember-line/10 bg-ember-card shadow-xl"
               style={{ top: pos.top, left: pos.left }}
             >
               {items.map((it, i) => (
@@ -947,7 +1097,7 @@ function MenuItem({ icon, children, onClick, danger }) {
   return (
     <button
       onClick={onClick}
-      className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-white/5 ${
+      className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-ember-line/5 ${
         danger ? 'text-ember-accent' : 'text-ember-cream'
       }`}
     >
@@ -968,13 +1118,13 @@ function Tag({ children, color = 'muted' }) {
       ? 'bg-ember-accent/15 text-ember-accent'
       : color === 'primary'
         ? 'bg-ember-primary/15 text-ember-primary'
-        : 'bg-white/5 text-ember-muted';
+        : 'bg-ember-line/5 text-ember-muted';
   return <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${cls}`}>{children}</span>;
 }
 
 function Switch({ label, desc, checked, onChange }) {
   return (
-    <div className="flex items-center gap-3 rounded-card border border-white/5 bg-ember-card p-4">
+    <div className="flex items-center gap-3 rounded-card border border-ember-line/5 bg-ember-card p-4">
       <div className="min-w-0 flex-1">
         <div className="font-semibold text-ember-cream">{label}</div>
         <div className="text-sm text-ember-muted">{desc}</div>
@@ -983,7 +1133,7 @@ function Switch({ label, desc, checked, onChange }) {
         onClick={onChange}
         role="switch"
         aria-checked={checked}
-        className={`relative h-6 w-11 shrink-0 rounded-full transition ${checked ? 'bg-ember-primary' : 'bg-white/15'}`}
+        className={`relative h-6 w-11 shrink-0 rounded-full transition ${checked ? 'bg-ember-primary' : 'bg-ember-line/15'}`}
       >
         <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-white transition-all ${checked ? 'left-[22px]' : 'left-0.5'}`} />
       </button>
@@ -994,7 +1144,7 @@ function Switch({ label, desc, checked, onChange }) {
 function ModalShell({ title, desc, children, onClose }) {
   return (
     <div className="fixed inset-0 z-[2000] flex items-center justify-center bg-black/60 p-4" onClick={onClose}>
-      <div className="w-full max-w-sm rounded-2xl border border-white/10 bg-ember-card p-5" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-sm rounded-2xl border border-ember-line/10 bg-ember-card p-5" onClick={(e) => e.stopPropagation()}>
         <h3 className="font-display text-lg font-bold text-ember-cream">{title}</h3>
         {desc && <p className="mt-1 text-sm text-ember-muted">{desc}</p>}
         {children}
@@ -1007,7 +1157,7 @@ function ConfirmModal({ title, desc, confirmLabel, danger, onClose, onConfirm })
   return (
     <ModalShell title={title} desc={desc} onClose={onClose}>
       <div className="mt-4 flex gap-2">
-        <button onClick={onClose} className="flex-1 rounded-lg bg-white/5 py-2 font-semibold text-ember-cream">
+        <button onClick={onClose} className="flex-1 rounded-lg bg-ember-line/5 py-2 font-semibold text-ember-cream">
           Annulla
         </button>
         <button
@@ -1033,7 +1183,7 @@ function ReasonModal({ title, desc, confirmLabel, danger, onClose, onConfirm }) 
         className="mt-3 w-full rounded-lg bg-ember-bg p-2 text-sm text-ember-cream outline-none ring-ember-primary focus:ring-2"
       />
       <div className="mt-4 flex gap-2">
-        <button onClick={onClose} className="flex-1 rounded-lg bg-white/5 py-2 font-semibold text-ember-cream">
+        <button onClick={onClose} className="flex-1 rounded-lg bg-ember-line/5 py-2 font-semibold text-ember-cream">
           Annulla
         </button>
         <button
@@ -1065,7 +1215,7 @@ function SuspendModal({ user, onClose, onConfirm }) {
             key={d.hours}
             onClick={() => setHours(d.hours)}
             className={`rounded-lg py-2 text-sm font-semibold transition ${
-              hours === d.hours ? 'bg-ember-primary text-ember-bg' : 'bg-white/5 text-ember-cream'
+              hours === d.hours ? 'bg-ember-primary text-ember-bg' : 'bg-ember-line/5 text-ember-cream'
             }`}
           >
             {d.label}
@@ -1088,7 +1238,7 @@ function SuspendModal({ user, onClose, onConfirm }) {
         className="mt-2 w-full rounded-lg bg-ember-bg p-2 text-sm text-ember-cream outline-none ring-ember-primary focus:ring-2"
       />
       <div className="mt-4 flex gap-2">
-        <button onClick={onClose} className="flex-1 rounded-lg bg-white/5 py-2 font-semibold text-ember-cream">
+        <button onClick={onClose} className="flex-1 rounded-lg bg-ember-line/5 py-2 font-semibold text-ember-cream">
           Annulla
         </button>
         <button
@@ -1114,7 +1264,7 @@ function RoleModal({ user, onClose, onConfirm }) {
             key={r}
             onClick={() => setRole(r)}
             className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-semibold transition ${
-              role === r ? 'bg-ember-primary text-ember-bg' : 'bg-white/5 text-ember-cream'
+              role === r ? 'bg-ember-primary text-ember-bg' : 'bg-ember-line/5 text-ember-cream'
             }`}
           >
             <span className="capitalize">{r}</span>
@@ -1123,7 +1273,7 @@ function RoleModal({ user, onClose, onConfirm }) {
         ))}
       </div>
       <div className="mt-4 flex gap-2">
-        <button onClick={onClose} className="flex-1 rounded-lg bg-white/5 py-2 font-semibold text-ember-cream">
+        <button onClick={onClose} className="flex-1 rounded-lg bg-ember-line/5 py-2 font-semibold text-ember-cream">
           Annulla
         </button>
         <button

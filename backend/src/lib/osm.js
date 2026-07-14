@@ -91,9 +91,12 @@ function mapElement(el) {
 }
 
 /**
- * Find bars/pubs/biergartens/nightclubs within `radiusKm` of (lat, lng) via
- * Overpass. Nightclubs (discoteche) come back tagged `amenity=nightclub` so the
- * client can distinguish them from bars. Returns normalized POIs (not persisted).
+ * Find bars/pubs/biergartens/nightclubs/cafes within `radiusKm` of (lat, lng)
+ * via Overpass. Cafes are included because the Italian "bar" is usually tagged
+ * `amenity=cafe` in OSM (`amenity=bar` means cocktail bar there); the client's
+ * open-until-23 filter keeps daytime-only coffee shops off the map. Nightclubs
+ * (discoteche) come back tagged `amenity=nightclub` so the client can
+ * distinguish them from bars. Returns normalized POIs (not persisted).
  */
 // Great-circle distance in km (Haversine). Used to trim the bbox square below
 // back to the requested circular radius; also reused by routes/places.js for
@@ -130,11 +133,11 @@ export async function findNearbyBars(lat, lng, radiusKm = 2) {
   const wayClause =
     radiusKm > 30
       ? ''
-      : `way["amenity"~"^(bar|pub|biergarten|nightclub)$"](${bbox});`;
+      : `way["amenity"~"^(bar|pub|biergarten|nightclub|cafe)$"](${bbox});`;
   const query = `
     [out:json][timeout:${serverTimeout}];
     (
-      node["amenity"~"^(bar|pub|biergarten|nightclub)$"](${bbox});
+      node["amenity"~"^(bar|pub|biergarten|nightclub|cafe)$"](${bbox});
       ${wayClause}
     );
     out center tags;`;

@@ -17,7 +17,7 @@ export default function Logo({ size = 'md', icon = true }) {
           aria-hidden="true"
           width={dims}
           height={dims}
-          className="shrink-0 object-contain drop-shadow-[0_2px_6px_rgba(224,123,26,0.35)]"
+          className="shrink-0 object-contain drop-shadow-[0_2px_6px_rgb(var(--ember-primary)/0.35)]"
           style={{ height: dims, width: 'auto' }}
         />
       )}

@@ -14,10 +14,12 @@ import { shareBar } from '../utils/share.js';
 // Route id is either our DB uuid or an OSM token "osm_<type>_<id>" for bars
 // that live only in OpenStreetMap until first visited.
 import { parseOsmToken } from '../utils/score.js';
+import { useI18n } from '../i18n/index.js';
 
 const PAGE_SIZE = 10;
 
 export default function BarDetail() {
+  const { t } = useI18n();
   const { id } = useParams();
   const location = useLocation();
   const { isAuthenticated, isAdmin, user } = useAuth();
@@ -50,7 +52,7 @@ export default function BarDetail() {
       const total = ratingData.total ?? ratingData.pagination?.total;
       setHasMore(total != null ? page * PAGE_SIZE < total : ratingData.ratings.length === PAGE_SIZE);
     } catch {
-      setError('Bar non trovato');
+      setError(t('bar.notFound'));
     } finally {
       setLoading(false);
     }
@@ -68,7 +70,7 @@ export default function BarDetail() {
     setShowForm(false);
     setPage(1);
     await load();
-    setToast({ msg: 'Valutazione salvata', icon: 'check' });
+    setToast({ msg: t('bar.ratingSaved'), icon: 'check' });
   }
 
   async function deleteRating() {
@@ -76,18 +78,18 @@ export default function BarDetail() {
     await ratingsApi.remove(bar.id, myRating.id);
     setShowForm(false);
     await load();
-    setToast({ msg: 'Valutazione eliminata', icon: 'trash' });
+    setToast({ msg: t('bar.ratingDeleted'), icon: 'trash' });
   }
 
   // Admin moderation: remove an inappropriate review (any user's).
   async function adminDeleteRating(rid) {
-    if (!confirm('Eliminare questa valutazione inappropriata?')) return;
+    if (!confirm(t('bar.adminDeleteConfirm'))) return;
     try {
       await ratingsApi.remove(bar.id, rid);
       await load();
-      setToast({ msg: 'Valutazione rimossa', icon: 'trash' });
+      setToast({ msg: t('bar.ratingRemoved'), icon: 'trash' });
     } catch {
-      setToast({ msg: 'Errore durante l’eliminazione', icon: 'info' });
+      setToast({ msg: t('bar.deleteError'), icon: 'info' });
     }
   }
 
@@ -97,13 +99,13 @@ export default function BarDetail() {
 
   async function onShare() {
     const res = await shareBar(bar);
-    if (res === 'copied') setToast({ msg: 'Link copiato', icon: 'link' });
+    if (res === 'copied') setToast({ msg: t('bar.linkCopied'), icon: 'link' });
   }
 
   if (loading && !bar)
     return (
       <p className="flex items-center gap-2 bg-ember-bg p-4 text-ember-muted">
-        <Icon name="reload" size={16} className="animate-spin" /> Caricamento…
+        <Icon name="reload" size={16} className="animate-spin" /> {t('common.loading')}
       </p>
     );
 
@@ -112,7 +114,7 @@ export default function BarDetail() {
       <div className="min-h-full bg-ember-bg p-4">
         <p className="mb-3 text-ember-accent">{error}</p>
         <Link to="/" className="inline-flex items-center gap-1 text-ember-primary underline">
-          <Icon name="arrow-left" size={16} /> Torna alla mappa
+          <Icon name="arrow-left" size={16} /> {t('common.backToMap')}
         </Link>
       </div>
     );
@@ -133,21 +135,21 @@ export default function BarDetail() {
           <div className="flex h-full flex-col items-center justify-center gap-2 text-ember-muted">
             <Icon name="image" size={44} />
             <span className="flex items-center gap-1 text-xs">
-              <Icon name="camera" size={14} /> Nessuna foto
+              <Icon name="camera" size={14} /> {t('bar.noPhoto')}
             </span>
           </div>
         )}
         <Link
           to="/"
-          aria-label="Torna alla mappa"
+          aria-label={t('common.backToMap')}
           className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-ember-bg/70 px-3 py-1.5 text-sm text-ember-cream backdrop-blur"
         >
-          <Icon name="arrow-left" size={16} /> Mappa
+          <Icon name="arrow-left" size={16} /> {t('common.map')}
         </Link>
         <div className="absolute right-3 top-3 flex gap-2">
           <button
             onClick={() => toggle(bar.id)}
-            aria-label={saved ? 'Rimuovi dai salvati' : 'Salva'}
+            aria-label={saved ? t('bar.removeBookmark') : t('bar.saveBookmark')}
             aria-pressed={saved}
             className={`rounded-full bg-ember-bg/70 p-2 backdrop-blur ${
               saved ? 'text-ember-primary' : 'text-ember-cream'
@@ -157,7 +159,7 @@ export default function BarDetail() {
           </button>
           <button
             onClick={onShare}
-            aria-label="Condividi"
+            aria-label={t('common.share')}
             className="rounded-full bg-ember-bg/70 p-2 text-ember-cream backdrop-blur"
           >
             <Icon name="share" size={18} />
@@ -188,7 +190,7 @@ export default function BarDetail() {
               href={`tel:${bar.phone}`}
               className="flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream"
             >
-              <Icon name="phone" size={16} className="text-ember-primary" /> Chiama
+              <Icon name="phone" size={16} className="text-ember-primary" /> {t('bar.call')}
             </a>
           )}
           {bar.website && (
@@ -198,7 +200,7 @@ export default function BarDetail() {
               rel="noreferrer"
               className="flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream"
             >
-              <Icon name="link" size={16} className="text-ember-primary" /> Sito web
+              <Icon name="link" size={16} className="text-ember-primary" /> {t('bar.website')}
             </a>
           )}
           <button
@@ -206,20 +208,20 @@ export default function BarDetail() {
             aria-expanded={showInfo}
             className="flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream"
           >
-            <Icon name="info" size={16} className="text-ember-primary" /> Info
+            <Icon name="info" size={16} className="text-ember-primary" /> {t('bar.info')}
             <Icon name={showInfo ? 'chevron-up' : 'chevron-down'} size={14} />
           </button>
         </div>
 
         {showInfo && (
-          <div className="space-y-1 rounded-card border border-white/5 bg-ember-card p-4 text-sm text-ember-muted">
+          <div className="space-y-1 rounded-card border border-ember-line/5 bg-ember-card p-4 text-sm text-ember-muted">
             <p className="flex items-center gap-2">
               <Icon name="pin" size={14} className="text-ember-primary" />
               {bar.address}, {bar.city}
             </p>
             <p className="flex items-center gap-2">
               <Icon name={bar.is_active === false ? 'close' : 'check'} size={14} className="text-ember-primary" />
-              {bar.is_active === false ? 'Attualmente chiuso' : 'Aperto'}
+              {bar.is_active === false ? t('common.currentlyClosed') : t('common.open')}
             </p>
             {bar.phone && (
               <p className="flex items-center gap-2">
@@ -244,12 +246,12 @@ export default function BarDetail() {
         )}
 
         {/* Community rating */}
-        <section className="rounded-card border border-white/5 bg-ember-card p-4">
+        <section className="rounded-card border border-ember-line/5 bg-ember-card p-4">
           <h2 className="mb-3 flex items-center gap-2 font-display font-bold text-ember-cream">
             <Icon name="star" size={18} className="text-ember-primary" />
-            Valutazione community
+            {t('bar.communityRating')}
             <span className="ml-auto text-sm font-normal text-ember-muted">
-              {summary?.total_ratings || 0} voti
+              {summary?.total_ratings || 0} {t('common.votes')}
             </span>
           </h2>
           <RatingBars summary={summary} />
@@ -276,7 +278,7 @@ export default function BarDetail() {
               className="flex w-full items-center justify-center gap-2 rounded-lg bg-ember-primary py-3 font-semibold text-ember-bg active:scale-[0.99]"
             >
               <Icon name={myRating ? 'edit' : 'star'} size={18} />
-              {myRating ? 'Modifica la tua valutazione' : 'Valuta questo bar'}
+              {myRating ? t('bar.editYourRating') : t('bar.rateThis')}
             </button>
           )
         ) : (
@@ -285,7 +287,7 @@ export default function BarDetail() {
             className="flex items-center justify-center gap-2 rounded-lg bg-ember-card py-3 text-center text-ember-cream"
           >
             <Icon name="user" size={18} className="text-ember-primary" />
-            Accedi per valutare
+            {t('bar.loginToRate')}
           </Link>
         )}
 
@@ -293,13 +295,13 @@ export default function BarDetail() {
         <section>
           <h2 className="mb-2 flex items-center gap-2 font-display font-bold text-ember-cream">
             <Icon name="review" size={18} className="text-ember-primary" />
-            Recensioni
+            {t('bar.reviews')}
           </h2>
 
           {ratings.length === 0 ? (
             <EmptyState
-              title="Sii il primo"
-              hint="Nessuna recensione ancora. Aiuta la community con la tua."
+              title={t('bar.beFirst')}
+              hint={t('bar.noReviewsYetHelp')}
               pin="arancione"
             />
           ) : (
@@ -311,7 +313,7 @@ export default function BarDetail() {
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-1.5 font-medium text-ember-cream">
                         <Icon name="user" size={14} className="text-ember-muted" />
-                        @{r.profiles?.username || 'utente'}
+                        @{r.profiles?.username || t('common.user')}
                       </span>
                       <span className="flex items-center gap-2 text-xs text-ember-primary">
                         <span className="flex items-center gap-0.5">
@@ -342,10 +344,10 @@ export default function BarDetail() {
                     </div>
                     {r.commento && <p className="mt-1 text-ember-muted">{r.commento}</p>}
                     <div className="mt-2 flex items-center gap-3 text-xs text-ember-muted">
-                      <span>Utile?</span>
+                      <span>{t('bar.helpful')}</span>
                       <button
                         onClick={() => voteHelpful(r.id, 'up')}
-                        aria-label="Utile"
+                        aria-label={t('bar.helpfulAria')}
                         aria-pressed={vote === 'up'}
                         className={vote === 'up' ? 'text-ember-primary' : 'hover:text-ember-cream'}
                       >
@@ -353,7 +355,7 @@ export default function BarDetail() {
                       </button>
                       <button
                         onClick={() => voteHelpful(r.id, 'down')}
-                        aria-label="Non utile"
+                        aria-label={t('bar.notHelpfulAria')}
                         aria-pressed={vote === 'down'}
                         className={vote === 'down' ? 'text-ember-accent' : 'hover:text-ember-cream'}
                       >
@@ -362,7 +364,7 @@ export default function BarDetail() {
                       {isAdmin && r.id !== myRating?.id && (
                         <button
                           onClick={() => adminDeleteRating(r.id)}
-                          aria-label="Elimina valutazione (admin)"
+                          aria-label={t('bar.adminDeleteAria')}
                           className="ml-auto text-ember-accent hover:text-ember-cream"
                         >
                           <Icon name="trash" size={16} />
@@ -381,15 +383,15 @@ export default function BarDetail() {
                     disabled={page === 1}
                     className="flex items-center gap-1 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream disabled:opacity-40"
                   >
-                    <Icon name="arrow-left" size={16} /> Prec.
+                    <Icon name="arrow-left" size={16} /> {t('common.prev')}
                   </button>
-                  <span className="text-xs text-ember-muted">Pagina {page}</span>
+                  <span className="text-xs text-ember-muted">{t('common.page', { n: page })}</span>
                   <button
                     onClick={() => setPage((p) => p + 1)}
                     disabled={!hasMore}
                     className="flex items-center gap-1 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream disabled:opacity-40"
                   >
-                    Succ. <Icon name="arrow-right" size={16} />
+                    {t('common.next')} <Icon name="arrow-right" size={16} />
                   </button>
                 </div>
               )}

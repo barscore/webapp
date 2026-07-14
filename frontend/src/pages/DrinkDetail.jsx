@@ -7,12 +7,17 @@ import DrinkVoteModal from '../components/DrinkVoteModal.jsx';
 import ProposeDrinkModal from '../components/ProposeDrinkModal.jsx';
 import { drinksApi } from '../services/api.js';
 import { useAuth } from '../hooks/useAuth.js';
+import { useI18n } from '../i18n/index.js';
 
 const PAGE_SIZE = 20;
+// Keep in sync with RANKING_RADIUS_KM in backend/src/routes/drinks.js.
+const RADIUS_KM = 30;
 
 // Drink detail: ranking of the bars that make this drink best (community
 // 1–5 votes, native scale — not the ×2 used for the bar overall score).
+// With geolocation the ranking only shows bars within RADIUS_KM.
 export default function DrinkDetail() {
+  const { t } = useI18n();
   const { id } = useParams();
   const { isAuthenticated } = useAuth();
 
@@ -25,23 +30,42 @@ export default function DrinkDetail() {
   const [voteOpen, setVoteOpen] = useState(false);
   const [proposeOpen, setProposeOpen] = useState(false);
   const [toast, setToast] = useState(null);
+  // undefined = still resolving, [lat, lng] = fix, null = denied/unavailable
+  // (fall back to the unfiltered global ranking).
+  const [userPos, setUserPos] = useState(undefined);
+
+  // Same caveat as Home: geolocation needs a secure context; on failure we
+  // just skip the radius filter instead of blocking the page.
+  useEffect(() => {
+    if (!navigator.geolocation) {
+      setUserPos(null);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setUserPos([pos.coords.latitude, pos.coords.longitude]),
+      () => setUserPos(null),
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 },
+    );
+  }, []);
 
   const load = useCallback(async () => {
+    if (userPos === undefined) return; // wait for geolocation to settle
     setLoading(true);
     try {
+      const geo = userPos ? { lat: userPos[0], lng: userPos[1] } : {};
       const [drinkData, ranking] = await Promise.all([
         drinksApi.get(id),
-        drinksApi.topBars(id, { page, limit: PAGE_SIZE }),
+        drinksApi.topBars(id, { page, limit: PAGE_SIZE, ...geo }),
       ]);
       setDrink(drinkData);
       setBars(ranking.bars);
       setHasMore(page * PAGE_SIZE < (ranking.total ?? 0));
     } catch {
-      setError('Drink non trovato');
+      setError(t('drink.notFound'));
     } finally {
       setLoading(false);
     }
-  }, [id, page]);
+  }, [id, page, userPos]);
 
   useEffect(() => {
     load();
@@ -50,7 +74,7 @@ export default function DrinkDetail() {
   if (loading && !drink)
     return (
       <p className="flex items-center gap-2 bg-ember-bg p-4 text-ember-muted">
-        <Icon name="reload" size={16} className="animate-spin" /> Caricamento…
+        <Icon name="reload" size={16} className="animate-spin" /> {t('common.loading')}
       </p>
     );
 
@@ -59,7 +83,7 @@ export default function DrinkDetail() {
       <div className="min-h-full bg-ember-bg p-4">
         <p className="mb-3 text-ember-accent">{error}</p>
         <Link to="/" className="inline-flex items-center gap-1 text-ember-primary underline">
-          <Icon name="arrow-left" size={16} /> Torna alla mappa
+          <Icon name="arrow-left" size={16} /> {t('common.backToMap')}
         </Link>
       </div>
     );
@@ -68,7 +92,7 @@ export default function DrinkDetail() {
     <div className="min-h-full bg-ember-bg pb-8">
       <div className="mx-auto w-full max-w-2xl space-y-5 p-4">
         <Link to="/" className="inline-flex items-center gap-1 text-sm text-ember-muted">
-          <Icon name="arrow-left" size={15} /> Mappa
+          <Icon name="arrow-left" size={15} /> {t('common.map')}
         </Link>
 
         {/* Header */}
@@ -88,7 +112,7 @@ export default function DrinkDetail() {
             onClick={() => setVoteOpen(true)}
             className="flex w-full items-center justify-center gap-2 rounded-lg bg-ember-primary py-3 font-semibold text-ember-bg active:scale-[0.99]"
           >
-            <Icon name="star" size={18} /> Valuta questo drink
+            <Icon name="star" size={18} /> {t('drink.rateThis')}
           </button>
         ) : (
           <Link
@@ -96,7 +120,7 @@ export default function DrinkDetail() {
             className="flex items-center justify-center gap-2 rounded-lg bg-ember-card py-3 text-center text-ember-cream"
           >
             <Icon name="user" size={18} className="text-ember-primary" />
-            Accedi per valutare
+            {t('bar.loginToRate')}
           </Link>
         )}
 
@@ -104,13 +128,22 @@ export default function DrinkDetail() {
         <section>
           <h2 className="mb-2 flex items-center gap-2 font-display font-bold text-ember-cream">
             <Icon name="star" size={18} className="text-ember-primary" />
-            Dove lo fanno meglio
+            {t('drink.whereBest')}
+            {userPos && (
+              <span className="text-xs font-normal text-ember-muted">
+                {t('drink.withinKm', { n: RADIUS_KM })}
+              </span>
+            )}
           </h2>
 
           {bars.length === 0 ? (
             <EmptyState
-              title="Nessun voto ancora"
-              hint="Nessun bar è stato ancora votato per questo drink. Vota il tuo preferito!"
+              title={t('drink.noVotes')}
+              hint={
+                userPos
+                  ? t('drink.noVotesGeoHint', { n: RADIUS_KM })
+                  : t('drink.noVotesHint')
+              }
               pin="arancione"
             />
           ) : (
@@ -119,7 +152,7 @@ export default function DrinkDetail() {
                 <li key={b.id}>
                   <Link
                     to={`/bar/${b.id}`}
-                    className="flex w-full items-center gap-3 rounded-2xl border border-white/5 bg-white/[0.03] px-3 py-3 transition hover:border-white/10 hover:bg-white/[0.06]"
+                    className="flex w-full items-center gap-3 rounded-2xl border border-ember-line/5 bg-ember-line/[0.03] px-3 py-3 transition hover:border-ember-line/10 hover:bg-ember-line/[0.06]"
                   >
                     <span className="w-7 shrink-0 text-center font-display text-lg font-extrabold tabular-nums text-ember-muted">
                       {(page - 1) * PAGE_SIZE + i + 1}
@@ -130,6 +163,7 @@ export default function DrinkDetail() {
                       </span>
                       <span className="block truncate text-xs text-ember-muted">
                         {[b.address, b.city].filter(Boolean).join(', ')}
+                        {b.distance_km != null && ` · ${b.distance_km} km`}
                       </span>
                     </span>
                     <span className="flex shrink-0 items-center gap-1 font-display text-base font-extrabold tabular-nums text-ember-primary">
@@ -137,7 +171,7 @@ export default function DrinkDetail() {
                       {Number(b.avg_rating).toFixed(1)}
                     </span>
                     <span className="shrink-0 text-xs text-ember-muted">
-                      {b.total_ratings} {b.total_ratings === 1 ? 'voto' : 'voti'}
+                      {b.total_ratings} {b.total_ratings === 1 ? t('common.vote') : t('common.votes')}
                     </span>
                   </Link>
                 </li>
@@ -152,15 +186,15 @@ export default function DrinkDetail() {
                 disabled={page === 1}
                 className="flex items-center gap-1 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream disabled:opacity-40"
               >
-                <Icon name="arrow-left" size={16} /> Prec.
+                <Icon name="arrow-left" size={16} /> {t('common.prev')}
               </button>
-              <span className="text-xs text-ember-muted">Pagina {page}</span>
+              <span className="text-xs text-ember-muted">{t('common.page', { n: page })}</span>
               <button
                 onClick={() => setPage((p) => p + 1)}
                 disabled={!hasMore}
                 className="flex items-center gap-1 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream disabled:opacity-40"
               >
-                Succ. <Icon name="arrow-right" size={16} />
+                {t('common.next')} <Icon name="arrow-right" size={16} />
               </button>
             </div>
           )}
@@ -174,7 +208,7 @@ export default function DrinkDetail() {
           onVoted={() => {
             setPage(1);
             load();
-            setToast({ msg: 'Voto salvato', icon: 'check' });
+            setToast({ msg: t('bar.voteSaved'), icon: 'check' });
           }}
           onPropose={() => {
             setVoteOpen(false);
@@ -186,7 +220,7 @@ export default function DrinkDetail() {
       {proposeOpen && (
         <ProposeDrinkModal
           onClose={() => setProposeOpen(false)}
-          onSent={() => setToast({ msg: "Grazie! Proposta inviata — visibile dopo l'approvazione", icon: 'check' })}
+          onSent={() => setToast({ msg: t('home.proposalSent'), icon: 'check' })}
         />
       )}
 

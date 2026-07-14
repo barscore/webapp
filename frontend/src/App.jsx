@@ -5,6 +5,7 @@ import { supabase } from './services/supabase.js';
 import Home from './pages/Home.jsx';
 import BanBanner from './components/BanBanner.jsx';
 import TutorialSplash from './components/TutorialSplash.jsx';
+import InstallHint from './components/InstallHint.jsx';
 import CookieBanner from './components/CookieBanner.jsx';
 import { loadAdsense } from './services/adsense.js';
 import { onConsentChange } from './services/consent.js';
@@ -86,11 +87,15 @@ export default function App() {
       );
     }
     // Beta program: admin/moderator/betatester pass, everyone else is locked
-    // out (backend rejects their writes too — 503 BETA).
-    if (maint?.beta_mode && !canBeta) {
+    // out (backend rejects their writes too — 503 BETA). A signed-in user has
+    // an account waiting for promotion, so they get the "attendi l'approvazione
+    // di un moderatore" variant instead of the generic lock. /register stays
+    // reachable (unlike under maintenance) so people can sign up and land in
+    // the pending state.
+    if (maint?.beta_mode && !canBeta && !(location.pathname === '/register' && !isAuthenticated)) {
       return (
         <Suspense fallback={Fallback}>
-          <Maintenance beta />
+          <Maintenance beta pending={isAuthenticated} />
         </Suspense>
       );
     }
@@ -100,6 +105,7 @@ export default function App() {
     <>
       <BanBanner />
       <TutorialSplash />
+      <InstallHint />
       <CookieBanner />
       <Suspense fallback={Fallback}>
       <Routes>

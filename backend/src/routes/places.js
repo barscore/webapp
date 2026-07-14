@@ -30,7 +30,7 @@ const inflight = new Map(); // key -> Promise (dedupe concurrent upstream fetche
 // clicks, fine enough not to miss bars for the given radius. The `v` prefix is a
 // schema version: bump it whenever the Overpass query changes (e.g. adding
 // nightclubs) so old cached results without the new POIs are ignored.
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5'; // v5: cafes added to the Overpass query
 const cacheKey = (lat, lng, r) => `${CACHE_VERSION}:${lat.toFixed(2)},${lng.toFixed(2)},${r}`;
 
 function loadCacheFromDisk() {

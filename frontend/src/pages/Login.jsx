@@ -57,7 +57,7 @@ export default function Login() {
 export function AuthShell({ title, children }) {
   return (
     <div className="flex min-h-full items-center justify-center bg-ember-bg p-4">
-      <div className="w-full max-w-sm rounded-card border border-white/5 bg-ember-card p-6">
+      <div className="w-full max-w-sm rounded-card border border-ember-line/5 bg-ember-card p-6">
         <Link to="/" className="mb-4 inline-flex items-center gap-1 text-sm text-ember-muted">
           <Icon name="arrow-left" size={15} /> Mappa
         </Link>
@@ -66,9 +66,9 @@ export function AuthShell({ title, children }) {
         </div>
         <h1 className="mb-4 font-display text-2xl font-bold text-ember-cream">{title}</h1>
         {children}
-        <div className="mt-6 flex items-center justify-center gap-3 border-t border-white/5 pt-4 text-xs text-ember-muted">
+        <div className="mt-6 flex items-center justify-center gap-3 border-t border-ember-line/5 pt-4 text-xs text-ember-muted">
           <Link to="/privacy" className="hover:text-ember-primary">Privacy</Link>
-          <span className="text-white/15">·</span>
+          <span className="text-ember-line/15">·</span>
           <Link to="/tos" className="hover:text-ember-primary">Termini</Link>
         </div>
       </div>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import Icon from './Icon.jsx';
 import { useAuth } from '../hooks/useAuth.js';
-import { tutorialSeenKey } from './TutorialSplash.jsx';
+import { tutorialSeen } from './TutorialSplash.jsx';
 
 // One-time "installa l'app" hint for mobile browsers. Three variants:
 //   iOS               — no install API: Safari Condividi → "Aggiungi alla
@@ -26,7 +26,7 @@ const isStandalone = () =>
 function Step({ n, children }) {
   return (
     <li className="flex items-start gap-2.5">
-      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-ember-primary/15 font-display text-xs font-bold text-ember-primary">
+      <span className="grid h-5 w-5 shrink-0 place-items-center rounded-full bg-ember-primary/15 font-display text-xs font-bold text-ember-ink">
         {n}
       </span>
       <span className="min-w-0">{children}</span>
@@ -35,7 +35,7 @@ function Step({ n, children }) {
 }
 
 export default function InstallHint() {
-  const { user, loading } = useAuth();
+  const { loading } = useAuth();
   const [deferred, setDeferred] = useState(null); // saved beforeinstallprompt event
   const [open, setOpen] = useState(false);
   const [tutorialTick, setTutorialTick] = useState(0); // bumped when the tutorial closes
@@ -65,12 +65,12 @@ export default function InstallHint() {
   useEffect(() => {
     if (loading) return;
     if (!isMobile || isStandalone() || localStorage.getItem(DISMISS_KEY)) return;
-    // A signed-in user who hasn't finished the welcome tour yet sees that
-    // first; the rabar:tutorial-dismissed event re-runs this effect after.
-    if (user && !localStorage.getItem(tutorialSeenKey(user.id))) return;
+    // The welcome tour comes first; the rabar:tutorial-dismissed event re-runs
+    // this effect once it's done.
+    if (!tutorialSeen()) return;
     const t = setTimeout(() => setOpen(true), 1500);
     return () => clearTimeout(t);
-  }, [loading, user?.id, tutorialTick]);
+  }, [loading, tutorialTick]);
 
   if (!open) return null;
 
@@ -93,11 +93,11 @@ export default function InstallHint() {
         role="dialog"
         aria-modal="true"
         aria-label="Installa l'app"
-        className="w-full max-w-sm space-y-4 rounded-card border border-ember-line/10 bg-ember-card p-5"
+        className="glass-flat fade-in w-full max-w-sm space-y-4 rounded-sheet p-5"
       >
         <div className="flex items-start justify-between gap-3">
           <div className="flex h-12 w-12 items-center justify-center rounded-full bg-ember-primary/15">
-            <Icon name="home" size={24} className="text-ember-primary" />
+            <Icon name="home" size={24} className="text-ember-ink" />
           </div>
           <button
             onClick={dismiss}
@@ -123,7 +123,7 @@ export default function InstallHint() {
             </Step>
             <Step n={2}>
               Tocca <strong className="text-ember-cream">Condividi</strong>{' '}
-              <Icon name="share" size={14} className="text-ember-primary" />
+              <Icon name="share" size={14} className="text-ember-ink" />
             </Step>
             <Step n={3}>
               Scegli{' '}
@@ -154,7 +154,7 @@ export default function InstallHint() {
             <button
               type="button"
               onClick={install}
-              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-ember-primary py-2.5 text-sm font-semibold text-ember-bg active:scale-[0.98]"
+              className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-ember-primary py-2.5 text-sm font-semibold text-ember-on-primary active:scale-[0.98]"
             >
               <Icon name="plus" size={16} /> Installa
             </button>
@@ -162,7 +162,7 @@ export default function InstallHint() {
             <button
               type="button"
               onClick={dismiss}
-              className="flex-1 rounded-lg bg-ember-primary py-2.5 text-sm font-semibold text-ember-bg active:scale-[0.98]"
+              className="btn-primary flex-1 py-2.5 text-sm active:scale-[0.98]"
             >
               Ho capito
             </button>

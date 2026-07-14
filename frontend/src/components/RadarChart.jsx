@@ -34,11 +34,13 @@ function AxisTick({ i, label, value }) {
       <text x={x} y={y + 2} textAnchor="middle" fill="rgb(var(--ember-cream))" fontSize={12}>
         {label.axis}
       </text>
+      {/* 11px bold — small text, so it needs the AA-safe ink rather than the
+          raw primary (which is only 3.5:1 on the midnight-red card). */}
       <text
         x={x}
         y={y + 17}
         textAnchor="middle"
-        fill="rgb(var(--ember-primary))"
+        fill="rgb(var(--ember-ink))"
         fontSize={11}
         fontWeight={700}
       >

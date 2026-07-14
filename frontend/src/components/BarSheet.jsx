@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import RadarChart from './RadarChart.jsx';
+import { SkeletonBar } from './Skeleton.jsx';
 import RatingBars from './RatingBars.jsx';
 import RatingForm from './RatingForm.jsx';
 import BarDrinksSection from './BarDrinksSection.jsx';
@@ -106,24 +107,24 @@ export default function BarSheet({ seed, onClose, onChanged }) {
   return (
     <>
       {/* Tap-outside backdrop to dismiss. */}
-      <div className="absolute inset-0 z-[1450] bg-black/40" onClick={onClose} aria-hidden />
+      <div className="absolute inset-0 z-[1450] bg-black/50 backdrop-blur-[3px]" onClick={onClose} aria-hidden />
 
       <section
         ref={sheetRef}
         role="dialog"
         aria-modal="true"
-        className={`rabar-sheet-in absolute z-[1500] flex flex-col overflow-hidden border border-ember-line/10 bg-ember-sheet shadow-[0_-10px_50px_rgba(0,0,0,0.6)] md:bg-ember-sheet/95 md:backdrop-blur-xl ${
+        className={`rabar-sheet-in sheet absolute z-[1500] flex flex-col overflow-hidden ${
           isMobile
             ? full
               ? 'inset-x-0 bottom-0 rounded-none'
-              : 'inset-x-3 bottom-3 rounded-3xl'
-            : 'inset-x-3 bottom-3 top-16 rounded-3xl md:inset-x-auto md:left-5 md:top-24 md:bottom-6 md:w-[372px]'
+              : 'inset-x-3 bottom-3 rounded-sheet'
+            : 'inset-x-3 bottom-3 top-16 rounded-sheet md:inset-x-auto md:left-5 md:top-24 md:bottom-6 md:w-[372px]'
         }`}
         style={
           // Bottom-anchored with explicit height (never inset-0) so the
           // imperative drag can shrink the sheet from fullscreen too.
           isMobile
-            ? { height: `${height}dvh`, transition: dragging ? 'none' : 'height 0.25s ease' }
+            ? { height: `${height}dvh`, transition: dragging ? 'none' : 'height 250ms cubic-bezier(0.22, 1, 0.36, 1)' }
             : undefined
         }
       >
@@ -141,7 +142,7 @@ export default function BarSheet({ seed, onClose, onChanged }) {
             type="button"
             onClick={onClose}
             aria-label={t('common.close')}
-            className="absolute right-3 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-ember-line/5 text-ember-cream hover:bg-ember-line/10"
+            className="press absolute right-3 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-ember-line/5 text-ember-cream transition-colors hover:bg-ember-line/10"
           >
             <Icon name="close" size={16} />
           </button>
@@ -152,13 +153,11 @@ export default function BarSheet({ seed, onClose, onChanged }) {
           className={`no-scrollbar flex-1 overflow-y-auto px-4 pb-4 ${isMobile ? 'touch-none' : ''}`}
         >
           {loading && !bar && (
-            <p className="flex items-center gap-2 py-6 text-sm text-ember-muted">
-              <Icon name="reload" size={16} className="animate-spin" /> {t('common.loading')}
-            </p>
+            <SkeletonBar label={t('common.loading')} />
           )}
 
           {error && (
-            <p className="py-6 text-center text-ember-accent">{error}</p>
+            <p className="py-6 text-center text-ember-danger">{error}</p>
           )}
 
           {bar && (
@@ -172,7 +171,7 @@ export default function BarSheet({ seed, onClose, onChanged }) {
                     {[bar.address, bar.city].filter(Boolean).join(', ')}
                   </p>
                 </div>
-                <span className="flex shrink-0 items-center gap-1 rounded-lg bg-ember-primary px-2.5 py-1.5 font-display font-bold text-ember-bg">
+                <span className="flex shrink-0 items-center gap-1 rounded-lg bg-ember-primary px-2.5 py-1.5 font-display font-bold text-ember-on-primary">
                   <Icon name="star" size={14} />
                   {(overall * 2).toFixed(1)}
                 </span>
@@ -182,12 +181,12 @@ export default function BarSheet({ seed, onClose, onChanged }) {
               <div className="flex flex-wrap gap-2">
                 {bar.phone && (
                   <a href={`tel:${bar.phone}`} className="flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream">
-                    <Icon name="phone" size={16} className="text-ember-primary" /> {t('bar.call')}
+                    <Icon name="phone" size={16} className="text-ember-ink" /> {t('bar.call')}
                   </a>
                 )}
                 {bar.website && (
                   <a href={bar.website} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream">
-                    <Icon name="link" size={16} className="text-ember-primary" /> {t('bar.site')}
+                    <Icon name="link" size={16} className="text-ember-ink" /> {t('bar.site')}
                   </a>
                 )}
                 <button
@@ -195,14 +194,14 @@ export default function BarSheet({ seed, onClose, onChanged }) {
                   aria-expanded={showInfo}
                   className="flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream"
                 >
-                  <Icon name="info" size={16} className="text-ember-primary" /> {t('bar.info')}
+                  <Icon name="info" size={16} className="text-ember-ink" /> {t('bar.info')}
                   <Icon name={showInfo ? 'chevron-up' : 'chevron-down'} size={14} />
                 </button>
                 <button
                   onClick={() => toggle(bar.id)}
                   aria-pressed={saved}
                   aria-label={saved ? t('bar.removeBookmark') : t('bar.saveBookmark')}
-                  className={`flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm ${saved ? 'text-ember-primary' : 'text-ember-cream'}`}
+                  className={`flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm ${saved ? 'text-ember-ink' : 'text-ember-cream'}`}
                 >
                   <Icon name="bookmark" size={16} />
                 </button>
@@ -212,18 +211,18 @@ export default function BarSheet({ seed, onClose, onChanged }) {
               </div>
 
               {showInfo && (
-                <div className="space-y-1 rounded-card border border-ember-line/5 bg-ember-card p-4 text-sm text-ember-muted">
+                <div className="card space-y-1 p-4 text-sm text-ember-muted">
                   <p className="flex items-center gap-2">
-                    <Icon name="pin" size={14} className="text-ember-primary" />
+                    <Icon name="pin" size={14} className="text-ember-ink" />
                     {[bar.address, bar.city].filter(Boolean).join(', ')}
                   </p>
                   <p className="flex items-center gap-2">
-                    <Icon name={bar.is_active === false ? 'close' : 'check'} size={14} className="text-ember-primary" />
+                    <Icon name={bar.is_active === false ? 'close' : 'check'} size={14} className="text-ember-ink" />
                     {bar.is_active === false ? t('common.currentlyClosed') : t('common.open')}
                   </p>
                   {bar.phone && (
                     <p className="flex items-center gap-2">
-                      <Icon name="phone" size={14} className="text-ember-primary" />
+                      <Icon name="phone" size={14} className="text-ember-ink" />
                       {bar.phone}
                     </p>
                   )}
@@ -241,9 +240,9 @@ export default function BarSheet({ seed, onClose, onChanged }) {
               )}
 
               {/* Community rating */}
-              <section className="rounded-card border border-ember-line/5 bg-ember-card p-4">
+              <section className="card p-4">
                 <h2 className="mb-3 flex items-center gap-2 font-display font-bold text-ember-cream">
-                  <Icon name="star" size={18} className="text-ember-primary" />
+                  <Icon name="star" size={18} className="text-ember-ink" />
                   {t('bar.community')}
                   <span className="ml-auto text-sm font-normal text-ember-muted">
                     {summary?.total_ratings || 0} {t('common.votes')}
@@ -270,7 +269,7 @@ export default function BarSheet({ seed, onClose, onChanged }) {
                 ) : (
                   <button
                     onClick={() => setShowForm(true)}
-                    className="flex w-full items-center justify-center gap-2 rounded-lg bg-ember-primary py-3 font-semibold text-ember-bg active:scale-[0.99]"
+                    className="btn-primary w-full py-3"
                   >
                     <Icon name={myRating ? 'edit' : 'star'} size={18} />
                     {myRating ? t('bar.editRating') : t('bar.rateThis')}
@@ -278,7 +277,7 @@ export default function BarSheet({ seed, onClose, onChanged }) {
                 )
               ) : (
                 <Link to="/login" className="flex items-center justify-center gap-2 rounded-lg bg-ember-card py-3 text-center text-ember-cream">
-                  <Icon name="user" size={18} className="text-ember-primary" />
+                  <Icon name="user" size={18} className="text-ember-ink" />
                   {t('bar.loginToRate')}
                 </Link>
               )}
@@ -286,21 +285,21 @@ export default function BarSheet({ seed, onClose, onChanged }) {
               {/* Reviews */}
               <section>
                 <h2 className="mb-2 flex items-center gap-2 font-display font-bold text-ember-cream">
-                  <Icon name="review" size={18} className="text-ember-primary" />
+                  <Icon name="review" size={18} className="text-ember-ink" />
                   {t('bar.reviews')}
                 </h2>
                 {ratings.length === 0 ? (
                   <EmptyState title={t('bar.beFirst')} hint={t('bar.noReviewsYet')} pin="arancione" />
                 ) : (
-                  <div className="space-y-2">
+                  <div className="stagger space-y-2">
                     {ratings.map((r) => (
-                      <div key={r.id} className="rounded-card bg-ember-card p-3 text-sm">
+                      <div key={r.id} className="card p-3 text-sm">
                         <div className="flex items-center justify-between">
                           <span className="flex items-center gap-1.5 font-medium text-ember-cream">
                             <Icon name="user" size={14} className="text-ember-muted" />
                             @{r.profiles?.username || t('common.user')}
                           </span>
-                          <span className="flex items-center gap-2 text-xs text-ember-primary">
+                          <span className="flex items-center gap-2 text-xs text-ember-ink">
                             <span className="flex items-center gap-0.5"><Icon name="euro" size={12} />{r.prezzo}</span>
                             <span className="flex items-center gap-0.5"><Icon name="bottle" size={12} />{r.qualita_drinks}</span>
                             <span className="flex items-center gap-0.5"><Icon name="social" size={12} />{r.socialita}</span>

@@ -33,9 +33,9 @@ export default function BarDrinksSection({ bar, onToast }) {
   }, [bar.id, reloadKey]);
 
   return (
-    <section className="rounded-card border border-ember-line/5 bg-ember-card p-4">
+    <section className="card p-4">
       <h2 className="mb-3 flex items-center gap-2 font-display font-bold text-ember-cream">
-        <Icon name="cocktail" size={18} className="text-ember-primary" />
+        <Icon name="cocktail" size={18} className="text-ember-ink" />
         {t('bar.bestDrinks')}
       </h2>
 
@@ -56,9 +56,9 @@ export default function BarDrinksSection({ bar, onToast }) {
               onClick={() => navigate(`/drink/${d.id}`)}
               className="flex w-full items-center gap-2 rounded-xl border border-ember-line/5 bg-ember-line/[0.03] px-3 py-2 text-left text-sm transition hover:border-ember-line/10 hover:bg-ember-line/[0.06]"
             >
-              <Icon name="cocktail" size={14} className="shrink-0 text-ember-primary" />
+              <Icon name="cocktail" size={14} className="shrink-0 text-ember-ink" />
               <span className="min-w-0 flex-1 truncate font-semibold text-ember-cream">{d.name}</span>
-              <span className="flex shrink-0 items-center gap-1 font-display text-sm font-bold tabular-nums text-ember-primary">
+              <span className="flex shrink-0 items-center gap-1 font-display text-sm font-bold tabular-nums text-ember-ink">
                 <Icon name="star" size={12} />
                 {Number(d.avg_rating).toFixed(1)}
               </span>
@@ -75,7 +75,7 @@ export default function BarDrinksSection({ bar, onToast }) {
           <button
             type="button"
             onClick={() => setVoteOpen(true)}
-            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-ember-primary/15 py-2 text-sm font-semibold text-ember-primary hover:bg-ember-primary/25"
+            className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-ember-primary/15 py-2 text-sm font-semibold text-ember-ink hover:bg-ember-primary/25"
           >
             <Icon name="star" size={15} /> {t('bar.rateDrink')}
           </button>

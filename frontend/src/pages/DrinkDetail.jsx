@@ -81,8 +81,8 @@ export default function DrinkDetail() {
   if (error || !drink)
     return (
       <div className="min-h-full bg-ember-bg p-4">
-        <p className="mb-3 text-ember-accent">{error}</p>
-        <Link to="/" className="inline-flex items-center gap-1 text-ember-primary underline">
+        <p className="mb-3 text-ember-danger">{error}</p>
+        <Link to="/" className="inline-flex items-center gap-1 text-ember-ink underline">
           <Icon name="arrow-left" size={16} /> {t('common.backToMap')}
         </Link>
       </div>
@@ -97,8 +97,8 @@ export default function DrinkDetail() {
 
         {/* Header */}
         <div className="flex items-start gap-3">
-          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-ember-primary/10">
-            <Icon name="cocktail" size={26} className="text-ember-primary" />
+          <span className="grid h-12 w-12 shrink-0 place-items-center rounded-card bg-ember-primary/10">
+            <Icon name="cocktail" size={26} className="text-ember-ink" />
           </span>
           <div className="min-w-0">
             <h1 className="font-display text-2xl font-bold text-ember-cream">{drink.name}</h1>
@@ -110,7 +110,7 @@ export default function DrinkDetail() {
         {isAuthenticated ? (
           <button
             onClick={() => setVoteOpen(true)}
-            className="flex w-full items-center justify-center gap-2 rounded-lg bg-ember-primary py-3 font-semibold text-ember-bg active:scale-[0.99]"
+            className="btn-primary w-full py-3 active:scale-[0.99]"
           >
             <Icon name="star" size={18} /> {t('drink.rateThis')}
           </button>
@@ -119,7 +119,7 @@ export default function DrinkDetail() {
             to="/login"
             className="flex items-center justify-center gap-2 rounded-lg bg-ember-card py-3 text-center text-ember-cream"
           >
-            <Icon name="user" size={18} className="text-ember-primary" />
+            <Icon name="user" size={18} className="text-ember-ink" />
             {t('bar.loginToRate')}
           </Link>
         )}
@@ -127,7 +127,7 @@ export default function DrinkDetail() {
         {/* Ranking */}
         <section>
           <h2 className="mb-2 flex items-center gap-2 font-display font-bold text-ember-cream">
-            <Icon name="star" size={18} className="text-ember-primary" />
+            <Icon name="star" size={18} className="text-ember-ink" />
             {t('drink.whereBest')}
             {userPos && (
               <span className="text-xs font-normal text-ember-muted">
@@ -166,7 +166,7 @@ export default function DrinkDetail() {
                         {b.distance_km != null && ` · ${b.distance_km} km`}
                       </span>
                     </span>
-                    <span className="flex shrink-0 items-center gap-1 font-display text-base font-extrabold tabular-nums text-ember-primary">
+                    <span className="flex shrink-0 items-center gap-1 font-display text-base font-extrabold tabular-nums text-ember-ink">
                       <Icon name="star" size={14} />
                       {Number(b.avg_rating).toFixed(1)}
                     </span>

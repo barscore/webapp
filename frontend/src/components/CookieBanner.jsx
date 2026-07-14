@@ -16,13 +16,13 @@ export default function CookieBanner() {
   }
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[1000] border-t border-ember-line/10 bg-ember-card/95 p-4 backdrop-blur">
+    <div className="glass fixed inset-x-0 bottom-0 z-[1000] rounded-none border-x-0 border-b-0 p-4">
       <div className="mx-auto flex max-w-3xl flex-col gap-3 sm:flex-row sm:items-center">
         <p className="flex-1 text-sm text-ember-muted">
           Usiamo solo cookie tecnici. Con il tuo consenso carichiamo la pubblicità di
           Google (con i relativi cookie); se rifiuti, nessun annuncio e nessun cookie
           pubblicitario. Puoi cambiare idea da Impostazioni. Vedi la{' '}
-          <Link to="/privacy" className="text-ember-primary underline">Privacy</Link>.
+          <Link to="/privacy" className="text-ember-ink underline">Privacy</Link>.
         </p>
         <div className="flex gap-2">
           <button
@@ -35,7 +35,7 @@ export default function CookieBanner() {
           <button
             type="button"
             onClick={() => choose(true)}
-            className="flex-1 whitespace-nowrap rounded-lg bg-ember-primary px-4 py-2 text-sm font-semibold text-ember-bg sm:flex-none"
+            className="btn-primary flex-1 whitespace-nowrap px-4 py-2 text-sm sm:flex-none"
           >
             Accetta
           </button>

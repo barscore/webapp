@@ -11,7 +11,7 @@ export default function Privacy() {
 }
 
 const mail = (
-  <a href="mailto:privacy@rabar.app" className="text-ember-primary hover:underline">
+  <a href="mailto:privacy@rabar.app" className="text-ember-ink hover:underline">
     privacy@rabar.app
   </a>
 );
@@ -65,7 +65,7 @@ function PrivacyIt() {
           <strong>solo se acconsenti</strong> tramite il banner: se rifiuti o non scegli, nessuno
           script pubblicitario viene eseguito. Puoi cambiare idea in ogni momento da{' '}
           <strong>Impostazioni → Preferenze cookie</strong> o da{' '}
-          <a href="https://adssettings.google.com" target="_blank" rel="noreferrer" className="text-ember-primary hover:underline">Impostazioni annunci Google</a>.
+          <a href="https://adssettings.google.com" target="_blank" rel="noreferrer" className="text-ember-ink hover:underline">Impostazioni annunci Google</a>.
         </p>
       </Section>
 
@@ -94,7 +94,7 @@ function PrivacyIt() {
           avviene <strong>solo con il tuo consenso</strong> e puoi revocarla in ogni momento da
           Impostazioni → Preferenze cookie (equivale al “Do Not Sell or Share My Personal
           Information”). Rispettiamo automaticamente il segnale{' '}
-          <a href="https://globalprivacycontrol.org" target="_blank" rel="noreferrer" className="text-ember-primary hover:underline">Global Privacy Control</a>:
+          <a href="https://globalprivacycontrol.org" target="_blank" rel="noreferrer" className="text-ember-ink hover:underline">Global Privacy Control</a>:
           se è attivo nel tuo browser, la pubblicità personalizzata resta disattivata. Per
           esercitare i tuoi diritti scrivi a {mail}.
         </p>
@@ -149,7 +149,7 @@ function PrivacyEn() {
           <strong>only if you consent</strong> via the banner: if you decline or make no choice,
           no advertising script runs at all. You can change your mind at any time from{' '}
           <strong>Settings → Cookie preferences</strong> or from{' '}
-          <a href="https://adssettings.google.com" target="_blank" rel="noreferrer" className="text-ember-primary hover:underline">Google Ads Settings</a>.
+          <a href="https://adssettings.google.com" target="_blank" rel="noreferrer" className="text-ember-ink hover:underline">Google Ads Settings</a>.
         </p>
       </Section>
 
@@ -178,7 +178,7 @@ function PrivacyEn() {
           happens <strong>only with your consent</strong> and you can withdraw it at any time
           from Settings → Cookie preferences (this acts as “Do Not Sell or Share My Personal
           Information”). We automatically honor the{' '}
-          <a href="https://globalprivacycontrol.org" target="_blank" rel="noreferrer" className="text-ember-primary hover:underline">Global Privacy Control</a>{' '}
+          <a href="https://globalprivacycontrol.org" target="_blank" rel="noreferrer" className="text-ember-ink hover:underline">Global Privacy Control</a>{' '}
           signal: when enabled in your browser, personalized advertising stays off. To exercise
           your rights, write to {mail}.
         </p>

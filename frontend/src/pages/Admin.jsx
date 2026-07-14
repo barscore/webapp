@@ -52,7 +52,7 @@ export default function Admin() {
             <Logo size="sm" />
           </div>
           <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-ember-cream">
-            <Icon name="filters" size={22} className="text-ember-primary" /> Pannello admin
+            <Icon name="filters" size={22} className="text-ember-ink" /> Pannello admin
           </h1>
         </div>
 
@@ -66,14 +66,14 @@ export default function Admin() {
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-1 overflow-x-auto rounded-xl border border-ember-line/5 bg-ember-card p-1">
+        <div className="card flex gap-1 overflow-x-auto p-1">
           {TABS.map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
               className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition ${
                 tab === t.key
-                  ? 'bg-ember-primary text-ember-bg'
+                  ? 'bg-ember-primary text-ember-on-primary'
                   : 'text-ember-muted hover:text-ember-cream'
               }`}
             >
@@ -98,8 +98,8 @@ export default function Admin() {
 
 function Stat({ label, value, accent }) {
   return (
-    <div className="rounded-card border border-ember-line/5 bg-ember-card p-3 text-center">
-      <div className={`font-display text-xl font-bold ${accent ? 'text-ember-accent' : 'text-ember-cream'}`}>
+    <div className="card p-3 text-center">
+      <div className={`font-display text-xl font-bold ${accent ? 'text-ember-danger' : 'text-ember-cream'}`}>
         {value ?? '…'}
       </div>
       <div className="text-xs text-ember-muted">{label}</div>
@@ -161,7 +161,7 @@ function UsersTab({ notify, onChange }) {
             key={r.v}
             onClick={() => setRole(r.v)}
             className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-              role === r.v ? 'bg-ember-primary text-ember-bg' : 'bg-ember-card text-ember-muted hover:text-ember-cream'
+              role === r.v ? 'bg-ember-primary text-ember-on-primary' : 'bg-ember-card text-ember-muted hover:text-ember-cream'
             }`}
           >
             {r.label}
@@ -169,7 +169,7 @@ function UsersTab({ notify, onChange }) {
         ))}
       </div>
 
-      <div className="divide-y divide-ember-line/5 overflow-hidden rounded-card border border-ember-line/5 bg-ember-card">
+      <div className="card divide-y divide-ember-line/5 overflow-hidden">
         {busy && !users.length && <p className="p-4 text-sm text-ember-muted">Caricamento…</p>}
         {!busy && !users.length && <p className="p-4 text-sm text-ember-muted">Nessun utente.</p>}
         {users.map((u) => (
@@ -188,7 +188,7 @@ function UsersTab({ notify, onChange }) {
                   notify(ok ? 'UUID copiato' : 'Copia non riuscita', ok ? 'check' : 'info');
                 }}
                 title="Copia UUID"
-                className="flex max-w-full items-center gap-1 font-mono text-[10px] text-ember-muted/70 hover:text-ember-primary"
+                className="flex max-w-full items-center gap-1 font-mono text-[10px] text-ember-muted/70 hover:text-ember-ink"
               >
                 <Icon name="link" size={11} />
                 <span className="truncate">{u.id}</span>
@@ -298,7 +298,7 @@ function RatingsTab({ notify, onChange }) {
   return (
     <section className="space-y-3">
       <SearchBar value={q} onChange={setQ} placeholder="Cerca nei commenti…" />
-      <div className="divide-y divide-ember-line/5 overflow-hidden rounded-card border border-ember-line/5 bg-ember-card">
+      <div className="card divide-y divide-ember-line/5 overflow-hidden">
         {busy && !ratings.length && <p className="p-4 text-sm text-ember-muted">Caricamento…</p>}
         {!busy && !ratings.length && <p className="p-4 text-sm text-ember-muted">Nessuna valutazione.</p>}
         {ratings.map((r) => (
@@ -307,7 +307,7 @@ function RatingsTab({ notify, onChange }) {
               <div className="flex flex-wrap items-center gap-2 text-sm">
                 <span className="font-semibold text-ember-cream">@{r.username || '—'}</span>
                 <span className="text-ember-muted">su</span>
-                <Link to={`/bar/${r.bar_id}`} className="text-ember-primary hover:underline">
+                <Link to={`/bar/${r.bar_id}`} className="text-ember-ink hover:underline">
                   {r.bar_name || 'bar'}
                 </Link>
               </div>
@@ -320,7 +320,7 @@ function RatingsTab({ notify, onChange }) {
             </div>
             <button
               onClick={() => setConfirm(r)}
-              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ember-muted hover:bg-ember-line/5 hover:text-ember-accent"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ember-muted hover:bg-ember-line/5 hover:text-ember-danger"
               title="Elimina"
             >
               <Icon name="trash" size={16} />
@@ -405,7 +405,7 @@ function SuggestionsTab({ notify }) {
             key={f.v}
             onClick={() => setStatus(f.v)}
             className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-              status === f.v ? 'bg-ember-primary text-ember-bg' : 'bg-ember-card text-ember-muted hover:text-ember-cream'
+              status === f.v ? 'bg-ember-primary text-ember-on-primary' : 'bg-ember-card text-ember-muted hover:text-ember-cream'
             }`}
           >
             {f.label}
@@ -413,7 +413,7 @@ function SuggestionsTab({ notify }) {
         ))}
       </div>
 
-      <div className="divide-y divide-ember-line/5 overflow-hidden rounded-card border border-ember-line/5 bg-ember-card">
+      <div className="card divide-y divide-ember-line/5 overflow-hidden">
         {busy && !items.length && <p className="p-4 text-sm text-ember-muted">Caricamento…</p>}
         {!busy && !items.length && <p className="p-4 text-sm text-ember-muted">Nessuna segnalazione.</p>}
         {items.map((s) => (
@@ -441,7 +441,7 @@ function SuggestionsTab({ notify }) {
                       href={`https://www.openstreetmap.org/?mlat=${s.lat}&mlon=${s.lng}#map=17/${s.lat}/${s.lng}`}
                       target="_blank"
                       rel="noreferrer"
-                      className="flex items-center gap-1 hover:text-ember-primary"
+                      className="flex items-center gap-1 hover:text-ember-ink"
                     >
                       <Icon name="pin" size={11} /> posizione
                     </a>
@@ -452,7 +452,7 @@ function SuggestionsTab({ notify }) {
               <button
                 onClick={() => setConfirm(s)}
                 title="Elimina"
-                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ember-muted hover:bg-ember-line/5 hover:text-ember-accent"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ember-muted hover:bg-ember-line/5 hover:text-ember-danger"
               >
                 <Icon name="trash" size={16} />
               </button>
@@ -462,7 +462,7 @@ function SuggestionsTab({ notify }) {
               <div className="mt-2 flex gap-2">
                 <button
                   onClick={() => setState(s.id, 'done', 'Segnata come aggiunta')}
-                  className="flex-1 rounded-lg bg-ember-primary/15 py-1.5 text-xs font-semibold text-ember-primary hover:bg-ember-primary/25"
+                  className="flex-1 rounded-lg bg-ember-primary/15 py-1.5 text-xs font-semibold text-ember-ink hover:bg-ember-primary/25"
                 >
                   Segna come aggiunto
                 </button>
@@ -564,7 +564,7 @@ function ReportsTab({ notify }) {
             key={f.v}
             onClick={() => setStatus(f.v)}
             className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-              status === f.v ? 'bg-ember-primary text-ember-bg' : 'bg-ember-card text-ember-muted hover:text-ember-cream'
+              status === f.v ? 'bg-ember-primary text-ember-on-primary' : 'bg-ember-card text-ember-muted hover:text-ember-cream'
             }`}
           >
             {f.label}
@@ -572,7 +572,7 @@ function ReportsTab({ notify }) {
         ))}
       </div>
 
-      <div className="divide-y divide-ember-line/5 overflow-hidden rounded-card border border-ember-line/5 bg-ember-card">
+      <div className="card divide-y divide-ember-line/5 overflow-hidden">
         {busy && !items.length && <p className="p-4 text-sm text-ember-muted">Caricamento…</p>}
         {!busy && !items.length && <p className="p-4 text-sm text-ember-muted">Nessun report.</p>}
         {items.map((r) => (
@@ -600,7 +600,7 @@ function ReportsTab({ notify }) {
               <button
                 onClick={() => setConfirm(r)}
                 title="Elimina"
-                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ember-muted hover:bg-ember-line/5 hover:text-ember-accent"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ember-muted hover:bg-ember-line/5 hover:text-ember-danger"
               >
                 <Icon name="trash" size={16} />
               </button>
@@ -610,7 +610,7 @@ function ReportsTab({ notify }) {
               <div className="mt-2 flex gap-2">
                 <button
                   onClick={() => setState(r.id, 'done', 'Segnato come risolto')}
-                  className="flex-1 rounded-lg bg-ember-primary/15 py-1.5 text-xs font-semibold text-ember-primary hover:bg-ember-primary/25"
+                  className="flex-1 rounded-lg bg-ember-primary/15 py-1.5 text-xs font-semibold text-ember-ink hover:bg-ember-primary/25"
                 >
                   Segna come risolto
                 </button>
@@ -705,7 +705,7 @@ function DrinkSuggestionsTab({ notify }) {
             key={f.v}
             onClick={() => setStatus(f.v)}
             className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
-              status === f.v ? 'bg-ember-primary text-ember-bg' : 'bg-ember-card text-ember-muted hover:text-ember-cream'
+              status === f.v ? 'bg-ember-primary text-ember-on-primary' : 'bg-ember-card text-ember-muted hover:text-ember-cream'
             }`}
           >
             {f.label}
@@ -713,7 +713,7 @@ function DrinkSuggestionsTab({ notify }) {
         ))}
       </div>
 
-      <div className="divide-y divide-ember-line/5 overflow-hidden rounded-card border border-ember-line/5 bg-ember-card">
+      <div className="card divide-y divide-ember-line/5 overflow-hidden">
         {busy && !items.length && <p className="p-4 text-sm text-ember-muted">Caricamento…</p>}
         {!busy && !items.length && <p className="p-4 text-sm text-ember-muted">Nessuna proposta.</p>}
         {items.map((s) => (
@@ -721,7 +721,7 @@ function DrinkSuggestionsTab({ notify }) {
             <div className="flex items-start gap-2">
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Icon name="cocktail" size={14} className="text-ember-primary" />
+                  <Icon name="cocktail" size={14} className="text-ember-ink" />
                   <span className="font-semibold text-ember-cream">{s.name}</span>
                   {s.status !== 'new' && (
                     <Tag color={s.status === 'done' ? 'primary' : 'accent'}>
@@ -737,7 +737,7 @@ function DrinkSuggestionsTab({ notify }) {
               <button
                 onClick={() => setConfirm(s)}
                 title="Elimina"
-                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ember-muted hover:bg-ember-line/5 hover:text-ember-accent"
+                className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-ember-muted hover:bg-ember-line/5 hover:text-ember-danger"
               >
                 <Icon name="trash" size={16} />
               </button>
@@ -747,7 +747,7 @@ function DrinkSuggestionsTab({ notify }) {
               <div className="mt-2 flex gap-2">
                 <button
                   onClick={() => setState(s.id, 'done', 'Drink aggiunto al catalogo')}
-                  className="flex-1 rounded-lg bg-ember-primary/15 py-1.5 text-xs font-semibold text-ember-primary hover:bg-ember-primary/25"
+                  className="flex-1 rounded-lg bg-ember-primary/15 py-1.5 text-xs font-semibold text-ember-ink hover:bg-ember-primary/25"
                 >
                   Approva
                 </button>
@@ -907,9 +907,9 @@ function EmergencyTab({ notify, onChange }) {
 
   return (
     <section className="space-y-4">
-      <div className={`rounded-card border p-4 ${settings?.maintenance_mode ? 'border-ember-accent/60 bg-ember-accent/10' : 'border-ember-line/5 bg-ember-card'}`}>
+      <div className={`rounded-card border p-4 ${settings?.maintenance_mode ? 'border-ember-danger/60 bg-ember-danger/10' : 'border-ember-line/5 bg-ember-card'}`}>
         <div className="flex items-center gap-2 font-display font-bold text-ember-cream">
-          <Icon name="bell" size={18} className="text-ember-accent" /> Modalità manutenzione
+          <Icon name="bell" size={18} className="text-ember-danger" /> Modalità manutenzione
         </div>
         <p className="mt-1 text-sm text-ember-muted">
           Kill switch: blocca tutte le scritture (valutazioni, salvataggi, eventi) per gli utenti
@@ -922,14 +922,14 @@ function EmergencyTab({ notify, onChange }) {
           onChange={(e) => setReason(e.target.value)}
           placeholder="Es. aggiornamento database"
           maxLength={500}
-          className="mt-1 w-full rounded-lg bg-ember-bg p-2 text-sm text-ember-cream outline-none ring-ember-primary focus:ring-2"
+          className="field mt-1 py-2 text-sm"
         />
         <label className="mt-2 block text-xs text-ember-muted">Ritorno stimato (opzionale)</label>
         <input
           type="datetime-local"
           value={eta}
           onChange={(e) => setEta(e.target.value)}
-          className="mt-1 w-full rounded-lg bg-ember-bg p-2 text-sm text-ember-cream outline-none ring-ember-primary focus:ring-2"
+          className="field mt-1 py-2 text-sm"
         />
 
         <div className="mt-3 flex gap-2">
@@ -946,8 +946,8 @@ function EmergencyTab({ notify, onChange }) {
             disabled={!settings}
             className={`flex-1 rounded-lg py-2 font-semibold ${
               settings?.maintenance_mode
-                ? 'bg-ember-primary text-ember-bg'
-                : 'bg-ember-accent text-white'
+                ? 'bg-ember-primary text-ember-on-primary'
+                : 'bg-ember-accent text-black'
             } disabled:opacity-50`}
           >
             {settings?.maintenance_mode ? 'Disattiva manutenzione' : 'Attiva manutenzione'}
@@ -958,7 +958,7 @@ function EmergencyTab({ notify, onChange }) {
       {/* Beta test — private beta gate, separate from maintenance. */}
       <div className={`rounded-card border p-4 ${settings?.beta_mode ? 'border-ember-primary/60 bg-ember-primary/10' : 'border-ember-line/5 bg-ember-card'}`}>
         <div className="flex items-center gap-2 font-display font-bold text-ember-cream">
-          <Icon name="star" size={18} className="text-ember-primary" /> Beta test
+          <Icon name="star" size={18} className="text-ember-ink" /> Beta test
         </div>
         <p className="mt-1 text-sm text-ember-muted">
           Beta privata: l'app resta accessibile solo ad admin, moderator e betatester. Gli altri
@@ -969,16 +969,16 @@ function EmergencyTab({ notify, onChange }) {
           onClick={toggleBeta}
           disabled={!settings}
           className={`mt-3 w-full rounded-lg py-2 font-semibold ${
-            settings?.beta_mode ? 'bg-ember-primary text-ember-bg' : 'bg-ember-line/10 text-ember-cream hover:bg-ember-line/15'
+            settings?.beta_mode ? 'bg-ember-primary text-ember-on-primary' : 'bg-ember-line/10 text-ember-cream hover:bg-ember-line/15'
           } disabled:opacity-50`}
         >
           {settings?.beta_mode ? 'Termina beta test' : 'Avvia beta test'}
         </button>
       </div>
 
-      <div className="rounded-card border border-ember-line/5 bg-ember-card p-4">
+      <div className="card p-4">
         <div className="flex items-center gap-2 font-display font-bold text-ember-cream">
-          <Icon name="trash" size={18} className="text-ember-accent" /> Elimina valutazioni utente
+          <Icon name="trash" size={18} className="text-ember-danger" /> Elimina valutazioni utente
         </div>
         <p className="mt-1 text-sm text-ember-muted">
           Cancella tutte le valutazioni di un account (spam cleanup). Serve l'ID utente.
@@ -987,12 +987,12 @@ function EmergencyTab({ notify, onChange }) {
           value={purgeId}
           onChange={(e) => setPurgeId(e.target.value)}
           placeholder="UUID utente"
-          className="mt-3 w-full rounded-lg bg-ember-bg p-2 text-sm text-ember-cream outline-none ring-ember-primary focus:ring-2"
+          className="mt-3 field py-2 text-sm"
         />
         <button
           onClick={() => setConfirm(true)}
           disabled={!purgeId.trim()}
-          className="mt-2 w-full rounded-lg bg-ember-accent py-2 font-semibold text-white disabled:opacity-50"
+          className="btn mt-2 w-full bg-ember-accent py-2 text-black"
         >
           Elimina valutazioni
         </button>
@@ -1098,10 +1098,10 @@ function MenuItem({ icon, children, onClick, danger }) {
     <button
       onClick={onClick}
       className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm hover:bg-ember-line/5 ${
-        danger ? 'text-ember-accent' : 'text-ember-cream'
+        danger ? 'text-ember-danger' : 'text-ember-cream'
       }`}
     >
-      <Icon name={icon} size={15} className={danger ? 'text-ember-accent' : 'text-ember-primary'} />
+      <Icon name={icon} size={15} className={danger ? 'text-ember-danger' : 'text-ember-ink'} />
       {children}
     </button>
   );
@@ -1115,16 +1115,16 @@ function RoleBadge({ role }) {
 function Tag({ children, color = 'muted' }) {
   const cls =
     color === 'accent'
-      ? 'bg-ember-accent/15 text-ember-accent'
+      ? 'bg-ember-danger/15 text-ember-danger'
       : color === 'primary'
-        ? 'bg-ember-primary/15 text-ember-primary'
+        ? 'bg-ember-primary/15 text-ember-ink'
         : 'bg-ember-line/5 text-ember-muted';
   return <span className={`rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase ${cls}`}>{children}</span>;
 }
 
 function Switch({ label, desc, checked, onChange }) {
   return (
-    <div className="flex items-center gap-3 rounded-card border border-ember-line/5 bg-ember-card p-4">
+    <div className="flex items-center gap-3 card p-4">
       <div className="min-w-0 flex-1">
         <div className="font-semibold text-ember-cream">{label}</div>
         <div className="text-sm text-ember-muted">{desc}</div>
@@ -1162,7 +1162,7 @@ function ConfirmModal({ title, desc, confirmLabel, danger, onClose, onConfirm })
         </button>
         <button
           onClick={onConfirm}
-          className={`flex-1 rounded-lg py-2 font-semibold ${danger ? 'bg-ember-accent text-white' : 'bg-ember-primary text-ember-bg'}`}
+          className={`flex-1 rounded-lg py-2 font-semibold ${danger ? 'bg-ember-accent text-black' : 'bg-ember-primary text-ember-on-primary'}`}
         >
           {confirmLabel}
         </button>
@@ -1180,7 +1180,7 @@ function ReasonModal({ title, desc, confirmLabel, danger, onClose, onConfirm }) 
         onChange={(e) => setReason(e.target.value)}
         placeholder="Motivo (opzionale)"
         maxLength={500}
-        className="mt-3 w-full rounded-lg bg-ember-bg p-2 text-sm text-ember-cream outline-none ring-ember-primary focus:ring-2"
+        className="mt-3 field py-2 text-sm"
       />
       <div className="mt-4 flex gap-2">
         <button onClick={onClose} className="flex-1 rounded-lg bg-ember-line/5 py-2 font-semibold text-ember-cream">
@@ -1188,7 +1188,7 @@ function ReasonModal({ title, desc, confirmLabel, danger, onClose, onConfirm }) 
         </button>
         <button
           onClick={() => onConfirm(reason.trim() || undefined)}
-          className={`flex-1 rounded-lg py-2 font-semibold ${danger ? 'bg-ember-accent text-white' : 'bg-ember-primary text-ember-bg'}`}
+          className={`flex-1 rounded-lg py-2 font-semibold ${danger ? 'bg-ember-accent text-black' : 'bg-ember-primary text-ember-on-primary'}`}
         >
           {confirmLabel}
         </button>
@@ -1215,7 +1215,7 @@ function SuspendModal({ user, onClose, onConfirm }) {
             key={d.hours}
             onClick={() => setHours(d.hours)}
             className={`rounded-lg py-2 text-sm font-semibold transition ${
-              hours === d.hours ? 'bg-ember-primary text-ember-bg' : 'bg-ember-line/5 text-ember-cream'
+              hours === d.hours ? 'bg-ember-primary text-ember-on-primary' : 'bg-ember-line/5 text-ember-cream'
             }`}
           >
             {d.label}
@@ -1228,14 +1228,14 @@ function SuspendModal({ user, onClose, onConfirm }) {
         min={1}
         value={hours}
         onChange={(e) => setHours(Math.max(1, Number(e.target.value) || 1))}
-        className="mt-1 w-full rounded-lg bg-ember-bg p-2 text-sm text-ember-cream outline-none ring-ember-primary focus:ring-2"
+        className="field mt-1 py-2 text-sm"
       />
       <input
         value={reason}
         onChange={(e) => setReason(e.target.value)}
         placeholder="Motivo (opzionale)"
         maxLength={500}
-        className="mt-2 w-full rounded-lg bg-ember-bg p-2 text-sm text-ember-cream outline-none ring-ember-primary focus:ring-2"
+        className="mt-2 field py-2 text-sm"
       />
       <div className="mt-4 flex gap-2">
         <button onClick={onClose} className="flex-1 rounded-lg bg-ember-line/5 py-2 font-semibold text-ember-cream">
@@ -1243,7 +1243,7 @@ function SuspendModal({ user, onClose, onConfirm }) {
         </button>
         <button
           onClick={() => onConfirm(hours, reason.trim() || undefined)}
-          className="flex-1 rounded-lg bg-ember-primary py-2 font-semibold text-ember-bg"
+          className="btn-primary flex-1 py-2"
         >
           Sospendi
         </button>
@@ -1264,7 +1264,7 @@ function RoleModal({ user, onClose, onConfirm }) {
             key={r}
             onClick={() => setRole(r)}
             className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-sm font-semibold transition ${
-              role === r ? 'bg-ember-primary text-ember-bg' : 'bg-ember-line/5 text-ember-cream'
+              role === r ? 'bg-ember-primary text-ember-on-primary' : 'bg-ember-line/5 text-ember-cream'
             }`}
           >
             <span className="capitalize">{r}</span>
@@ -1279,7 +1279,7 @@ function RoleModal({ user, onClose, onConfirm }) {
         <button
           onClick={() => onConfirm(role)}
           disabled={role === user.role}
-          className="flex-1 rounded-lg bg-ember-primary py-2 font-semibold text-ember-bg disabled:opacity-50"
+          className="btn-primary flex-1 py-2"
         >
           Salva
         </button>

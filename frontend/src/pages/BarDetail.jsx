@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import RadarChart from '../components/RadarChart.jsx';
+import { SkeletonBar } from '../components/Skeleton.jsx';
 import RatingBars from '../components/RatingBars.jsx';
 import RatingForm from '../components/RatingForm.jsx';
 import BarDrinksSection from '../components/BarDrinksSection.jsx';
@@ -104,16 +105,16 @@ export default function BarDetail() {
 
   if (loading && !bar)
     return (
-      <p className="flex items-center gap-2 bg-ember-bg p-4 text-ember-muted">
-        <Icon name="reload" size={16} className="animate-spin" /> {t('common.loading')}
-      </p>
+      <div className="min-h-full bg-ember-bg p-4">
+        <SkeletonBar label={t('common.loading')} />
+      </div>
     );
 
   if (error || !bar)
     return (
       <div className="min-h-full bg-ember-bg p-4">
-        <p className="mb-3 text-ember-accent">{error}</p>
-        <Link to="/" className="inline-flex items-center gap-1 text-ember-primary underline">
+        <p className="mb-3 text-ember-danger">{error}</p>
+        <Link to="/" className="inline-flex items-center gap-1 text-ember-ink underline">
           <Icon name="arrow-left" size={16} /> {t('common.backToMap')}
         </Link>
       </div>
@@ -142,7 +143,7 @@ export default function BarDetail() {
         <Link
           to="/"
           aria-label={t('common.backToMap')}
-          className="absolute left-3 top-3 flex items-center gap-1 rounded-full bg-ember-bg/70 px-3 py-1.5 text-sm text-ember-cream backdrop-blur"
+          className="glass press absolute left-3 top-3 flex items-center gap-1 rounded-full px-3 py-1.5 text-sm text-ember-cream"
         >
           <Icon name="arrow-left" size={16} /> {t('common.map')}
         </Link>
@@ -151,8 +152,8 @@ export default function BarDetail() {
             onClick={() => toggle(bar.id)}
             aria-label={saved ? t('bar.removeBookmark') : t('bar.saveBookmark')}
             aria-pressed={saved}
-            className={`rounded-full bg-ember-bg/70 p-2 backdrop-blur ${
-              saved ? 'text-ember-primary' : 'text-ember-cream'
+            className={`glass press rounded-full p-2 ${
+              saved ? 'text-ember-ink' : 'text-ember-cream'
             }`}
           >
             <Icon name="bookmark" size={18} />
@@ -160,7 +161,7 @@ export default function BarDetail() {
           <button
             onClick={onShare}
             aria-label={t('common.share')}
-            className="rounded-full bg-ember-bg/70 p-2 text-ember-cream backdrop-blur"
+            className="glass press rounded-full p-2 text-ember-cream"
           >
             <Icon name="share" size={18} />
           </button>
@@ -177,7 +178,7 @@ export default function BarDetail() {
               {bar.address}, {bar.city}
             </p>
           </div>
-          <span className="flex shrink-0 items-center gap-1 rounded-lg bg-ember-primary px-3 py-1.5 font-display text-lg font-bold text-ember-bg">
+          <span className="flex shrink-0 items-center gap-1 rounded-lg bg-ember-primary px-3 py-1.5 font-display text-lg font-bold text-ember-on-primary">
             <Icon name="star" size={16} />
             {(overall * 2).toFixed(1)}
           </span>
@@ -190,7 +191,7 @@ export default function BarDetail() {
               href={`tel:${bar.phone}`}
               className="flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream"
             >
-              <Icon name="phone" size={16} className="text-ember-primary" /> {t('bar.call')}
+              <Icon name="phone" size={16} className="text-ember-ink" /> {t('bar.call')}
             </a>
           )}
           {bar.website && (
@@ -200,7 +201,7 @@ export default function BarDetail() {
               rel="noreferrer"
               className="flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream"
             >
-              <Icon name="link" size={16} className="text-ember-primary" /> {t('bar.website')}
+              <Icon name="link" size={16} className="text-ember-ink" /> {t('bar.website')}
             </a>
           )}
           <button
@@ -208,24 +209,24 @@ export default function BarDetail() {
             aria-expanded={showInfo}
             className="flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream"
           >
-            <Icon name="info" size={16} className="text-ember-primary" /> {t('bar.info')}
+            <Icon name="info" size={16} className="text-ember-ink" /> {t('bar.info')}
             <Icon name={showInfo ? 'chevron-up' : 'chevron-down'} size={14} />
           </button>
         </div>
 
         {showInfo && (
-          <div className="space-y-1 rounded-card border border-ember-line/5 bg-ember-card p-4 text-sm text-ember-muted">
+          <div className="card space-y-1 p-4 text-sm text-ember-muted">
             <p className="flex items-center gap-2">
-              <Icon name="pin" size={14} className="text-ember-primary" />
+              <Icon name="pin" size={14} className="text-ember-ink" />
               {bar.address}, {bar.city}
             </p>
             <p className="flex items-center gap-2">
-              <Icon name={bar.is_active === false ? 'close' : 'check'} size={14} className="text-ember-primary" />
+              <Icon name={bar.is_active === false ? 'close' : 'check'} size={14} className="text-ember-ink" />
               {bar.is_active === false ? t('common.currentlyClosed') : t('common.open')}
             </p>
             {bar.phone && (
               <p className="flex items-center gap-2">
-                <Icon name="phone" size={14} className="text-ember-primary" />
+                <Icon name="phone" size={14} className="text-ember-ink" />
                 {bar.phone}
               </p>
             )}
@@ -246,9 +247,9 @@ export default function BarDetail() {
         )}
 
         {/* Community rating */}
-        <section className="rounded-card border border-ember-line/5 bg-ember-card p-4">
+        <section className="card p-4">
           <h2 className="mb-3 flex items-center gap-2 font-display font-bold text-ember-cream">
-            <Icon name="star" size={18} className="text-ember-primary" />
+            <Icon name="star" size={18} className="text-ember-ink" />
             {t('bar.communityRating')}
             <span className="ml-auto text-sm font-normal text-ember-muted">
               {summary?.total_ratings || 0} {t('common.votes')}
@@ -275,7 +276,7 @@ export default function BarDetail() {
           ) : (
             <button
               onClick={() => setShowForm(true)}
-              className="flex w-full items-center justify-center gap-2 rounded-lg bg-ember-primary py-3 font-semibold text-ember-bg active:scale-[0.99]"
+              className="btn-primary w-full py-3"
             >
               <Icon name={myRating ? 'edit' : 'star'} size={18} />
               {myRating ? t('bar.editYourRating') : t('bar.rateThis')}
@@ -286,7 +287,7 @@ export default function BarDetail() {
             to="/login"
             className="flex items-center justify-center gap-2 rounded-lg bg-ember-card py-3 text-center text-ember-cream"
           >
-            <Icon name="user" size={18} className="text-ember-primary" />
+            <Icon name="user" size={18} className="text-ember-ink" />
             {t('bar.loginToRate')}
           </Link>
         )}
@@ -294,7 +295,7 @@ export default function BarDetail() {
         {/* Reviews */}
         <section>
           <h2 className="mb-2 flex items-center gap-2 font-display font-bold text-ember-cream">
-            <Icon name="review" size={18} className="text-ember-primary" />
+            <Icon name="review" size={18} className="text-ember-ink" />
             {t('bar.reviews')}
           </h2>
 
@@ -305,17 +306,17 @@ export default function BarDetail() {
               pin="arancione"
             />
           ) : (
-            <div className="space-y-2">
+            <div className="stagger space-y-2">
               {ratings.map((r) => {
                 const vote = helpful[r.id];
                 return (
-                  <div key={r.id} className="rounded-card bg-ember-card p-3 text-sm">
+                  <div key={r.id} className="card p-3 text-sm">
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-1.5 font-medium text-ember-cream">
                         <Icon name="user" size={14} className="text-ember-muted" />
                         @{r.profiles?.username || t('common.user')}
                       </span>
-                      <span className="flex items-center gap-2 text-xs text-ember-primary">
+                      <span className="flex items-center gap-2 text-xs text-ember-ink">
                         <span className="flex items-center gap-0.5">
                           <Icon name="euro" size={12} />
                           {r.prezzo}
@@ -349,7 +350,7 @@ export default function BarDetail() {
                         onClick={() => voteHelpful(r.id, 'up')}
                         aria-label={t('bar.helpfulAria')}
                         aria-pressed={vote === 'up'}
-                        className={vote === 'up' ? 'text-ember-primary' : 'hover:text-ember-cream'}
+                        className={vote === 'up' ? 'text-ember-ink' : 'hover:text-ember-cream'}
                       >
                         <Icon name="thumbs-up" size={16} />
                       </button>
@@ -357,7 +358,7 @@ export default function BarDetail() {
                         onClick={() => voteHelpful(r.id, 'down')}
                         aria-label={t('bar.notHelpfulAria')}
                         aria-pressed={vote === 'down'}
-                        className={vote === 'down' ? 'text-ember-accent' : 'hover:text-ember-cream'}
+                        className={vote === 'down' ? 'text-ember-danger' : 'hover:text-ember-cream'}
                       >
                         <Icon name="thumbs-down" size={16} />
                       </button>
@@ -365,7 +366,7 @@ export default function BarDetail() {
                         <button
                           onClick={() => adminDeleteRating(r.id)}
                           aria-label={t('bar.adminDeleteAria')}
-                          className="ml-auto text-ember-accent hover:text-ember-cream"
+                          className="ml-auto text-ember-danger hover:text-ember-cream"
                         >
                           <Icon name="trash" size={16} />
                         </button>

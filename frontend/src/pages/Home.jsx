@@ -8,6 +8,7 @@ import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import NavTabs from '../components/NavTabs.jsx';
 import EmptyState from '../components/EmptyState.jsx';
+import { SkeletonRows } from '../components/Skeleton.jsx';
 import Toast from '../components/Toast.jsx';
 import SuggestModal from '../components/SuggestModal.jsx';
 import ReportModal from '../components/ReportModal.jsx';
@@ -59,7 +60,7 @@ function GlassButton({ onClick, label, children }) {
       type="button"
       onClick={onClick}
       aria-label={label}
-      className="flex h-11 w-11 items-center justify-center rounded-full border border-ember-line/10 bg-ember-bg/70 text-ember-cream shadow-lg backdrop-blur-md transition hover:text-ember-primary active:scale-95"
+      className="glass press flex h-11 w-11 items-center justify-center rounded-full text-ember-cream transition-colors hover:text-ember-ink"
     >
       {children}
     </button>
@@ -95,7 +96,7 @@ function RadiusControl({ radius, setRadius }) {
   const { t } = useI18n();
   return (
     <div className="flex items-center gap-3 px-1 text-xs text-ember-muted">
-      <Icon name="funnel" size={14} className="text-ember-primary" />
+      <Icon name="funnel" size={14} className="text-ember-ink" />
       <span className="whitespace-nowrap tabular-nums">{t('home.radius', { n: radius })}</span>
       <input
         type="range"
@@ -121,7 +122,7 @@ function RatedFilter({ ratedOnly, setRatedOnly }) {
       aria-pressed={ratedOnly}
       className={`flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs transition ${
         ratedOnly
-          ? 'border-ember-primary/60 bg-ember-primary/10 text-ember-primary'
+          ? 'border-ember-primary/60 bg-ember-primary/10 text-ember-ink'
           : 'border-ember-line/10 text-ember-muted hover:text-ember-cream'
       }`}
     >
@@ -140,26 +141,19 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
     return (
       <>
         <div className="mb-2 flex items-center gap-2 px-1">
-          <Icon name="bell" size={14} className="text-ember-primary" />
+          <Icon name="bell" size={14} className="text-ember-ink" />
           <span className="font-display text-xs font-bold uppercase tracking-wide text-ember-muted">
             {t('tabs.eventi')}
           </span>
           <span className="text-xs text-ember-muted">· {events.length}</span>
         </div>
 
-        {eventsLoading && (
-          <p className="flex items-center gap-2 px-1 py-3 text-sm text-ember-muted">
-            <Icon name="reload" size={16} className="animate-spin" /> {t('common.loading')}
-          </p>
-        )}
+        {eventsLoading && <SkeletonRows n={3} label={t('common.loading')} />}
 
         {eventsError && !eventsLoading && (
-          <div className="rounded-2xl border border-ember-accent/30 bg-ember-line/[0.03] p-4 text-center">
-            <p className="text-ember-accent">{eventsError}</p>
-            <button
-              onClick={onReload}
-              className="mt-3 inline-flex items-center gap-2 rounded-lg bg-ember-primary px-4 py-2 font-semibold text-ember-bg"
-            >
+          <div className="rounded-card border border-ember-danger/30 bg-ember-line/[0.03] p-4 text-center">
+            <p className="text-ember-danger">{eventsError}</p>
+            <button onClick={onReload} className="btn-primary mt-3 px-4 py-2">
               <Icon name="reload" size={16} /> {t('common.retry')}
             </button>
           </div>
@@ -177,7 +171,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
         )}
 
         {!eventsLoading && events.length > 0 && (
-          <div className="space-y-2 pb-1">
+          <div className="stagger space-y-2 pb-1">
             {events.map((ev) => (
               <EventRow key={ev.id} event={ev} />
             ))}
@@ -197,26 +191,19 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
         </div>
 
         <div className="mb-2 flex items-center gap-2 px-1">
-          <Icon name="cocktail" size={14} className="text-ember-primary" />
+          <Icon name="cocktail" size={14} className="text-ember-ink" />
           <span className="font-display text-xs font-bold uppercase tracking-wide text-ember-muted">
             {t('tabs.drinks')}
           </span>
           <span className="text-xs text-ember-muted">· {drinks.length}</span>
         </div>
 
-        {drinksLoading && (
-          <p className="flex items-center gap-2 px-1 py-3 text-sm text-ember-muted">
-            <Icon name="reload" size={16} className="animate-spin" /> {t('common.loading')}
-          </p>
-        )}
+        {drinksLoading && <SkeletonRows n={4} label={t('common.loading')} />}
 
         {drinksError && !drinksLoading && (
-          <div className="rounded-2xl border border-ember-accent/30 bg-ember-line/[0.03] p-4 text-center">
-            <p className="text-ember-accent">{drinksError}</p>
-            <button
-              onClick={onReload}
-              className="mt-3 inline-flex items-center gap-2 rounded-lg bg-ember-primary px-4 py-2 font-semibold text-ember-bg"
-            >
+          <div className="rounded-card border border-ember-danger/30 bg-ember-line/[0.03] p-4 text-center">
+            <p className="text-ember-danger">{drinksError}</p>
+            <button onClick={onReload} className="btn-primary mt-3 px-4 py-2">
               <Icon name="reload" size={16} /> {t('common.retry')}
             </button>
           </div>
@@ -234,14 +221,14 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
         )}
 
         {!drinksLoading && drinks.length > 0 && (
-          <div className="space-y-2 pb-1">
+          <div className="stagger space-y-2 pb-1">
             {drinks.map((d) => (
               <DrinkRow key={d.id} drink={d} />
             ))}
             <button
               type="button"
               onClick={onProposeDrink}
-              className="flex w-full items-center justify-center gap-2 rounded-2xl border border-dashed border-ember-line/15 px-3 py-3 text-sm text-ember-muted transition hover:text-ember-cream"
+              className="press flex w-full items-center justify-center gap-2 rounded-card border border-dashed border-ember-line/15 px-3 py-3 text-sm text-ember-muted transition-colors hover:text-ember-cream"
             >
               <Icon name="plus" size={15} /> {t('home.proposeDrinkRow')}
             </button>
@@ -260,7 +247,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
       ) : (
         <div className="mb-2 space-y-2">
           <div className="flex items-center gap-2 px-1">
-            <Icon name={searchActive ? 'search' : tab === 'salvati' ? 'bookmark' : 'locate'} size={14} className="text-ember-primary" />
+            <Icon name={searchActive ? 'search' : tab === 'salvati' ? 'bookmark' : 'locate'} size={14} className="text-ember-ink" />
             <span className="font-display text-xs font-bold uppercase tracking-wide text-ember-muted">
               {searchActive ? t('tabs.results') : t(`tabs.${tab}`)}
             </span>
@@ -277,19 +264,14 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
         </div>
       )}
 
-      {loading && (
-        <p className="flex items-center gap-2 px-1 py-3 text-sm text-ember-muted">
-          <Icon name="reload" size={16} className="animate-spin" /> {t('common.loading')}
-        </p>
-      )}
+      {/* `loading` is already false on a warm start (the localStorage cache
+          paints instantly), so this never flashes over cached rows. */}
+      {loading && <SkeletonRows n={5} label={t('common.loading')} />}
 
       {error && !loading && (
-        <div className="rounded-2xl border border-ember-accent/30 bg-ember-line/[0.03] p-4 text-center">
-          <p className="text-ember-accent">{error}</p>
-          <button
-            onClick={onReload}
-            className="mt-3 inline-flex items-center gap-2 rounded-lg bg-ember-primary px-4 py-2 font-semibold text-ember-bg"
-          >
+        <div className="rounded-card border border-ember-danger/30 bg-ember-line/[0.03] p-4 text-center">
+          <p className="text-ember-danger">{error}</p>
+          <button onClick={onReload} className="btn-primary mt-3 px-4 py-2">
             <Icon name="reload" size={16} /> {t('common.retry')}
           </button>
         </div>
@@ -326,7 +308,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
       )}
 
       {!loading && list.length > 0 && (
-        <div className="space-y-2 pb-1">
+        <div className="stagger space-y-2 pb-1">
           {list.map((bar) => (
             <BarRow key={barKey(bar)} bar={bar} onSelect={onSelect} />
           ))}
@@ -656,7 +638,7 @@ export default function Home() {
 
       {/* Logo — top left (fades out when the mobile sheet is fullscreen) */}
       <div
-        className={`absolute left-4 top-4 z-[1200] drop-shadow-lg transition-all duration-300 ease-out ${
+        className={`on-map absolute left-4 top-4 z-[1200] drop-shadow-lg transition-all duration-300 ease-out ${
           sheetFull ? 'max-md:pointer-events-none max-md:-translate-y-6 max-md:opacity-0' : ''
         }`}
       >
@@ -679,18 +661,18 @@ export default function Home() {
             <Icon name="user" size={22} />
           </GlassButton>
           {menuOpen && isAuthenticated && (
-            <div className="absolute right-0 z-[1400] mt-2 w-64 overflow-hidden rounded-2xl border border-ember-line/10 bg-ember-card shadow-xl">
+            <div className="glass-flat fade-in absolute right-0 z-[1400] mt-2 w-64 overflow-hidden rounded-lg2">
               {/* Own profile card — no need to open Impostazioni to see this. */}
               <div className="border-b border-ember-line/5 px-3 py-3">
                 <div className="flex items-center gap-2 text-sm font-semibold text-ember-cream">
-                  <Icon name="user" size={16} className="text-ember-primary" />@{user.username}
+                  <Icon name="user" size={16} className="text-ember-ink" />@{user.username}
                 </div>
                 {profile?.email && (
                   <div className="mt-1 truncate text-xs text-ember-muted">{profile.email}</div>
                 )}
                 <div className="mt-2 flex items-center gap-3 text-xs text-ember-muted">
                   <span className="flex items-center gap-1">
-                    <Icon name="review" size={13} className="text-ember-primary" />
+                    <Icon name="review" size={13} className="text-ember-ink" />
                     {profile ? profile.ratings_count : '…'} {t('menu.ratings')}
                   </span>
                   {profile?.created_at && (
@@ -718,9 +700,9 @@ export default function Home() {
                 <Link
                   to="/admin"
                   onClick={() => setMenuOpen(false)}
-                  className="flex w-full items-center gap-2 border-b border-ember-line/5 px-3 py-2.5 text-left text-sm font-semibold text-ember-primary hover:bg-ember-line/5"
+                  className="flex w-full items-center gap-2 border-b border-ember-line/5 px-3 py-2.5 text-left text-sm font-semibold text-ember-ink hover:bg-ember-line/5"
                 >
-                  <Icon name="filters" size={16} className="text-ember-primary" /> {t('menu.admin')}
+                  <Icon name="filters" size={16} className="text-ember-ink" /> {t('menu.admin')}
                 </Link>
               )}
               <Link
@@ -728,14 +710,14 @@ export default function Home() {
                 onClick={() => setMenuOpen(false)}
                 className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-ember-line/5"
               >
-                <Icon name="filters" size={16} className="text-ember-primary" /> {t('menu.settings')}
+                <Icon name="filters" size={16} className="text-ember-ink" /> {t('menu.settings')}
               </Link>
               <Link
                 to="/le-tue-valutazioni"
                 onClick={() => setMenuOpen(false)}
                 className="flex w-full items-center gap-2 border-b border-ember-line/5 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-ember-line/5"
               >
-                <Icon name="star" size={16} className="text-ember-primary" /> {t('menu.myRatings')}
+                <Icon name="star" size={16} className="text-ember-ink" /> {t('menu.myRatings')}
               </Link>
               <button
                 type="button"
@@ -745,15 +727,15 @@ export default function Home() {
                 }}
                 className="flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm text-ember-cream hover:bg-ember-line/5"
               >
-                <Icon name="bell" size={16} className="text-ember-primary" /> {t('menu.report')}
+                <Icon name="bell" size={16} className="text-ember-ink" /> {t('menu.report')}
               </button>
               <LanguageMenuRow />
               <div className="flex items-center gap-3 border-t border-ember-line/5 px-3 py-2 text-xs text-ember-muted">
-                <Link to="/privacy" onClick={() => setMenuOpen(false)} className="hover:text-ember-primary">
+                <Link to="/privacy" onClick={() => setMenuOpen(false)} className="hover:text-ember-ink">
                   {t('common.privacy')}
                 </Link>
                 <span className="text-ember-line/15">·</span>
-                <Link to="/tos" onClick={() => setMenuOpen(false)} className="hover:text-ember-primary">
+                <Link to="/tos" onClick={() => setMenuOpen(false)} className="hover:text-ember-ink">
                   {t('common.terms')}
                 </Link>
               </div>
@@ -776,7 +758,7 @@ export default function Home() {
 
       {/* Desktop: floating tab menu (left) + list panel below it */}
       <div className="pointer-events-none absolute left-5 top-24 bottom-6 z-[1100] hidden w-[440px] flex-col gap-3 md:flex">
-        <div className="pointer-events-auto rounded-3xl border border-ember-line/10 bg-ember-bg/80 p-3 shadow-xl backdrop-blur">
+        <div className="glass pointer-events-auto rounded-lg2 p-3">
           <SearchPanel query={query} setQuery={setQuery} />
         </div>
         <NavTabs
@@ -787,7 +769,9 @@ export default function Home() {
           savedCount={count}
           exclude={['cerca']}
         />
-        <div className="pointer-events-auto flex min-h-0 flex-1 flex-col overflow-hidden rounded-3xl border border-ember-line/10 bg-ember-sheet/90 shadow-2xl backdrop-blur-xl">
+        {/* Desktop only: the map never pans behind this while it's being
+            resized, so a real blur is affordable here. */}
+        <div className="glass pointer-events-auto flex min-h-0 flex-1 flex-col overflow-hidden rounded-sheet">
           <div className="no-scrollbar flex-1 overflow-y-auto px-4 py-4">
             <SheetBody {...sheetProps} />
           </div>
@@ -798,8 +782,11 @@ export default function Home() {
           it snaps to collapsed / expanded / fullscreen. */}
       <section
         ref={sheetRef}
-        className={`absolute z-[1100] flex flex-col overflow-hidden border border-ember-line/10 bg-ember-sheet shadow-[0_10px_40px_rgba(0,0,0,0.55)] md:hidden ${
-          sheetFull ? 'inset-x-0 bottom-0 rounded-none' : 'inset-x-3 bottom-3 rounded-3xl'
+        // `.sheet` is opaque on purpose: this surface is resized frame-by-frame
+        // during a drag, over a map whose tiles already run a CSS filter. A
+        // backdrop-blur here would re-blur the whole region every frame.
+        className={`sheet absolute z-[1100] flex flex-col overflow-hidden md:hidden ${
+          sheetFull ? 'inset-x-0 bottom-0 rounded-none' : 'inset-x-3 bottom-3 rounded-sheet'
         }`}
         style={{
           // Always bottom-anchored with an explicit height (never inset-0):
@@ -807,7 +794,9 @@ export default function Home() {
           // grow/shrink from the bottom even while the full-screen classes are
           // still applied.
           height: `${sheetH}dvh`,
-          transition: dragging ? 'none' : 'height 0.28s ease',
+          // Ease-out, never an overshoot curve: at the collapsed stop an
+          // overshoot would dip the sheet below its min and flash the map.
+          transition: dragging ? 'none' : 'height 280ms cubic-bezier(0.22, 1, 0.36, 1)',
         }}
       >
         <div

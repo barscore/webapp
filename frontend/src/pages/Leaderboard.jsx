@@ -4,6 +4,7 @@ import { leaderboardApi } from '../services/api.js';
 import { useAuth } from '../hooks/useAuth.js';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
+import { SkeletonRows } from '../components/Skeleton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 
 // Ice-cube icon (colored png, not a sprite mask). File added by hand later at
@@ -49,12 +50,10 @@ export default function Leaderboard() {
         </div>
 
         {loading && (
-          <p className="flex items-center gap-2 px-1 py-3 text-sm text-ember-muted">
-            <Icon name="reload" size={16} className="animate-spin" /> Caricamento…
-          </p>
+          <SkeletonRows n={5} label="Caricamento…" />
         )}
 
-        {error && !loading && <p className="text-sm text-ember-accent">{error}</p>}
+        {error && !loading && <p className="text-sm text-ember-danger">{error}</p>}
 
         {!loading && !error && rows.length === 0 && (
           <EmptyState title="Classifica vuota" hint="Nessun utente ha ancora valutato un bar." pin="grigio" />
@@ -77,13 +76,13 @@ export default function Leaderboard() {
                   {u.avatar_url ? (
                     <img src={u.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
                   ) : (
-                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ember-line/5 text-ember-primary">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-ember-line/5 text-ember-ink">
                       <Icon name="user" size={16} />
                     </span>
                   )}
                   <span className="min-w-0 flex-1 truncate text-ember-cream">
                     @{u.username}
-                    {me && <span className="ml-1 text-xs text-ember-primary">(tu)</span>}
+                    {me && <span className="ml-1 text-xs text-ember-ink">(tu)</span>}
                   </span>
                   <span className="flex items-center gap-1 font-display font-bold tabular-nums text-ember-cream">
                     {u.ice_cubes} <IceCube />

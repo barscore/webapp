@@ -19,7 +19,7 @@ export default function EmptyState({
         <button
           type="button"
           onClick={onCta}
-          className="mt-4 flex items-center gap-2 rounded-lg bg-ember-primary px-4 py-2.5 font-semibold text-ember-bg active:scale-[0.98]"
+          className="btn-primary mt-4 px-4 py-2.5"
         >
           <Icon name={ctaIcon} size={18} />
           {ctaLabel}

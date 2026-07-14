@@ -56,7 +56,7 @@ export default function Register() {
         </p>
         <p className="mt-4 text-center text-sm text-ember-muted">
           Hai già un account?{' '}
-          <Link to="/login" className="text-ember-primary underline">
+          <Link to="/login" className="text-ember-ink underline">
             Accedi
           </Link>
         </p>
@@ -79,15 +79,15 @@ export default function Register() {
           />
           <span>
             Ho almeno 18 anni e accetto la{' '}
-            <Link to="/privacy" className="text-ember-primary underline">Privacy</Link> e i{' '}
-            <Link to="/tos" className="text-ember-primary underline">Termini di servizio</Link>.
+            <Link to="/privacy" className="text-ember-ink underline">Privacy</Link> e i{' '}
+            <Link to="/tos" className="text-ember-ink underline">Termini di servizio</Link>.
           </span>
         </label>
-        {error && <p className="text-sm text-ember-accent">{error}</p>}
+        {error && <p className="text-sm text-ember-danger">{error}</p>}
         <button
           type="submit"
           disabled={busy || !accepted}
-          className="w-full rounded-lg bg-ember-primary py-2 font-semibold text-ember-bg disabled:opacity-50"
+          className="btn-primary w-full py-2"
         >
           {busy ? 'Creazione…' : 'Registrati'}
         </button>
@@ -95,7 +95,7 @@ export default function Register() {
       <GoogleButton label="Registrati con Google" disabled={!accepted} />
       <p className="mt-4 text-center text-sm text-ember-muted">
         Hai già un account?{' '}
-        <Link to="/login" className="text-ember-primary underline">
+        <Link to="/login" className="text-ember-ink underline">
           Accedi
         </Link>
       </p>

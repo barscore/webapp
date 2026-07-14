@@ -1,14 +1,21 @@
 import { useEffect, useState } from 'react';
-import { useAuth } from '../hooks/useAuth.js';
 import Icon from './Icon.jsx';
 import Logo from './Logo.jsx';
 
-// One-time onboarding splash, shown the first time a user is signed in on this
-// device. Dismissal is remembered per user id in localStorage, so a new account
-// on the same browser still gets the tour. Bump the version segment when the
-// content changes enough that existing users should see it again (v2: drinks).
+// One-time onboarding splash: shown the first time the app is opened on this
+// device, signed in or not. Dismissal is remembered per device, so someone who
+// already took the tour never sees it again — not after registering, not at
+// first login, not from a second account on the same browser. Bump the version
+// segment when the content changes enough to warrant showing it again.
 // Exported so InstallHint can hold back while the tour is still pending.
-export const tutorialSeenKey = (userId) => `rabar:tutorial-seen:v2:${userId}`;
+const SEEN_KEY = 'rabar:tutorial-seen:v3';
+const LEGACY_PREFIX = 'rabar:tutorial-seen:v2:'; // per-user keys from the old gate
+
+export function tutorialSeen() {
+  if (localStorage.getItem(SEEN_KEY)) return true;
+  // Anyone who already dismissed the per-user v2 tour shouldn't get it again.
+  return Object.keys(localStorage).some((k) => k.startsWith(LEGACY_PREFIX));
+}
 
 const STEPS = [
   {
@@ -34,13 +41,13 @@ const STEPS = [
           da 1 a 5 più un commento opzionale. Una sola valutazione per bar.
         </p>
         <p className="flex items-start gap-2">
-          <Icon name="edit" size={16} className="mt-0.5 shrink-0 text-ember-primary" />
+          <Icon name="edit" size={16} className="mt-0.5 shrink-0 text-ember-ink" />
           <span>
             Per <strong>modificarla</strong>, riapri il bar già valutato e aggiorna gli slider.
           </span>
         </p>
         <p className="flex items-start gap-2">
-          <Icon name="trash" size={16} className="mt-0.5 shrink-0 text-ember-accent" />
+          <Icon name="trash" size={16} className="mt-0.5 shrink-0 text-ember-danger" />
           <span>
             Per <strong>eliminarla</strong>, usa il cestino nel form o la pagina{' '}
             <strong>Le tue valutazioni</strong> dal menu.
@@ -106,22 +113,17 @@ const STEPS = [
 ];
 
 export default function TutorialSplash() {
-  const { user, loading } = useAuth();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
 
   useEffect(() => {
-    if (loading || !user) return;
-    if (!localStorage.getItem(tutorialSeenKey(user.id))) {
-      setStep(0);
-      setOpen(true);
-    }
-  }, [loading, user?.id]);
+    if (!tutorialSeen()) setOpen(true);
+  }, []);
 
-  if (!open || !user) return null;
+  if (!open) return null;
 
   function dismiss() {
-    localStorage.setItem(tutorialSeenKey(user.id), '1');
+    localStorage.setItem(SEEN_KEY, '1');
     setOpen(false);
     // Wake up other one-time overlays (InstallHint) now that the tour is done.
     window.dispatchEvent(new Event('rabar:tutorial-dismissed'));
@@ -132,12 +134,12 @@ export default function TutorialSplash() {
 
   return (
     <div
-      className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[3px]"
       role="dialog"
       aria-modal="true"
       aria-label="Tutorial di benvenuto"
     >
-      <div className="w-full max-w-sm space-y-4 rounded-card border border-ember-line/10 bg-ember-card p-5">
+      <div className="glass-flat fade-in w-full max-w-sm space-y-4 rounded-sheet p-5">
         <div className="flex items-center justify-between">
           <Logo size="sm" />
           <button
@@ -153,7 +155,7 @@ export default function TutorialSplash() {
           {s.iceCube ? (
             <img src="/icons/ice.png" alt="" className="h-6 w-6 object-contain" />
           ) : (
-            <Icon name={s.icon} size={24} className="text-ember-primary" />
+            <Icon name={s.icon} size={24} className="text-ember-ink" />
           )}
         </div>
 
@@ -183,7 +185,7 @@ export default function TutorialSplash() {
             )}
             <button
               onClick={() => (last ? dismiss() : setStep(step + 1))}
-              className="flex items-center gap-2 rounded-lg bg-ember-primary px-4 py-2.5 font-semibold text-ember-bg active:scale-[0.98]"
+              className="btn-primary px-4 py-2.5 active:scale-[0.98]"
             >
               {last ? (
                 <>

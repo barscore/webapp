@@ -59,7 +59,7 @@ export default function BanBanner() {
   if (!active || dismissed) return null;
 
   return (
-    <div className="fixed inset-x-0 top-0 z-[3000] border-b border-ember-accent/40 bg-ember-accent/95 text-white shadow-lg">
+    <div className="fixed inset-x-0 top-0 z-[3000] border-b border-ember-danger/40 bg-ember-accent/95 text-black shadow-lg">
       <div className="mx-auto flex max-w-3xl flex-col gap-2 px-4 py-2.5">
         <div className="flex items-center gap-2">
           <Icon name="bell" size={18} className="shrink-0" />

@@ -19,11 +19,23 @@ export default {
           // Hairlines / hover tints: white on dark themes, espresso on the
           // light "aperitif" theme. Always used with an opacity modifier.
           line: 'rgb(var(--ember-line) / <alpha-value>)',
+          // Score ≥ 7 ("ben valutato"). Was a hardcoded #57C08A in score.js,
+          // which sits at 1.6:1 on the light theme's cream card.
+          good: 'rgb(var(--ember-good) / <alpha-value>)',
+          // The primary, tinted where needed so it clears WCAG AA (4.5:1) as
+          // SMALL text. Use for primary-colored text under ~18px; the plain
+          // `primary` is only guaranteed at large/bold sizes on some themes.
+          ink: 'rgb(var(--ember-ink) / <alpha-value>)',
+          // Error/destructive TEXT. `accent` stays the brand hue for fills, but
+          // it drops to 1.78:1 as text on the light theme — use this instead.
+          danger: 'rgb(var(--ember-danger) / <alpha-value>)',
+          // Label sitting INSIDE a primary-colored fill. Not always `bg`:
+          // midnight-red needs white, aperitif needs black.
+          'on-primary': 'rgb(var(--ember-on-primary) / <alpha-value>)',
         },
         // Keep `brand` aliased to the primary for existing classes.
         brand: {
           DEFAULT: 'rgb(var(--ember-primary) / <alpha-value>)',
-          dark: '#b45309',
         },
       },
       fontFamily: {
@@ -36,7 +48,28 @@ export default {
           'linear-gradient(90deg, rgb(var(--ember-primary)) 0%, rgb(var(--ember-accent)) 100%)',
       },
       borderRadius: {
-        card: '16px',
+        // `rounded-lg` is used 110× on small controls and is stock-Tailwind 8px,
+        // which is what makes the UI read as dated. Overriding the token softens
+        // every one of those call sites without editing them.
+        lg: 'var(--r-sm)', // 10px — chips, inputs, buttons
+        card: 'var(--r-md)', // 14px — cards, list rows
+        lg2: 'var(--r-lg)', // 20px — panels, dropdowns
+        sheet: 'var(--r-xl)', // 28px — sheets, modals
+      },
+      boxShadow: {
+        e1: 'var(--shadow-1)',
+        e2: 'var(--shadow-2)',
+        e3: 'var(--shadow-3)',
+        glow: '0 4px 20px rgb(var(--ember-primary) / 0.35)',
+      },
+      transitionTimingFunction: {
+        out: 'var(--ease-out)',
+        spring: 'var(--ease-spring)',
+      },
+      transitionDuration: {
+        1: 'var(--dur-1)',
+        2: 'var(--dur-2)',
+        3: 'var(--dur-3)',
       },
     },
   },

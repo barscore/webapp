@@ -18,9 +18,14 @@ export function scoreMeta(bar) {
     return { score: '—', variant: 'grigio', color: 'text-ember-muted', hasReviews: false };
   }
   if (s >= 7) {
-    return { score: s.toFixed(1), variant: 'verde', color: 'text-[#57C08A]', hasReviews: true };
+    // `variant` keys the pin art (utils/pins.js, Map.jsx) — do not rename it.
+    // The color is a token because the old hardcoded #57C08A sat at 1.6:1 on
+    // the light theme's card.
+    return { score: s.toFixed(1), variant: 'verde', color: 'text-ember-good', hasReviews: true };
   }
-  return { score: s.toFixed(1), variant: 'arancione', color: 'text-ember-primary', hasReviews: true };
+  // `ink`, not `primary`: these scores render at 16–18px bold, which is below
+  // the "large text" threshold, so they need the full 4.5:1.
+  return { score: s.toFixed(1), variant: 'arancione', color: 'text-ember-ink', hasReviews: true };
 }
 
 // Discoteche (OSM amenity=nightclub) share the map with bars but use their own

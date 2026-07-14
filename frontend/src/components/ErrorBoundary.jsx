@@ -74,7 +74,7 @@ export default class ErrorBoundary extends Component {
               : 'L’app ha riscontrato un errore imprevisto.'}
           </p>
           {!stale && (
-            <pre className="mt-4 max-h-48 overflow-auto rounded-lg bg-black/30 p-3 text-left text-xs text-ember-primary">
+            <pre className="mt-4 max-h-48 overflow-auto rounded-lg bg-ember-line/10 p-3 text-left text-xs text-ember-ink">
               {String(error?.message || error)}
             </pre>
           )}

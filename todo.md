@@ -8,8 +8,8 @@ npm run dev -- --host 0.0.0.0
 
 cloudflared-linux-amd64.deb
 
----
+/caveman ultra nella sezione vicino a me permetti di cercare i bar di una città in cui non sono al momento, può essere utile per i viaggi
 
-/caveman ultra vorrei un redesign della ui dell'app mantenendo lo stesso branding. rendila moderna, leggera e fluida mantenendo la stessa ux e dinamiche
+/caveman ultra nelle impostazioni fai in modo che gli utenti possano scegliere se usare le animazioni semplici o più complesse e di default siano semplici.
 
-/caveman ultra la splash screen del tutorial iniziale deve vedersi solo la prima volta che l'utente apre l'app, se ha già fatto la registrazione mostralo solo al primo login
+/caveman ultra nella sezione eventi i pr e gli organizzatori possono registrarsi come tali e sponsorizzare le feste di zona. gli eventi, i pr e gli organizzatori possono essere seguiti per ricevere notifiche ogni volta che c’è un nuovo evento. gli account da pr devono essere approvati con le dovute verifiche. (DA INFORMARSI)

@@ -13,10 +13,10 @@ function DrinkRow({ drink }) {
     <button
       type="button"
       onClick={() => navigate(`/drink/${drink.id}`)}
-      className="flex w-full items-center gap-3 rounded-2xl border border-ember-line/5 bg-ember-line/[0.03] px-3 py-3 text-left transition active:scale-[0.99] hover:border-ember-line/10 hover:bg-ember-line/[0.06] [content-visibility:auto] [contain-intrinsic-size:auto_66px]"
+      className="row flex w-full items-center gap-3 px-3 py-3 text-left [content-visibility:auto] [contain-intrinsic-size:auto_66px]"
     >
       <span className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-ember-primary/10">
-        <Icon name="cocktail" size={18} className="text-ember-primary" />
+        <Icon name="cocktail" size={18} className="text-ember-ink" />
       </span>
       <div className="min-w-0 flex-1">
         <h3 className="truncate font-display text-[15px] font-bold text-ember-cream">{drink.name}</h3>
@@ -27,7 +27,7 @@ function DrinkRow({ drink }) {
         </p>
       </div>
       {best ? (
-        <span className="flex shrink-0 items-center gap-1 font-display text-base font-extrabold tabular-nums text-ember-primary">
+        <span className="flex shrink-0 items-center gap-1 font-display text-base font-extrabold tabular-nums text-ember-ink">
           <Icon name="star" size={14} />
           {Number(best.avg_rating).toFixed(1)}
         </span>

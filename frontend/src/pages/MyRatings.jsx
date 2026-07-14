@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth.js';
 import { meApi, ratingsApi } from '../services/api.js';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
+import { SkeletonRows } from '../components/Skeleton.jsx';
 import Toast from '../components/Toast.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 
@@ -59,17 +60,15 @@ export default function MyRatings() {
             <Logo size="sm" />
           </div>
           <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-ember-cream">
-            <Icon name="star" size={22} className="text-ember-primary" /> Le tue valutazioni
+            <Icon name="star" size={22} className="text-ember-ink" /> Le tue valutazioni
           </h1>
         </div>
 
         {busy && (
-          <p className="flex items-center gap-2 text-ember-muted">
-            <Icon name="reload" size={16} className="animate-spin" /> Caricamento…
-          </p>
+          <SkeletonRows n={4} label="Caricamento…" />
         )}
 
-        {error && !busy && <p className="text-ember-accent">{error}</p>}
+        {error && !busy && <p className="text-ember-danger">{error}</p>}
 
         {!busy && !error && ratings.length === 0 && (
           <EmptyState
@@ -97,7 +96,7 @@ export default function MyRatings() {
                       </p>
                     )}
                   </div>
-                  <span className="flex shrink-0 items-center gap-2 text-xs text-ember-primary">
+                  <span className="flex shrink-0 items-center gap-2 text-xs text-ember-ink">
                     <span className="flex items-center gap-0.5">
                       <Icon name="euro" size={12} />
                       {r.prezzo}
@@ -130,12 +129,12 @@ export default function MyRatings() {
                     to={`/bar/${r.bar_id}`}
                     className="flex items-center gap-1.5 rounded-lg bg-ember-bg px-3 py-1.5 text-ember-cream"
                   >
-                    <Icon name="edit" size={15} className="text-ember-primary" /> Modifica
+                    <Icon name="edit" size={15} className="text-ember-ink" /> Modifica
                   </Link>
                   <button
                     onClick={() => remove(r)}
                     aria-label="Elimina valutazione"
-                    className="flex items-center gap-1.5 rounded-lg bg-ember-bg px-3 py-1.5 text-ember-accent"
+                    className="flex items-center gap-1.5 rounded-lg bg-ember-bg px-3 py-1.5 text-ember-danger"
                   >
                     <Icon name="trash" size={15} /> Elimina
                   </button>

@@ -104,12 +104,12 @@ export default function Settings() {
             <Logo size="sm" />
           </div>
           <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-ember-cream">
-            <Icon name="filters" size={22} className="text-ember-primary" /> Impostazioni
+            <Icon name="filters" size={22} className="text-ember-ink" /> Impostazioni
           </h1>
         </div>
 
         {/* Account details */}
-        <section className="rounded-card border border-ember-line/5 bg-ember-card p-4">
+        <section className="card p-4">
           <h2 className="mb-3 font-display font-bold text-ember-cream">Dettagli account</h2>
           <dl className="space-y-2 text-sm">
             <Detail icon="user" label="Username" value={profile ? `@${profile.username}` : '…'} />
@@ -134,47 +134,47 @@ export default function Settings() {
         <CookieSection />
 
         {/* Change email */}
-        <form onSubmit={changeEmail} className="space-y-3 rounded-card border border-ember-line/5 bg-ember-card p-4">
+        <form onSubmit={changeEmail} className="space-y-3 card p-4">
           <h2 className="font-display font-bold text-ember-cream">Cambia email</h2>
           <SettingsField label="Nuova email" type="email" value={email} onChange={setEmail} />
-          {emailErr && <p className="text-sm text-ember-accent">{emailErr}</p>}
+          {emailErr && <p className="text-sm text-ember-danger">{emailErr}</p>}
           <button
             type="submit"
             disabled={emailBusy}
-            className="w-full rounded-lg bg-ember-primary py-2 font-semibold text-ember-bg disabled:opacity-50"
+            className="btn-primary w-full py-2"
           >
             {emailBusy ? 'Salvataggio…' : 'Aggiorna email'}
           </button>
         </form>
 
         {/* Change password */}
-        <form onSubmit={changePassword} className="space-y-3 rounded-card border border-ember-line/5 bg-ember-card p-4">
+        <form onSubmit={changePassword} className="space-y-3 card p-4">
           <h2 className="font-display font-bold text-ember-cream">Cambia password</h2>
           <SettingsField label="Nuova password" type="password" value={password} onChange={setPassword} />
           <SettingsField label="Conferma password" type="password" value={password2} onChange={setPassword2} />
-          {pwErr && <p className="text-sm text-ember-accent">{pwErr}</p>}
+          {pwErr && <p className="text-sm text-ember-danger">{pwErr}</p>}
           <button
             type="submit"
             disabled={pwBusy}
-            className="w-full rounded-lg bg-ember-primary py-2 font-semibold text-ember-bg disabled:opacity-50"
+            className="btn-primary w-full py-2"
           >
             {pwBusy ? 'Salvataggio…' : 'Aggiorna password'}
           </button>
         </form>
 
         {/* Danger zone — GDPR art. 17 self-service erasure */}
-        <section className="space-y-3 rounded-card border border-ember-accent/40 bg-ember-card p-4">
-          <h2 className="font-display font-bold text-ember-accent">Elimina account</h2>
+        <section className="space-y-3 rounded-card border border-ember-danger/40 bg-ember-card p-4">
+          <h2 className="font-display font-bold text-ember-danger">Elimina account</h2>
           <p className="text-sm text-ember-muted">
             Cancella definitivamente il tuo account e tutti i dati collegati (valutazioni, voti,
             bar salvati). Operazione irreversibile.
           </p>
-          {delErr && <p className="text-sm text-ember-accent">{delErr}</p>}
+          {delErr && <p className="text-sm text-ember-danger">{delErr}</p>}
           {!delConfirm ? (
             <button
               type="button"
               onClick={() => setDelConfirm(true)}
-              className="w-full rounded-lg border border-ember-accent py-2 font-semibold text-ember-accent"
+              className="w-full rounded-lg border border-ember-danger py-2 font-semibold text-ember-danger"
             >
               Elimina account
             </button>
@@ -194,7 +194,7 @@ export default function Settings() {
                   type="button"
                   onClick={deleteAccount}
                   disabled={delBusy}
-                  className="flex-1 rounded-lg bg-ember-accent py-2 font-semibold text-ember-bg disabled:opacity-50"
+                  className="btn flex-1 bg-ember-accent py-2 text-black"
                 >
                   {delBusy ? 'Eliminazione…' : 'Conferma eliminazione'}
                 </button>
@@ -212,7 +212,7 @@ export default function Settings() {
 function ThemeSection() {
   const { theme, setTheme, themes } = useTheme();
   return (
-    <section className="rounded-card border border-ember-line/5 bg-ember-card p-4">
+    <section className="card p-4">
       <h2 className="mb-3 font-display font-bold text-ember-cream">Tema</h2>
       <div className="grid grid-cols-3 gap-2">
         {themes.map((t) => {
@@ -239,7 +239,7 @@ function ThemeSection() {
                 ))}
               </span>
               <span
-                className={`text-xs font-semibold ${active ? 'text-ember-primary' : 'text-ember-cream'}`}
+                className={`text-xs font-semibold ${active ? 'text-ember-ink' : 'text-ember-cream'}`}
               >
                 {t.label}
               </span>
@@ -263,7 +263,7 @@ function CookieSection() {
         ? 'Hai rifiutato: nessuna pubblicità e nessun cookie pubblicitario.'
         : 'Nessuna scelta ancora: nessuna pubblicità caricata.';
   return (
-    <section className="space-y-3 rounded-card border border-ember-line/5 bg-ember-card p-4">
+    <section className="space-y-3 card p-4">
       <h2 className="font-display font-bold text-ember-cream">Preferenze cookie</h2>
       <p className="text-sm text-ember-muted">{label}</p>
       <button
@@ -281,7 +281,7 @@ function Detail({ icon, label, value }) {
   return (
     <div className="flex items-center justify-between gap-3">
       <dt className="flex items-center gap-2 text-ember-muted">
-        <Icon name={icon} size={15} className="text-ember-primary" />
+        <Icon name={icon} size={15} className="text-ember-ink" />
         {label}
       </dt>
       <dd className="truncate text-ember-cream">{value}</dd>
@@ -298,7 +298,7 @@ function SettingsField({ label, type = 'text', value, onChange }) {
         value={value}
         onChange={(e) => onChange(e.target.value)}
         required
-        className="w-full rounded-lg bg-ember-bg p-2 text-ember-cream outline-none ring-ember-primary focus:ring-2"
+        className="field py-2"
       />
     </div>
   );

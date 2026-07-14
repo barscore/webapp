@@ -41,7 +41,7 @@ export function LanguageMenuRow() {
 export function LanguageSection() {
   const { lang, t, setLang } = useI18n();
   return (
-    <section className="rounded-card border border-ember-line/5 bg-ember-card p-4">
+    <section className="card p-4">
       <h2 className="mb-3 font-display font-bold text-ember-cream">{t('settings.language')}</h2>
       <div className="grid grid-cols-3 gap-2">
         {LANGUAGES.map((l) => {
@@ -60,7 +60,7 @@ export function LanguageSection() {
             >
               <span className="text-xl leading-none">{l.flag}</span>
               <span
-                className={`text-xs font-semibold ${active ? 'text-ember-primary' : 'text-ember-cream'}`}
+                className={`text-xs font-semibold ${active ? 'text-ember-ink' : 'text-ember-cream'}`}
               >
                 {l.label}
               </span>

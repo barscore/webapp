@@ -34,7 +34,7 @@ export default function GoogleButton({ label = 'Continua con Google', disabled =
         <GoogleIcon />
         {busy ? 'Reindirizzamento…' : label}
       </button>
-      {error && <p className="mt-2 text-sm text-ember-accent">{error}</p>}
+      {error && <p className="mt-2 text-sm text-ember-danger">{error}</p>}
     </div>
   );
 }

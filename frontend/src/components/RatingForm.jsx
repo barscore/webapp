@@ -57,10 +57,10 @@ export default function RatingForm({ initial, onSubmit, onCancel, onDelete }) {
   return (
     <form
       onSubmit={handleSubmit}
-      className="space-y-4 rounded-card border border-ember-line/5 bg-ember-card p-4"
+      className="space-y-4 card p-4"
     >
       <h3 className="flex items-center gap-2 font-display font-bold text-ember-cream">
-        <Icon name="cocktail" size={18} className="text-ember-primary" />
+        <Icon name="cocktail" size={18} className="text-ember-ink" />
         {initial ? t('form.editYourRating') : t('form.yourRating')}
       </h3>
 
@@ -68,10 +68,10 @@ export default function RatingForm({ initial, onSubmit, onCancel, onDelete }) {
         <div key={d.key}>
           <div className="flex items-center justify-between">
             <label className="flex items-center gap-1.5 font-medium text-ember-cream">
-              <Icon name={d.icon} size={16} className="text-ember-primary" />
+              <Icon name={d.icon} size={16} className="text-ember-ink" />
               {t(d.label)}
             </label>
-            <span className="font-display font-semibold text-ember-primary">{values[d.key]}</span>
+            <span className="font-display font-semibold text-ember-ink">{values[d.key]}</span>
           </div>
           <input
             type="range"
@@ -93,7 +93,7 @@ export default function RatingForm({ initial, onSubmit, onCancel, onDelete }) {
           maxLength={500}
           rows={3}
           onChange={(e) => setCommento(e.target.value)}
-          className="mt-1 w-full rounded-lg bg-ember-bg p-2 text-sm text-ember-cream outline-none ring-ember-primary focus:ring-2"
+          className="field mt-1 py-2 text-sm"
           placeholder={t('form.commentPh')}
         />
         <div className="flex items-center justify-between text-xs text-ember-muted">
@@ -109,13 +109,13 @@ export default function RatingForm({ initial, onSubmit, onCancel, onDelete }) {
         </div>
       </div>
 
-      {error && <p className="text-sm text-ember-accent">{error}</p>}
+      {error && <p className="text-sm text-ember-danger">{error}</p>}
 
       <div className="flex items-center gap-2">
         <button
           type="submit"
           disabled={busy}
-          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-ember-primary py-2.5 font-semibold text-ember-bg active:scale-[0.98] disabled:opacity-50"
+          className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-ember-primary py-2.5 font-semibold text-ember-on-primary active:scale-[0.98] disabled:opacity-50"
         >
           <Icon name="check" size={18} />
           {busy ? t('common.saving') : t('common.save')}
@@ -126,7 +126,7 @@ export default function RatingForm({ initial, onSubmit, onCancel, onDelete }) {
             onClick={handleDelete}
             disabled={busy}
             aria-label={t('form.deleteAria')}
-            className="rounded-lg bg-ember-bg p-2.5 text-ember-accent disabled:opacity-50"
+            className="rounded-lg bg-ember-bg p-2.5 text-ember-danger disabled:opacity-50"
           >
             <Icon name="trash" size={18} />
           </button>

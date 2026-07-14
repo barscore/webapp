@@ -62,7 +62,7 @@ export default function Maintenance({ reason, eta, beta = false, pending = false
           </div>
           <div className="mb-4 flex justify-center">
             <span className="grid h-14 w-14 place-items-center rounded-full bg-ember-primary/15">
-              <Icon name="user" size={26} className="text-ember-primary" />
+              <Icon name="user" size={26} className="text-ember-ink" />
             </span>
           </div>
           <h1 className="font-display text-2xl font-bold text-ember-cream">
@@ -92,8 +92,8 @@ export default function Maintenance({ reason, eta, beta = false, pending = false
           <Logo size="sm" />
         </div>
         <div className="mb-4 flex justify-center">
-          <span className="grid h-14 w-14 place-items-center rounded-full bg-ember-accent/15">
-            <Icon name="bell" size={26} className="text-ember-accent" />
+          <span className="grid h-14 w-14 place-items-center rounded-full bg-ember-danger/15">
+            <Icon name="bell" size={26} className="text-ember-danger" />
           </span>
         </div>
         <h1 className="font-display text-2xl font-bold text-ember-cream">
@@ -117,7 +117,7 @@ export default function Maintenance({ reason, eta, beta = false, pending = false
             <div className="text-xs uppercase tracking-wide text-ember-muted">Tempo stimato</div>
             {remaining > 0 ? (
               <>
-                <div className="mt-0.5 font-display text-lg font-bold tabular-nums text-ember-primary">
+                <div className="mt-0.5 font-display text-lg font-bold tabular-nums text-ember-ink">
                   {fmt(remaining)}
                 </div>
                 <div className="text-xs text-ember-muted">

@@ -3,7 +3,7 @@ import { z } from 'zod';
 // --- Users ---------------------------------------------------------------
 export const listUsersQuerySchema = z.object({
   q: z.string().trim().max(100).optional(),
-  role: z.enum(['user', 'betatester', 'moderator', 'admin']).optional(),
+  role: z.enum(['user', 'betatester', 'moderator', 'admin', 'organizer']).optional(),
   page: z.coerce.number().int().min(1).default(1),
   limit: z.coerce.number().int().min(1).max(100).default(50),
 });
@@ -19,9 +19,15 @@ export const banSchema = z.object({
   reason: z.string().trim().max(500).optional(),
 });
 
-export const roleSchema = z.object({
-  role: z.enum(['user', 'betatester', 'moderator', 'admin']),
-});
+export const roleSchema = z
+  .object({
+    role: z.enum(['user', 'betatester', 'moderator', 'admin', 'organizer']),
+    organizer_type: z.enum(['pr', 'organizzatore', 'proprietario']).optional(),
+  })
+  .refine((v) => v.role !== 'organizer' || !!v.organizer_type, {
+    message: 'organizer_type richiesto per il ruolo organizer',
+    path: ['organizer_type'],
+  });
 
 // --- Settings (security + emergency switches) ----------------------------
 export const settingsSchema = z

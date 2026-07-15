@@ -66,7 +66,7 @@ admin.get('/users', async (c) => {
   let query = supabase
     .from('profiles')
     .select(
-      'id, username, email, avatar_url, role, banned, suspended_until, moderation_note, created_at',
+      'id, username, email, avatar_url, role, organizer_type, banned, suspended_until, moderation_note, created_at',
       { count: 'exact' },
     )
     .order('created_at', { ascending: false })
@@ -186,13 +186,18 @@ admin.put('/users/:id/role', async (c) => {
   const id = uuidParam(c);
   assertNotSelf(c, id);
   await assertUserExists(id);
-  const { role } = roleSchema.parse(await c.req.json());
+  const { role, organizer_type } = roleSchema.parse(await c.req.json());
 
   const { data, error } = await supabase
     .from('profiles')
-    .update({ role, updated_at: new Date().toISOString() })
+    .update({
+      role,
+      // Direct promotion to organizer carries its type; any other role clears it.
+      organizer_type: role === 'organizer' ? organizer_type : null,
+      updated_at: new Date().toISOString(),
+    })
     .eq('id', id)
-    .select('id, role')
+    .select('id, role, organizer_type')
     .single();
   if (error) throw new AppError(500, 'INTERNAL_ERROR', 'Cambio ruolo fallito');
   return c.json({ user: data });

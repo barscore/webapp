@@ -26,17 +26,20 @@ export default function OrganizerTools({ center, bars = [], onChanged }) {
   const [mine, setMine] = useState([]);
   const [banner, setBanner] = useState(() => !localStorage.getItem(BANNER_KEY));
 
+  // Organizer, ma anche staff: admin/moderator possono creare e gestire eventi
+  // (il backend già li autorizza). Boost/banner restano solo per gli organizer.
   const isOrganizer = role === 'organizer';
+  const canManage = isOrganizer || role === 'admin' || role === 'moderator';
 
   useEffect(() => {
-    if (!isOrganizer || !mineOpen) return;
+    if (!canManage || !mineOpen) return;
     organizerApi
       .myEvents()
       .then(setMine)
       .catch(() => {});
-  }, [isOrganizer, mineOpen, composer, boost]);
+  }, [canManage, mineOpen, composer, boost]);
 
-  if (!isOrganizer) return null;
+  if (!canManage) return null;
 
   function dismissBanner() {
     localStorage.setItem(BANNER_KEY, '1');
@@ -59,7 +62,7 @@ export default function OrganizerTools({ center, bars = [], onChanged }) {
   return (
     <div className="mb-3 space-y-2">
       {/* Banner promo boost — dismissibile, solo per organizer */}
-      {banner && (
+      {banner && isOrganizer && (
         <div className="flex items-center gap-2.5 rounded-card border border-ember-primary/40 bg-ember-primary/10 p-3">
           <Icon name="euro" size={18} className="shrink-0 text-ember-ink" />
           <p className="min-w-0 flex-1 text-xs leading-snug text-ember-cream">
@@ -123,14 +126,16 @@ export default function OrganizerTools({ center, bars = [], onChanged }) {
               </div>
               {!ev.cancelled_at && (
                 <>
-                  <button
-                    type="button"
-                    onClick={() => setBoost({ target: { event_id: ev.id }, label: ev.title })}
-                    aria-label="Sponsorizza"
-                    className="chip !px-2.5"
-                  >
-                    <Icon name="euro" size={14} className="text-ember-ink" />
-                  </button>
+                  {isOrganizer && (
+                    <button
+                      type="button"
+                      onClick={() => setBoost({ target: { event_id: ev.id }, label: ev.title })}
+                      aria-label="Sponsorizza"
+                      className="chip !px-2.5"
+                    >
+                      <Icon name="euro" size={14} className="text-ember-ink" />
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => setComposer({ event: ev })}

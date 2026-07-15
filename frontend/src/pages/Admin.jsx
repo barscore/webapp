@@ -156,6 +156,7 @@ function UsersTab({ notify, onChange }) {
           { v: '', label: 'Tutti' },
           { v: 'user', label: 'User' },
           { v: 'betatester', label: 'Betatester' },
+          { v: 'organizer', label: 'Organizer' },
           { v: 'moderator', label: 'Moderator' },
           { v: 'admin', label: 'Admin' },
         ].map((r) => (
@@ -245,7 +246,9 @@ function UsersTab({ notify, onChange }) {
         <RoleModal
           user={modal.user}
           onClose={() => setModal(null)}
-          onConfirm={(role) => run(() => adminApi.setRole(modal.user.id, role), 'Ruolo aggiornato')}
+          onConfirm={(role, orgType) =>
+            run(() => adminApi.setRole(modal.user.id, role, orgType), 'Ruolo aggiornato')
+          }
         />
       )}
       {modal?.kind === 'delete' && (
@@ -1427,10 +1430,12 @@ function SuspendModal({ user, onClose, onConfirm }) {
   );
 }
 
-const ROLES = ['user', 'betatester', 'moderator', 'admin'];
+const ROLES = ['user', 'betatester', 'organizer', 'moderator', 'admin'];
+const ORGANIZER_TYPES = ['pr', 'organizzatore', 'proprietario'];
 
 function RoleModal({ user, onClose, onConfirm }) {
   const [role, setRole] = useState(user.role);
+  const [orgType, setOrgType] = useState(user.organizer_type || 'pr');
   return (
     <ModalShell title={`Ruolo di @${user.username}`} onClose={onClose}>
       <div className="mt-3 space-y-2">
@@ -1447,13 +1452,33 @@ function RoleModal({ user, onClose, onConfirm }) {
           </button>
         ))}
       </div>
+      {role === 'organizer' && (
+        <div className="mt-3">
+          <p className="mb-1.5 text-xs text-ember-muted">Tipo organizzatore</p>
+          <div className="grid grid-cols-3 gap-2">
+            {ORGANIZER_TYPES.map((tp) => (
+              <button
+                key={tp}
+                onClick={() => setOrgType(tp)}
+                className={`rounded-lg px-2 py-1.5 text-xs font-semibold capitalize transition ${
+                  orgType === tp
+                    ? 'bg-ember-primary text-ember-on-primary'
+                    : 'bg-ember-line/5 text-ember-cream'
+                }`}
+              >
+                {tp}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
       <div className="mt-4 flex gap-2">
         <button onClick={onClose} className="flex-1 rounded-lg bg-ember-line/5 py-2 font-semibold text-ember-cream">
           Annulla
         </button>
         <button
-          onClick={() => onConfirm(role)}
-          disabled={role === user.role}
+          onClick={() => onConfirm(role, role === 'organizer' ? orgType : undefined)}
+          disabled={role === user.role && (role !== 'organizer' || orgType === user.organizer_type)}
           className="btn-primary flex-1 py-2"
         >
           Salva

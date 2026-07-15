@@ -158,8 +158,8 @@ export const adminApi = {
   suspendUser: (id, hours, reason) =>
     api.post(`/admin/users/${id}/suspend`, { hours, reason }).then((r) => r.data),
   unbanUser: (id) => api.post(`/admin/users/${id}/unban`).then((r) => r.data),
-  setRole: (id, role) =>
-    api.put(`/admin/users/${id}/role`, { role }).then((r) => r.data),
+  setRole: (id, role, organizer_type) =>
+    api.put(`/admin/users/${id}/role`, { role, organizer_type }).then((r) => r.data),
   deleteUser: (id) => api.delete(`/admin/users/${id}`).then((r) => r.data),
 
   // Ratings

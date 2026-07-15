@@ -12,6 +12,7 @@ import {
   sanitizeHttpUrl,
 } from '../schemas/barSchemas.js';
 import { listTopQuerySchema } from '../schemas/drinkSchemas.js';
+import { createClaimSchema } from '../schemas/organizerSchemas.js';
 import { fetchElement } from '../lib/osm.js';
 import ratings from './ratings.js';
 
@@ -137,18 +138,23 @@ bars.get('/', async (c) => {
   const { data, error } = await supabase
     .from('bars')
     .select(
-      'id, name, address, city, lat, lng, cover_image_url, bar_ratings_summary(avg_overall, total_ratings)',
+      'id, name, address, city, lat, lng, cover_image_url, boost_until, bar_ratings_summary(avg_overall, total_ratings)',
     )
     .eq('is_active', true)
     .limit(500);
   if (error) throw new AppError(500, 'INTERNAL_ERROR', 'Could not load bars');
 
+  const now = Date.now();
   const flattened = (data ?? []).map((b) => ({
     ...b,
     avg_overall: b.bar_ratings_summary?.avg_overall ?? 0,
     total_ratings: b.bar_ratings_summary?.total_ratings ?? 0,
+    sponsored: !!b.boost_until && new Date(b.boost_until).getTime() > now,
+    boost_until: undefined,
     bar_ratings_summary: undefined,
   }));
+  // Stable sort: sponsored first, previous order kept within each group.
+  flattened.sort((a, b) => b.sponsored - a.sponsored);
   return c.json({ bars: flattened });
 });
 
@@ -165,8 +171,46 @@ bars.get('/:id', async (c) => {
 
   if (error) throw new AppError(500, 'INTERNAL_ERROR', 'Could not load bar');
   if (!data) throw new AppError(404, 'NOT_FOUND', 'Bar not found');
-  return c.json({ bar: data });
+  return c.json({
+    bar: {
+      ...data,
+      sponsored: !!data.boost_until && new Date(data.boost_until) > new Date(),
+    },
+  });
 });
+
+/** POST /bars/:id/claim — an organizer claims ownership of a bar. */
+bars.post(
+  '/:id/claim',
+  requireAuth,
+  requireRole('organizer'),
+  rateLimiter({ windowMs: 60_000, max: 5 }),
+  async (c) => {
+    const barId = uuidParam(c);
+    const { proof } = createClaimSchema.parse(await c.req.json());
+    const user = c.get('user');
+
+    const { data: bar, error: barErr } = await supabase
+      .from('bars')
+      .select('id, owner_id')
+      .eq('id', barId)
+      .maybeSingle();
+    if (barErr) throw new AppError(500, 'INTERNAL_ERROR', 'Could not load bar');
+    if (!bar) throw new AppError(404, 'NOT_FOUND', 'Bar non trovato');
+    if (bar.owner_id) throw new AppError(409, 'CONFLICT', 'Questo bar ha già un proprietario');
+
+    const { data, error } = await supabase
+      .from('bar_claims')
+      .insert({ user_id: user.id, bar_id: barId, proof })
+      .select('id, status, created_at')
+      .single();
+    if (error?.code === '23505') {
+      throw new AppError(409, 'CONFLICT', 'Hai già una richiesta in attesa per questo bar');
+    }
+    if (error) throw new AppError(500, 'INTERNAL_ERROR', 'Invio richiesta non riuscito');
+    return c.json({ claim: data }, 201);
+  },
+);
 
 /** POST /bars — create (admin/moderator only). */
 bars.post('/', requireAuth, requireRole('admin', 'moderator'), async (c) => {

@@ -18,6 +18,13 @@ import suggestionRoutes from './routes/suggestions.js';
 import reportRoutes from './routes/reports.js';
 import drinkRoutes from './routes/drinks.js';
 import healthRoutes from './routes/health.js';
+import notificationRoutes from './routes/notifications.js';
+import organizerRoutes from './routes/organizers.js';
+import followRoutes from './routes/follows.js';
+import pushRoutes from './routes/push.js';
+import boostRoutes from './routes/boosts.js';
+import stripeWebhookRoutes from './routes/stripeWebhook.js';
+import { startReminderWorker } from './lib/reminderWorker.js';
 
 const app = new Hono();
 
@@ -74,6 +81,8 @@ app.use('*', async (c, next) => {
   const method = c.req.method;
   if (method === 'GET' || method === 'HEAD' || method === 'OPTIONS') return next();
   if (c.req.path.startsWith('/admin')) return next();
+  // Stripe retries must land even in maintenance (signature-verified anyway).
+  if (c.req.path === '/stripe/webhook') return next();
 
   const { data: settings } = await supabase
     .from('app_settings')
@@ -119,6 +128,12 @@ app.route('/admin', adminRoutes);
 app.route('/suggestions', suggestionRoutes);
 app.route('/reports', reportRoutes);
 app.route('/drinks', drinkRoutes);
+app.route('/notifications', notificationRoutes);
+app.route('/admin/organizers', organizerRoutes);
+app.route('/follows', followRoutes);
+app.route('/push', pushRoutes);
+app.route('/boosts', boostRoutes);
+app.route('/stripe', stripeWebhookRoutes);
 
 app.notFound((c) =>
   c.json({ error: 'Not found', code: 'NOT_FOUND', statusCode: 404 }, 404),
@@ -129,5 +144,7 @@ const port = Number(process.env.PORT) || 3000;
 serve({ fetch: app.fetch, port }, (info) => {
   console.log(`rabar API listening on http://localhost:${info.port}`);
 });
+
+startReminderWorker();
 
 export default app;

@@ -4,6 +4,8 @@ import Map from '../components/Map.jsx';
 import BarRow from '../components/BarRow.jsx';
 import DrinkRow from '../components/DrinkRow.jsx';
 import EventRow from '../components/EventRow.jsx';
+import NotificationsBell from '../components/NotificationsBell.jsx';
+import OrganizerTools from '../components/OrganizerTools.jsx';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import NavTabs from '../components/NavTabs.jsx';
@@ -141,7 +143,7 @@ function RatedFilter({ ratedOnly, setRatedOnly }) {
 
 // Inner content of the sheet / desktop panel. Module-level so the search input
 // keeps focus across re-renders.
-function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, radius, setRadius, ratedOnly, setRatedOnly, cityResult, onGoToCity, onReload, onWiden, onExplore, onSelect, onSuggest, events, eventsLoading, eventsError, drinks, drinksLoading, drinksError, drinkQuery, setDrinkQuery, onProposeDrink }) {
+function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, radius, setRadius, ratedOnly, setRatedOnly, cityResult, onGoToCity, onReload, onWiden, onExplore, onSelect, onSuggest, events, eventsLoading, eventsError, drinks, drinksLoading, drinksError, drinkQuery, setDrinkQuery, onProposeDrink, center }) {
   const { t } = useI18n();
   // Eventi tab: zone events, soonest first. Separate data path (no map pins,
   // no bar rows) so it doesn't share the bars list flow below.
@@ -157,6 +159,9 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
             {events.length}
           </span>
         </div>
+
+        {/* Strumenti organizer: crea evento, i miei eventi, banner boost */}
+        <OrganizerTools center={center} bars={list} onChanged={onReload} />
 
         {eventsLoading && <SkeletonRows n={3} label={t('common.loading')} />}
 
@@ -379,7 +384,11 @@ export default function Home() {
   const [searchError, setSearchError] = useState('');
   // Top geocoded place for the current query (travel jump), or null.
   const [cityResult, setCityResult] = useState(null);
-  const [tab, setTab] = useState('vicini');
+  // ?tab=eventi (dai link delle notifiche) apre direttamente quella scheda.
+  const [tab, setTab] = useState(() => {
+    const wanted = new URLSearchParams(window.location.search).get('tab');
+    return ['eventi', 'drinks'].includes(wanted) ? wanted : 'vicini';
+  });
   const [menuOpen, setMenuOpen] = useState(false);
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
@@ -663,6 +672,7 @@ export default function Home() {
     onExplore: () => setTab('vicini'),
     onSuggest: () => setSuggestOpen(true),
     onSelect,
+    center,
   };
 
   return (
@@ -700,6 +710,7 @@ export default function Home() {
           sheetFull ? 'max-md:pointer-events-none max-md:-translate-y-6 max-md:opacity-0' : ''
         }`}
       >
+        <NotificationsBell />
         <div ref={accountRef} className="relative">
           <GlassButton
             label={isAuthenticated ? t('menu.account') : t('common.login')}

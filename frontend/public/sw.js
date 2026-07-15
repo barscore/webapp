@@ -21,6 +21,40 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
+// Web Push: show the notification; tapping it focuses (or opens) the app on
+// the payload's internal link.
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data?.json() ?? {};
+  } catch {
+    /* non-JSON payload — show a generic notification */
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title || 'rabar', {
+      body: data.body || '',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      data: { link: data.link || '/' },
+    }),
+  );
+});
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const link = event.notification.data?.link || '/';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
+      const win = wins.find((w) => new URL(w.url).origin === self.location.origin);
+      if (win) {
+        win.focus();
+        return win.navigate(link);
+      }
+      return clients.openWindow(link);
+    }),
+  );
+});
+
 self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);

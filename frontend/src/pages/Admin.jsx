@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useRef, useLayoutEffect } from 'react
 import { createPortal } from 'react-dom';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
-import { adminApi, suggestionsApi, reportsApi, drinksApi } from '../services/api.js';
+import { adminApi, suggestionsApi, reportsApi, drinksApi, organizerAdminApi } from '../services/api.js';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import Toast from '../components/Toast.jsx';
@@ -14,6 +14,7 @@ const TABS = [
   { key: 'suggestions', label: 'Segnalazioni', icon: 'pin' },
   { key: 'reports', label: 'Report', icon: 'info' },
   { key: 'drinks', label: 'Drinks', icon: 'cocktail' },
+  { key: 'organizers', label: 'Organizzatori', icon: 'star' },
   { key: 'security', label: 'Sicurezza', icon: 'filters' },
   { key: 'emergency', label: 'Emergenza', icon: 'bell' },
 ];
@@ -87,6 +88,7 @@ export default function Admin() {
         {tab === 'suggestions' && <SuggestionsTab notify={notify} />}
         {tab === 'reports' && <ReportsTab notify={notify} />}
         {tab === 'drinks' && <DrinkSuggestionsTab notify={notify} />}
+        {tab === 'organizers' && <OrganizersTab notify={notify} />}
         {tab === 'security' && <SecurityTab notify={notify} />}
         {tab === 'emergency' && <EmergencyTab notify={notify} onChange={loadStats} />}
       </div>
@@ -1015,6 +1017,179 @@ function EmergencyTab({ notify, onChange }) {
 // =========================================================================
 // Shared bits
 // =========================================================================
+const ORG_FILTERS = [
+  { v: 'pending', label: 'In attesa' },
+  { v: 'approved', label: 'Approvate' },
+  { v: 'rejected', label: 'Rifiutate' },
+  { v: 'all', label: 'Tutte' },
+];
+
+const CHANNEL_LABELS = {
+  instagram: 'Instagram',
+  facebook: 'Facebook',
+  x: 'X',
+  telegram: 'Telegram',
+  whatsapp: 'WhatsApp',
+  tiktok: 'TikTok',
+  volantinaggio: 'Volantinaggio',
+  altro: 'Altro',
+};
+
+// Richieste account organizzatore (form 3 domande) + rivendicazioni bar.
+function OrganizersTab({ notify }) {
+  const [status, setStatus] = useState('pending');
+  const [requests, setRequests] = useState([]);
+  const [claims, setClaims] = useState([]);
+  const [busy, setBusy] = useState(false);
+
+  const load = useCallback(() => {
+    setBusy(true);
+    Promise.all([
+      organizerAdminApi.requests({ status }),
+      organizerAdminApi.claims({ status }),
+    ])
+      .then(([r, c]) => {
+        setRequests(r);
+        setClaims(c);
+      })
+      .catch(() => notify('Errore caricamento richieste', 'info'))
+      .finally(() => setBusy(false));
+  }, [status, notify]);
+
+  useEffect(load, [load]);
+
+  async function review(kind, id, action) {
+    const admin_note =
+      action === 'reject'
+        ? window.prompt('Nota per l’utente (opzionale):') || undefined
+        : undefined;
+    try {
+      if (kind === 'request') await organizerAdminApi.reviewRequest(id, action, admin_note);
+      else await organizerAdminApi.reviewClaim(id, action, admin_note);
+      notify(action === 'approve' ? 'Approvata' : 'Rifiutata');
+      load();
+    } catch (err) {
+      notify(err?.response?.data?.error || 'Operazione fallita', 'info');
+    }
+  }
+
+  const Actions = ({ kind, id }) => (
+    <div className="mt-2 flex gap-2">
+      <button
+        onClick={() => review(kind, id, 'approve')}
+        className="rounded-lg bg-ember-primary px-3 py-1 text-xs font-semibold text-ember-on-primary"
+      >
+        Approva
+      </button>
+      <button
+        onClick={() => review(kind, id, 'reject')}
+        className="rounded-lg border border-ember-danger px-3 py-1 text-xs font-semibold text-ember-danger"
+      >
+        Rifiuta
+      </button>
+    </div>
+  );
+
+  return (
+    <section className="space-y-3">
+      <div className="flex flex-wrap gap-1.5">
+        {ORG_FILTERS.map((f) => (
+          <button
+            key={f.v}
+            onClick={() => setStatus(f.v)}
+            className={`rounded-full px-3 py-1 text-xs font-semibold transition ${
+              status === f.v
+                ? 'bg-ember-primary text-ember-on-primary'
+                : 'bg-ember-card text-ember-muted hover:text-ember-cream'
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      <h3 className="px-1 font-display text-sm font-bold uppercase tracking-wide text-ember-cream">
+        Richieste account
+      </h3>
+      <div className="card divide-y divide-ember-line/5 overflow-hidden">
+        {busy && !requests.length && <p className="p-4 text-sm text-ember-muted">Caricamento…</p>}
+        {!busy && !requests.length && (
+          <p className="p-4 text-sm text-ember-muted">Nessuna richiesta.</p>
+        )}
+        {requests.map((r) => (
+          <div key={r.id} className="p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-semibold text-ember-cream">@{r.username ?? r.user_id}</span>
+              <Tag color="primary">{r.requested_type}</Tag>
+              {r.status !== 'pending' && (
+                <Tag color={r.status === 'approved' ? 'primary' : 'accent'}>
+                  {r.status === 'approved' ? 'approvata' : 'rifiutata'}
+                </Tag>
+              )}
+              <span className="ml-auto text-xs text-ember-muted">
+                {new Date(r.created_at).toLocaleDateString('it-IT')}
+              </span>
+            </div>
+            <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-ember-muted">
+              1 · Prova
+            </p>
+            <p className="whitespace-pre-wrap text-sm text-ember-cream/90">{r.proof}</p>
+            <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-ember-muted">
+              2 · Canali
+            </p>
+            <p className="text-sm text-ember-cream/90">
+              {(r.channels ?? []).map((ch) => CHANNEL_LABELS[ch] ?? ch).join(', ')}
+              {r.channels_other ? ` — ${r.channels_other}` : ''}
+            </p>
+            <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-ember-muted">
+              3 · Collaborazioni (ultimi 6 mesi)
+            </p>
+            <p className="whitespace-pre-wrap text-sm text-ember-cream/90">{r.collaborations}</p>
+            {r.admin_note && (
+              <p className="mt-1 text-xs text-ember-muted">Nota: {r.admin_note}</p>
+            )}
+            {r.status === 'pending' && <Actions kind="request" id={r.id} />}
+          </div>
+        ))}
+      </div>
+
+      <h3 className="px-1 pt-2 font-display text-sm font-bold uppercase tracking-wide text-ember-cream">
+        Rivendicazioni bar
+      </h3>
+      <div className="card divide-y divide-ember-line/5 overflow-hidden">
+        {busy && !claims.length && <p className="p-4 text-sm text-ember-muted">Caricamento…</p>}
+        {!busy && !claims.length && (
+          <p className="p-4 text-sm text-ember-muted">Nessuna rivendicazione.</p>
+        )}
+        {claims.map((cl) => (
+          <div key={cl.id} className="p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-semibold text-ember-cream">@{cl.username ?? cl.user_id}</span>
+              <span className="text-xs text-ember-muted">
+                → {cl.bar_name ?? cl.bar_id}
+                {cl.bar_city ? ` (${cl.bar_city})` : ''}
+              </span>
+              {cl.status !== 'pending' && (
+                <Tag color={cl.status === 'approved' ? 'primary' : 'accent'}>
+                  {cl.status === 'approved' ? 'approvata' : 'rifiutata'}
+                </Tag>
+              )}
+              <span className="ml-auto text-xs text-ember-muted">
+                {new Date(cl.created_at).toLocaleDateString('it-IT')}
+              </span>
+            </div>
+            <p className="mt-2 whitespace-pre-wrap text-sm text-ember-cream/90">{cl.proof}</p>
+            {cl.admin_note && (
+              <p className="mt-1 text-xs text-ember-muted">Nota: {cl.admin_note}</p>
+            )}
+            {cl.status === 'pending' && <Actions kind="claim" id={cl.id} />}
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 function SearchBar({ value, onChange, placeholder }) {
   return (
     <div className="flex items-center gap-2 rounded-lg border border-ember-line/5 bg-ember-card px-3">

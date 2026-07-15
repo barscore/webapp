@@ -41,6 +41,11 @@ function BarRow({ bar, onSelect }) {
 
       <div className="min-w-0 flex-1">
         <h3 className="truncate font-display text-[16px] font-bold leading-tight text-ember-cream">
+          {bar.sponsored && (
+            <span className="mr-1.5 inline-block rounded-full bg-ember-primary/15 px-1.5 py-0.5 align-middle text-[9px] font-bold uppercase tracking-wide text-ember-ink">
+              Sponsorizzato
+            </span>
+          )}
           {bar.name}
         </h3>
         <p className="mt-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.07em] text-ember-muted">

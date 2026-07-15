@@ -167,6 +167,11 @@ export default function BarSheet({ seed, onClose, onChanged }) {
               {/* Hero: name leads, the score badge is the second thing you see. */}
               <div className="flex items-start justify-between gap-4 pr-8">
                 <div className="min-w-0">
+                  {bar.sponsored && (
+                    <span className="mb-1 inline-block rounded-full bg-ember-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ember-ink">
+                      Sponsorizzato
+                    </span>
+                  )}
                   <h1 className="font-display text-[26px] font-extrabold leading-tight tracking-tight text-ember-cream">
                     {bar.name}
                   </h1>

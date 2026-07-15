@@ -24,6 +24,7 @@ const Admin = lazy(() => import('./pages/Admin.jsx'));
 const Privacy = lazy(() => import('./pages/Privacy.jsx'));
 const Tos = lazy(() => import('./pages/Tos.jsx'));
 const Maintenance = lazy(() => import('./pages/Maintenance.jsx'));
+const BoostResult = lazy(() => import('./pages/BoostResult.jsx'));
 
 // Blank dark screen while a lazy page chunk downloads (matches the app bg, so
 // no white flash).
@@ -121,6 +122,7 @@ export default function App() {
         <Route path="/le-tue-valutazioni" element={<MyRatings />} />
         <Route path="/classifica" element={<Leaderboard />} />
         <Route path="/admin" element={<Admin />} />
+        <Route path="/boost/esito" element={<BoostResult />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/tos" element={<Tos />} />
         <Route path="*" element={<Navigate to="/" replace />} />

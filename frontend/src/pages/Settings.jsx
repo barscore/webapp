@@ -4,10 +4,12 @@ import { useAuth } from '../hooks/useAuth.js';
 import { useTheme } from '../hooks/useTheme.js';
 import { useGraphics } from '../hooks/useGraphics.js';
 import { supabase } from '../services/supabase.js';
-import { meApi } from '../services/api.js';
+import { meApi, organizerApi } from '../services/api.js';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import Toast from '../components/Toast.jsx';
+import OrganizerRequestForm from '../components/OrganizerRequestForm.jsx';
+import { pushSupported, getPushSubscription, enablePush, disablePush } from '../services/push.js';
 import { getConsent, resetConsent, onConsentChange } from '../services/consent.js';
 import { isAndroid, getProvider, setProvider } from '../utils/directions.js';
 
@@ -137,6 +139,12 @@ export default function Settings() {
 
         {/* Maps app for directions — hidden on Android (always Google Maps) */}
         {!isAndroid() && <MapsSection />}
+
+        {/* Notifiche push — opt-in esplicito, mai prompt a freddo */}
+        <PushSection />
+
+        {/* Account organizzatore/PR — richiesta upgrade con verifica staff */}
+        <OrganizerSection />
 
         {/* Ad-consent management — GDPR: withdrawing must be as easy as giving */}
         <CookieSection />
@@ -359,6 +367,136 @@ function CookieSection() {
       >
         Modifica scelta
       </button>
+    </section>
+  );
+}
+
+// Toggle Web Push: chiede il permesso browser solo qui, registra/rimuove la
+// subscription sul backend. Nascosto se il browser non supporta il push.
+function PushSection() {
+  const [enabled, setEnabled] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState('');
+
+  useEffect(() => {
+    getPushSubscription().then((s) => setEnabled(!!s)).catch(() => {});
+  }, []);
+
+  if (!pushSupported()) return null;
+
+  async function toggle() {
+    setBusy(true);
+    setErr('');
+    try {
+      if (enabled) {
+        await disablePush();
+        setEnabled(false);
+      } else {
+        await enablePush();
+        setEnabled(true);
+      }
+    } catch (e) {
+      setErr(e?.message || 'Operazione non riuscita');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <section className="card p-4">
+      <h2 className="mb-1 font-display font-bold text-ember-cream">Notifiche push</h2>
+      <p className="mb-3 text-sm text-ember-muted">
+        Ricevi una notifica quando chi segui pubblica un evento, quando un evento seguito cambia o
+        sta per iniziare.
+      </p>
+      {err && <p className="mb-2 text-sm text-ember-danger">{err}</p>}
+      <button
+        type="button"
+        onClick={toggle}
+        disabled={busy}
+        aria-pressed={enabled}
+        className={`w-full rounded-lg border py-2 font-semibold transition-colors ${
+          enabled
+            ? 'border-ember-primary bg-ember-primary/10 text-ember-ink'
+            : 'border-ember-line/10 text-ember-cream'
+        }`}
+      >
+        {busy ? 'Un attimo…' : enabled ? 'Push attive — disattiva' : 'Attiva le notifiche push'}
+      </button>
+    </section>
+  );
+}
+
+// Stato richiesta organizzatore + form 3 domande. Un organizer approvato vede
+// la conferma; una richiesta pendente lo stato; un rifiuto la nota + retry.
+function OrganizerSection() {
+  const { user } = useAuth();
+  const role = user?.role;
+  const [req, setReq] = useState(undefined); // undefined = loading
+  const [showForm, setShowForm] = useState(false);
+
+  useEffect(() => {
+    organizerApi
+      .myRequest()
+      .then(setReq)
+      .catch(() => setReq(null));
+  }, []);
+
+  if (role === 'organizer') {
+    return (
+      <section className="card p-4">
+        <h2 className="mb-1 font-display font-bold text-ember-cream">Account organizzatore</h2>
+        <p className="text-sm text-ember-muted">
+          Il tuo account è verificato: puoi pubblicare eventi e acquistare boost dalla scheda
+          Eventi.
+        </p>
+      </section>
+    );
+  }
+  if (req === undefined) return null;
+
+  return (
+    <section className="card p-4">
+      <h2 className="mb-1 font-display font-bold text-ember-cream">
+        Diventa organizzatore / PR
+      </h2>
+
+      {req?.status === 'pending' && (
+        <p className="text-sm text-ember-muted">
+          Richiesta inviata il {new Date(req.created_at).toLocaleDateString('it-IT')} — in attesa
+          di verifica da parte dello staff.
+        </p>
+      )}
+
+      {req?.status === 'rejected' && !showForm && (
+        <div className="space-y-3">
+          <p className="text-sm text-ember-muted">
+            La tua richiesta è stata rifiutata{req.admin_note ? `: "${req.admin_note}"` : '.'}
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowForm(true)}
+            className="w-full rounded-lg border border-ember-line/10 py-2 font-semibold text-ember-cream"
+          >
+            Riprova con nuove prove
+          </button>
+        </div>
+      )}
+
+      {(req === null || req?.status === 'approved' || showForm) && (
+        <>
+          <p className="mb-4 text-sm text-ember-muted">
+            Pubblica gli eventi delle tue feste, fatti seguire e sponsorizza le serate in zona. Le
+            richieste vengono verificate manualmente dallo staff.
+          </p>
+          <OrganizerRequestForm
+            onDone={(r) => {
+              setReq(r);
+              setShowForm(false);
+            }}
+          />
+        </>
+      )}
     </section>
   );
 }

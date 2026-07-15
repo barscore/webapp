@@ -216,6 +216,61 @@ export const drinksApi = {
   removeSuggestion: (id) => api.delete(`/drinks/suggestions/${id}`).then((r) => r.data),
 };
 
+// Account organizzatore: richiesta upgrade (form 3 domande), claim bar,
+// eventi propri. Tutte richiedono sessione.
+export const organizerApi = {
+  myRequest: () => api.get('/me/organizer-request').then((r) => r.data.request),
+  submitRequest: (payload) =>
+    api.post('/me/organizer-request', payload).then((r) => r.data.request),
+  myClaims: () => api.get('/me/claims').then((r) => expectArray(r.data.claims, 'claims')),
+  myEvents: () => api.get('/me/events').then((r) => expectArray(r.data.events, 'myEvents')),
+  claimBar: (barId, proof) =>
+    api.post(`/bars/${barId}/claim`, { proof }).then((r) => r.data.claim),
+};
+
+// Follow di eventi/organizzatori. PUT/DELETE idempotenti (toggle ottimistico).
+export const followsApi = {
+  list: () => api.get('/me/follows').then((r) => expectArray(r.data.follows, 'follows')),
+  follow: (target) => api.put('/follows', target).then((r) => r.data),
+  unfollow: (target) => api.delete('/follows', { data: target }).then((r) => r.data),
+};
+
+// Inbox notifiche in-app (campanella).
+export const notificationsApi = {
+  list: (params) => api.get('/notifications', { params }).then((r) => r.data),
+  markRead: (payload) => api.post('/notifications/read', payload).then((r) => r.data),
+};
+
+// Registrazione Web Push (toggle in Impostazioni).
+export const pushApi = {
+  subscribe: (sub) => api.post('/push/subscribe', sub).then((r) => r.data),
+  unsubscribe: (endpoint) =>
+    api.delete('/push/subscribe', { data: { endpoint } }).then((r) => r.data),
+};
+
+// Boost sponsorizzati (Stripe Checkout). tiers è pubblico; checkout solo organizer.
+export const boostsApi = {
+  tiers: () => api.get('/boosts/tiers').then((r) => expectArray(r.data.tiers, 'tiers')),
+  checkout: (payload) => api.post('/boosts/checkout', payload).then((r) => r.data.url),
+  session: (sid) => api.get(`/boosts/session/${sid}`).then((r) => r.data.order),
+};
+
+// Moderazione organizzatori (staff): richieste ruolo + rivendicazioni bar.
+export const organizerAdminApi = {
+  requests: (params) =>
+    api.get('/admin/organizers/requests', { params }).then((r) =>
+      expectArray(r.data.requests, 'orgRequests'),
+    ),
+  reviewRequest: (id, action, admin_note) =>
+    api.post(`/admin/organizers/requests/${id}/${action}`, { admin_note }).then((r) => r.data),
+  claims: (params) =>
+    api.get('/admin/organizers/claims', { params }).then((r) =>
+      expectArray(r.data.claims, 'orgClaims'),
+    ),
+  reviewClaim: (id, action, admin_note) =>
+    api.post(`/admin/organizers/claims/${id}/${action}`, { admin_note }).then((r) => r.data),
+};
+
 export const ratingsApi = {
   list: (barId, params) =>
     api.get(`/bars/${barId}/ratings`, { params }).then((r) => r.data),

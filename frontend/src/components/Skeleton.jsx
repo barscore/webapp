@@ -14,19 +14,20 @@ function Bone({ className = '' }) {
   return <span className={`skel block ${className}`} />;
 }
 
-// n rows shaped like BarRow/DrinkRow/EventRow: pin, two text lines, score.
+// n rows shaped exactly like BarRow/DrinkRow/EventRow — same 52px tile, same
+// two text lines, same badge — so the list doesn't reflow when the data lands.
 export function SkeletonRows({ n = 5, label }) {
   return (
-    <div aria-busy="true" className="space-y-2">
+    <div aria-busy="true" className="space-y-2.5">
       {label && <span className="sr-only">{label}</span>}
       {Array.from({ length: n }, (_, i) => (
-        <div key={i} className="flex items-center gap-3 px-3 py-3" style={{ height: 66 }}>
-          <Bone className="h-8 w-8 shrink-0 rounded-full" />
-          <div className="min-w-0 flex-1 space-y-1.5">
-            <Bone className="h-3.5 w-1/2" />
+        <div key={i} className="flex items-center gap-3.5 px-3.5 py-3.5">
+          <Bone className="h-[52px] w-[52px] shrink-0" />
+          <div className="min-w-0 flex-1 space-y-2">
+            <Bone className="h-4 w-1/2" />
             <Bone className="h-2.5 w-1/3" />
           </div>
-          <Bone className="h-4 w-8 shrink-0" />
+          <Bone className="h-8 w-12 shrink-0" />
         </div>
       ))}
     </div>

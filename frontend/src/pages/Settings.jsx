@@ -8,6 +8,7 @@ import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import Toast from '../components/Toast.jsx';
 import { getConsent, resetConsent, onConsentChange } from '../services/consent.js';
+import { isAndroid, getProvider, setProvider } from '../utils/directions.js';
 
 // Account settings: read-only account details + credential changes (email /
 // password) via supabase-js. Credential updates never go through the backend.
@@ -130,6 +131,9 @@ export default function Settings() {
         {/* Theme picker — client-side preference, saved in localStorage */}
         <ThemeSection />
 
+        {/* Maps app for directions — hidden on Android (always Google Maps) */}
+        {!isAndroid() && <MapsSection />}
+
         {/* Ad-consent management — GDPR: withdrawing must be as easy as giving */}
         <CookieSection />
 
@@ -243,6 +247,46 @@ function ThemeSection() {
               >
                 {t.label}
               </span>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// Maps-app preference for the "Indicazioni" button. Saved in localStorage
+// (shared with DirectionsButton via utils/directions.js). Not shown on Android.
+function MapsSection() {
+  const [provider, setP] = useState(getProvider);
+  const options = [
+    { id: 'google', label: 'Google Maps' },
+    { id: 'apple', label: 'Apple Maps' },
+  ];
+  function choose(id) {
+    setProvider(id);
+    setP(id);
+  }
+  return (
+    <section className="card p-4">
+      <h2 className="mb-1 font-display font-bold text-ember-cream">App per le indicazioni</h2>
+      <p className="mb-3 text-sm text-ember-muted">Con quale app aprire le indicazioni verso un locale.</p>
+      <div className="grid grid-cols-2 gap-2">
+        {options.map((o) => {
+          const active = o.id === provider;
+          return (
+            <button
+              key={o.id}
+              type="button"
+              onClick={() => choose(o.id)}
+              aria-pressed={active}
+              className={`rounded-lg border p-3 text-sm font-semibold transition-colors ${
+                active
+                  ? 'border-ember-primary bg-ember-primary/10 text-ember-ink'
+                  : 'border-ember-line/10 text-ember-cream hover:border-ember-line/25'
+              }`}
+            >
+              {o.label}
             </button>
           );
         })}

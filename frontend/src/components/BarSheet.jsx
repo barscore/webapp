@@ -1,10 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import RadarChart from './RadarChart.jsx';
+import ScoreBadge from './ScoreBadge.jsx';
 import { SkeletonBar } from './Skeleton.jsx';
 import RatingBars from './RatingBars.jsx';
 import RatingForm from './RatingForm.jsx';
 import BarDrinksSection from './BarDrinksSection.jsx';
+import DirectionsButton from './DirectionsButton.jsx';
 import Icon from './Icon.jsx';
 import Toast from './Toast.jsx';
 import EmptyState from './EmptyState.jsx';
@@ -161,52 +163,54 @@ export default function BarSheet({ seed, onClose, onChanged }) {
           )}
 
           {bar && (
-            <div className="space-y-4">
-              {/* Title + score */}
-              <div className="flex items-start justify-between gap-3 pr-8">
+            <div className="space-y-5">
+              {/* Hero: name leads, the score badge is the second thing you see. */}
+              <div className="flex items-start justify-between gap-4 pr-8">
                 <div className="min-w-0">
-                  <h1 className="font-display text-xl font-bold text-ember-cream">{bar.name}</h1>
-                  <p className="flex items-center gap-1 text-sm text-ember-muted">
-                    <Icon name="pin" size={14} />
-                    {[bar.address, bar.city].filter(Boolean).join(', ')}
+                  <h1 className="font-display text-[26px] font-extrabold leading-tight tracking-tight text-ember-cream">
+                    {bar.name}
+                  </h1>
+                  <p className="mt-1.5 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.07em] text-ember-muted">
+                    <Icon name="pin" size={13} />
+                    <span className="truncate">
+                      {[bar.address, bar.city].filter(Boolean).join(', ')}
+                    </span>
                   </p>
                 </div>
-                <span className="flex shrink-0 items-center gap-1 rounded-lg bg-ember-primary px-2.5 py-1.5 font-display font-bold text-ember-on-primary">
-                  <Icon name="star" size={14} />
-                  {(overall * 2).toFixed(1)}
-                </span>
+                <ScoreBadge bar={bar} size="lg" />
               </div>
 
-              {/* Contact / info actions */}
-              <div className="flex flex-wrap gap-2">
+              {/* Contact / info actions — pills, not slabs. */}
+              <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
                 {bar.phone && (
-                  <a href={`tel:${bar.phone}`} className="flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream">
-                    <Icon name="phone" size={16} className="text-ember-ink" /> {t('bar.call')}
+                  <a href={`tel:${bar.phone}`} className="chip">
+                    <Icon name="phone" size={15} className="text-ember-ink" /> {t('bar.call')}
                   </a>
                 )}
                 {bar.website && (
-                  <a href={bar.website} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream">
-                    <Icon name="link" size={16} className="text-ember-ink" /> {t('bar.site')}
+                  <a href={bar.website} target="_blank" rel="noreferrer" className="chip">
+                    <Icon name="link" size={15} className="text-ember-ink" /> {t('bar.site')}
                   </a>
                 )}
+                <DirectionsButton bar={bar} />
                 <button
                   onClick={() => setShowInfo((o) => !o)}
                   aria-expanded={showInfo}
-                  className="flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream"
+                  className="chip"
                 >
-                  <Icon name="info" size={16} className="text-ember-ink" /> {t('bar.info')}
-                  <Icon name={showInfo ? 'chevron-up' : 'chevron-down'} size={14} />
+                  <Icon name="info" size={15} className="text-ember-ink" /> {t('bar.info')}
+                  <Icon name={showInfo ? 'chevron-up' : 'chevron-down'} size={13} />
                 </button>
                 <button
                   onClick={() => toggle(bar.id)}
                   aria-pressed={saved}
                   aria-label={saved ? t('bar.removeBookmark') : t('bar.saveBookmark')}
-                  className={`flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm ${saved ? 'text-ember-ink' : 'text-ember-cream'}`}
+                  className={`chip ${saved ? 'chip-on' : ''}`}
                 >
-                  <Icon name="bookmark" size={16} />
+                  <Icon name="bookmark" size={15} />
                 </button>
-                <button onClick={onShare} aria-label={t('common.share')} className="flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream">
-                  <Icon name="share" size={16} />
+                <button onClick={onShare} aria-label={t('common.share')} className="chip">
+                  <Icon name="share" size={15} />
                 </button>
               </div>
 

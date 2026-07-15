@@ -53,6 +53,14 @@ function writeNearbyCache(lat, lng, r, data) {
   }
 }
 
+// Nominatim place types we treat as a "city" for the travel jump: typing a
+// place name surfaces a "Vedi bar a <città>" row that recenters the nearby
+// search there. Filtering by type keeps bar-name searches from matching.
+const PLACE_TYPES = new Set([
+  'city', 'town', 'village', 'hamlet', 'administrative', 'municipality',
+  'suburb', 'borough', 'quarter', 'county', 'state', 'province', 'region', 'locality',
+]);
+
 // Circular glass control used top-right (account + repositioning).
 function GlassButton({ onClick, label, children }) {
   return (
@@ -133,19 +141,21 @@ function RatedFilter({ ratedOnly, setRatedOnly }) {
 
 // Inner content of the sheet / desktop panel. Module-level so the search input
 // keeps focus across re-renders.
-function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, radius, setRadius, ratedOnly, setRatedOnly, onReload, onWiden, onExplore, onSelect, onSuggest, events, eventsLoading, eventsError, drinks, drinksLoading, drinksError, drinkQuery, setDrinkQuery, onProposeDrink }) {
+function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, radius, setRadius, ratedOnly, setRatedOnly, cityResult, onGoToCity, onReload, onWiden, onExplore, onSelect, onSuggest, events, eventsLoading, eventsError, drinks, drinksLoading, drinksError, drinkQuery, setDrinkQuery, onProposeDrink }) {
   const { t } = useI18n();
   // Eventi tab: zone events, soonest first. Separate data path (no map pins,
   // no bar rows) so it doesn't share the bars list flow below.
   if (tab === 'eventi') {
     return (
       <>
-        <div className="mb-2 flex items-center gap-2 px-1">
-          <Icon name="bell" size={14} className="text-ember-ink" />
-          <span className="font-display text-xs font-bold uppercase tracking-wide text-ember-muted">
+        <div className="mb-3 flex items-center gap-2.5 px-1">
+          <Icon name="bell" size={16} className="text-ember-ink" />
+          <h2 className="font-display text-sm font-extrabold uppercase tracking-[0.12em] text-ember-cream">
             {t('tabs.eventi')}
+          </h2>
+          <span className="ml-auto rounded-full border border-ember-line/10 bg-ember-line/5 px-2 py-0.5 text-[11px] font-bold tabular-nums text-ember-muted">
+            {events.length}
           </span>
-          <span className="text-xs text-ember-muted">· {events.length}</span>
         </div>
 
         {eventsLoading && <SkeletonRows n={3} label={t('common.loading')} />}
@@ -171,7 +181,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
         )}
 
         {!eventsLoading && events.length > 0 && (
-          <div className="stagger space-y-2 pb-1">
+          <div className="stagger space-y-2.5 pb-2">
             {events.map((ev) => (
               <EventRow key={ev.id} event={ev} />
             ))}
@@ -190,12 +200,14 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
           <SearchPanel query={drinkQuery} setQuery={setDrinkQuery} placeholder={t('home.searchDrink')} />
         </div>
 
-        <div className="mb-2 flex items-center gap-2 px-1">
-          <Icon name="cocktail" size={14} className="text-ember-ink" />
-          <span className="font-display text-xs font-bold uppercase tracking-wide text-ember-muted">
+        <div className="mb-3 flex items-center gap-2.5 px-1">
+          <Icon name="cocktail" size={16} className="text-ember-ink" />
+          <h2 className="font-display text-sm font-extrabold uppercase tracking-[0.12em] text-ember-cream">
             {t('tabs.drinks')}
+          </h2>
+          <span className="ml-auto rounded-full border border-ember-line/10 bg-ember-line/5 px-2 py-0.5 text-[11px] font-bold tabular-nums text-ember-muted">
+            {drinks.length}
           </span>
-          <span className="text-xs text-ember-muted">· {drinks.length}</span>
         </div>
 
         {drinksLoading && <SkeletonRows n={4} label={t('common.loading')} />}
@@ -221,7 +233,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
         )}
 
         {!drinksLoading && drinks.length > 0 && (
-          <div className="stagger space-y-2 pb-1">
+          <div className="stagger space-y-2.5 pb-2">
             {drinks.map((d) => (
               <DrinkRow key={d.id} drink={d} />
             ))}
@@ -245,13 +257,15 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
           <SearchPanel query={query} setQuery={setQuery} autoFocus />
         </div>
       ) : (
-        <div className="mb-2 space-y-2">
-          <div className="flex items-center gap-2 px-1">
-            <Icon name={searchActive ? 'search' : tab === 'salvati' ? 'bookmark' : 'locate'} size={14} className="text-ember-ink" />
-            <span className="font-display text-xs font-bold uppercase tracking-wide text-ember-muted">
+        <div className="mb-3 space-y-3">
+          <div className="flex items-center gap-2.5 px-1">
+            <Icon name={searchActive ? 'search' : tab === 'salvati' ? 'bookmark' : 'locate'} size={16} className="text-ember-ink" />
+            <h2 className="font-display text-sm font-extrabold uppercase tracking-[0.12em] text-ember-cream">
               {searchActive ? t('tabs.results') : t(`tabs.${tab}`)}
+            </h2>
+            <span className="ml-auto rounded-full border border-ember-line/10 bg-ember-line/5 px-2 py-0.5 text-[11px] font-bold tabular-nums text-ember-muted">
+              {list.length}
             </span>
-            <span className="text-xs text-ember-muted">· {list.length}</span>
           </div>
           {tab === 'vicini' && !searchActive && (
             <>
@@ -262,6 +276,19 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
             </>
           )}
         </div>
+      )}
+
+      {/* Travel jump: recenter the nearby search on the matched place. */}
+      {searchActive && cityResult && (
+        <button
+          type="button"
+          onClick={() => onGoToCity(cityResult)}
+          className="press mb-2.5 flex w-full items-center gap-2 rounded-card border border-ember-primary/30 bg-ember-primary/[0.06] px-3 py-3 text-left text-sm text-ember-cream transition-colors hover:border-ember-primary/60"
+        >
+          <Icon name="pin" size={16} className="text-ember-ink" />
+          <span className="truncate">{t('home.viewBarsIn', { city: cityResult.display_name })}</span>
+          <Icon name="arrow-right" size={14} className="ml-auto shrink-0 text-ember-muted" />
+        </button>
       )}
 
       {/* `loading` is already false on a warm start (the localStorage cache
@@ -308,7 +335,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
       )}
 
       {!loading && list.length > 0 && (
-        <div className="stagger space-y-2 pb-1">
+        <div className="stagger space-y-2.5 pb-2">
           {list.map((bar) => (
             <BarRow key={barKey(bar)} bar={bar} onSelect={onSelect} />
           ))}
@@ -350,6 +377,8 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState('');
+  // Top geocoded place for the current query (travel jump), or null.
+  const [cityResult, setCityResult] = useState(null);
   const [tab, setTab] = useState('vicini');
   const [menuOpen, setMenuOpen] = useState(false);
   const [suggestOpen, setSuggestOpen] = useState(false);
@@ -403,7 +432,7 @@ export default function Home() {
     // Overpass query — public mirrors rate-limit (429) heavy concurrent calls,
     // self-inflicting the "Impossibile caricare i bar" error. Wait for the value
     // to settle, then fire ONE request and abort it if superseded.
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       // All bars come straight from OpenStreetMap (Overpass), enriched server-side
       // with community ratings (avg_overall/total_ratings) and distance.
       placesApi
@@ -427,7 +456,7 @@ export default function Home() {
     return () => {
       cancelled = true;
       controller.abort();
-      clearTimeout(t);
+      clearTimeout(timer);
     };
   }, [center, radius, reloadKey]);
 
@@ -455,7 +484,7 @@ export default function Home() {
     let cancelled = false;
     setDrinksLoading(true);
     setDrinksError('');
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
       drinksApi
         .list({ q: drinkQuery.trim() || undefined, limit: 100 })
         .then((r) => !cancelled && setDrinks(r.drinks))
@@ -464,7 +493,7 @@ export default function Home() {
     }, 300);
     return () => {
       cancelled = true;
-      clearTimeout(t);
+      clearTimeout(timer);
     };
   }, [tab, drinkQuery, reloadKey]);
 
@@ -522,13 +551,20 @@ export default function Home() {
       setSearchResults([]);
       setSearchLoading(false);
       setSearchError('');
+      setCityResult(null);
       return;
     }
     const q = query.trim();
     let cancelled = false;
     setSearchLoading(true);
     setSearchError('');
-    const t = setTimeout(() => {
+    const timer = setTimeout(() => {
+      // Geocode the query in parallel: if the top hit is a place (city/town/…),
+      // offer a "Vedi bar a <città>" jump. Failures just hide the row.
+      placesApi
+        .search(q)
+        .then((r) => !cancelled && setCityResult(r.find((x) => PLACE_TYPES.has(x.type)) || null))
+        .catch(() => !cancelled && setCityResult(null));
       placesApi
         .searchBars({ q, lat: center[0], lng: center[1] })
         .then((data) => {
@@ -546,7 +582,7 @@ export default function Home() {
     }, 300);
     return () => {
       cancelled = true;
-      clearTimeout(t);
+      clearTimeout(timer);
     };
   }, [searchActive, query, center]);
 
@@ -576,6 +612,15 @@ export default function Home() {
   function onTab(id) {
     setTab(id);
     setSheetH((h) => (h < 84 ? 84 : h));
+  }
+
+  // Travel jump: recenter the nearby search on a geocoded place. Clears the
+  // query (drops search mode) and returns to the vicini list. userPos (and the
+  // "La mia posizione" button) still point at the real GPS position.
+  function onGoToCity(city) {
+    setCenter([city.lat, city.lng]);
+    setQuery('');
+    setTab('vicini');
   }
 
   // Stable identities so the memoized Map / BarRow don't re-render (all the
@@ -611,6 +656,8 @@ export default function Home() {
     setRadius,
     ratedOnly,
     setRatedOnly,
+    cityResult: searchActive ? cityResult : null,
+    onGoToCity,
     onReload: () => setReloadKey((k) => k + 1),
     onWiden: () => setRadius((r) => Math.min(100, r + 3)),
     onExplore: () => setTab('vicini'),

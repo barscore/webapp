@@ -23,18 +23,22 @@ export default function EventRow({ event }) {
   const dist = event.distance_km != null ? `${event.distance_km} km` : null;
 
   return (
-    <div className="row flex w-full items-center gap-3 px-3 py-3 text-left">
-      <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ember-primary/15 text-ember-ink">
-        <Icon name="bell" size={16} />
+    <div className="row flex w-full items-center gap-3.5 px-3.5 py-3.5 text-left">
+      <span className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-card bg-ember-primary/10 text-ember-ink">
+        <Icon name="bell" size={22} />
       </span>
       <div className="min-w-0 flex-1">
-        <h3 className="truncate font-display text-[15px] font-bold text-ember-cream">{event.title}</h3>
-        <p className="truncate text-xs text-ember-muted">
+        <h3 className="truncate font-display text-[16px] font-bold leading-tight text-ember-cream">
+          {event.title}
+        </h3>
+        <p className="mt-1.5 truncate text-[11px] font-semibold uppercase tracking-[0.07em] text-ember-muted">
           {[when, place].filter(Boolean).join(' · ')}
         </p>
       </div>
       {dist && (
-        <span className="shrink-0 text-xs font-semibold tabular-nums text-ember-muted">{dist}</span>
+        <span className="shrink-0 rounded-card border border-ember-line/10 bg-ember-line/5 px-2.5 py-1.5 text-xs font-bold tabular-nums text-ember-muted">
+          {dist}
+        </span>
       )}
     </div>
   );

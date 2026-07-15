@@ -1,10 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { Link, useParams, useLocation } from 'react-router-dom';
 import RadarChart from '../components/RadarChart.jsx';
+import ScoreBadge from '../components/ScoreBadge.jsx';
 import { SkeletonBar } from '../components/Skeleton.jsx';
 import RatingBars from '../components/RatingBars.jsx';
 import RatingForm from '../components/RatingForm.jsx';
 import BarDrinksSection from '../components/BarDrinksSection.jsx';
+import DirectionsButton from '../components/DirectionsButton.jsx';
 import Icon from '../components/Icon.jsx';
 import Toast from '../components/Toast.jsx';
 import EmptyState from '../components/EmptyState.jsx';
@@ -169,48 +171,36 @@ export default function BarDetail() {
       </div>
 
       <div className="space-y-5 p-4">
-        {/* Title + score */}
-        <div className="flex items-start justify-between gap-3">
+        {/* Hero: name leads, score badge second. */}
+        <div className="flex items-start justify-between gap-4">
           <div className="min-w-0">
-            <h1 className="font-display text-2xl font-bold text-ember-cream">{bar.name}</h1>
-            <p className="flex items-center gap-1 text-ember-muted">
-              <Icon name="pin" size={15} />
-              {bar.address}, {bar.city}
+            <h1 className="font-display text-[30px] font-extrabold leading-tight tracking-tight text-ember-cream">
+              {bar.name}
+            </h1>
+            <p className="mt-2 flex items-center gap-1.5 text-[11px] font-semibold uppercase tracking-[0.07em] text-ember-muted">
+              <Icon name="pin" size={13} />
+              <span className="truncate">{[bar.address, bar.city].filter(Boolean).join(', ')}</span>
             </p>
           </div>
-          <span className="flex shrink-0 items-center gap-1 rounded-lg bg-ember-primary px-3 py-1.5 font-display text-lg font-bold text-ember-on-primary">
-            <Icon name="star" size={16} />
-            {(overall * 2).toFixed(1)}
-          </span>
+          <ScoreBadge bar={bar} size="lg" />
         </div>
 
         {/* Contact actions */}
-        <div className="flex flex-wrap gap-2">
+        <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
           {bar.phone && (
-            <a
-              href={`tel:${bar.phone}`}
-              className="flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream"
-            >
-              <Icon name="phone" size={16} className="text-ember-ink" /> {t('bar.call')}
+            <a href={`tel:${bar.phone}`} className="chip">
+              <Icon name="phone" size={15} className="text-ember-ink" /> {t('bar.call')}
             </a>
           )}
           {bar.website && (
-            <a
-              href={bar.website}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream"
-            >
-              <Icon name="link" size={16} className="text-ember-ink" /> {t('bar.website')}
+            <a href={bar.website} target="_blank" rel="noreferrer" className="chip">
+              <Icon name="link" size={15} className="text-ember-ink" /> {t('bar.website')}
             </a>
           )}
-          <button
-            onClick={() => setShowInfo((o) => !o)}
-            aria-expanded={showInfo}
-            className="flex items-center gap-2 rounded-lg bg-ember-card px-3 py-2 text-sm text-ember-cream"
-          >
-            <Icon name="info" size={16} className="text-ember-ink" /> {t('bar.info')}
-            <Icon name={showInfo ? 'chevron-up' : 'chevron-down'} size={14} />
+          <DirectionsButton bar={bar} />
+          <button onClick={() => setShowInfo((o) => !o)} aria-expanded={showInfo} className="chip">
+            <Icon name="info" size={15} className="text-ember-ink" /> {t('bar.info')}
+            <Icon name={showInfo ? 'chevron-up' : 'chevron-down'} size={13} />
           </button>
         </div>
 

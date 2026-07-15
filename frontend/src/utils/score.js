@@ -15,17 +15,38 @@ export function scoreMeta(bar) {
   const hasReviews = total > 0 && s > 0;
 
   if (!hasReviews) {
-    return { score: '—', variant: 'grigio', color: 'text-ember-muted', hasReviews: false };
+    return {
+      score: '—',
+      variant: 'grigio',
+      color: 'text-ember-muted',
+      badge: 'border-ember-line/10 bg-ember-line/5 text-ember-muted',
+      tint: 'bg-ember-line/[0.06]',
+      hasReviews: false,
+    };
   }
   if (s >= 7) {
     // `variant` keys the pin art (utils/pins.js, Map.jsx) — do not rename it.
     // The color is a token because the old hardcoded #57C08A sat at 1.6:1 on
     // the light theme's card.
-    return { score: s.toFixed(1), variant: 'verde', color: 'text-ember-good', hasReviews: true };
+    return {
+      score: s.toFixed(1),
+      variant: 'verde',
+      color: 'text-ember-good',
+      badge: 'border-ember-good/30 bg-ember-good/15 text-ember-good',
+      tint: 'bg-ember-good/10',
+      hasReviews: true,
+    };
   }
-  // `ink`, not `primary`: these scores render at 16–18px bold, which is below
-  // the "large text" threshold, so they need the full 4.5:1.
-  return { score: s.toFixed(1), variant: 'arancione', color: 'text-ember-ink', hasReviews: true };
+  // `ink`, not `primary`: these scores render below the "large text" threshold,
+  // so they need the full 4.5:1.
+  return {
+    score: s.toFixed(1),
+    variant: 'arancione',
+    color: 'text-ember-ink',
+    badge: 'border-ember-ink/30 bg-ember-ink/15 text-ember-ink',
+    tint: 'bg-ember-ink/10',
+    hasReviews: true,
+  };
 }
 
 // Discoteche (OSM amenity=nightclub) share the map with bars but use their own

@@ -378,6 +378,25 @@ input[type='range'] {
     border: 1px solid rgb(var(--glass-edge) / var(--glass-edge-a));
   }
 
+  /* Pill action / filter. Replaces the flat `bg-ember-card px-3 py-2` slabs. */
+  .chip {
+    @apply inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full bg-ember-line/[0.06] px-3.5 py-2 text-sm font-semibold text-ember-cream;
+    border: 1px solid rgb(var(--glass-edge) / var(--glass-edge-a));
+    transition:
+      background-color var(--dur-2) var(--ease-out),
+      border-color var(--dur-2) var(--ease-out),
+      transform var(--dur-1) var(--ease-out);
+  }
+  .chip:hover {
+    @apply bg-ember-line/10;
+  }
+  .chip:active {
+    transform: scale(0.96);
+  }
+  .chip-on {
+    @apply border-ember-primary/50 bg-ember-primary/15 text-ember-ink;
+  }
+
   .field {
     @apply w-full rounded-lg bg-ember-bg px-3 py-2 text-ember-cream outline-none ring-ember-primary focus:ring-2;
     border: 1px solid rgb(var(--glass-edge) / var(--glass-edge-a));

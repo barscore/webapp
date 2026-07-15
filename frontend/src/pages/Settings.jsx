@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
 import { useTheme } from '../hooks/useTheme.js';
+import { useGraphics } from '../hooks/useGraphics.js';
 import { supabase } from '../services/supabase.js';
 import { meApi } from '../services/api.js';
 import Logo from '../components/Logo.jsx';
@@ -131,6 +132,9 @@ export default function Settings() {
         {/* Theme picker — client-side preference, saved in localStorage */}
         <ThemeSection />
 
+        {/* Graphics quality — simple (default, low-end) vs rich */}
+        <GraphicsSection />
+
         {/* Maps app for directions — hidden on Android (always Google Maps) */}
         {!isAndroid() && <MapsSection />}
 
@@ -247,6 +251,44 @@ function ThemeSection() {
               >
                 {t.label}
               </span>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+// Graphics quality: "simple" (default) turns off blur, the map filter and all
+// animations for old / low-end devices; "rich" restores the full look.
+function GraphicsSection() {
+  const { graphics, setGraphics } = useGraphics();
+  const options = [
+    { id: 'simple', label: 'Semplice', hint: 'Ottimizzata per dispositivi vecchi o poco potenti' },
+    { id: 'rich', label: 'Completa', hint: 'Effetti, sfocature e animazioni complete' },
+  ];
+  return (
+    <section className="card p-4">
+      <h2 className="mb-3 font-display font-bold text-ember-cream">Grafica e animazioni</h2>
+      <div className="grid grid-cols-2 gap-2">
+        {options.map((o) => {
+          const active = o.id === graphics;
+          return (
+            <button
+              key={o.id}
+              type="button"
+              onClick={() => setGraphics(o.id)}
+              aria-pressed={active}
+              className={`flex flex-col gap-1 rounded-lg border p-3 text-left transition-colors ${
+                active
+                  ? 'border-ember-primary bg-ember-primary/10'
+                  : 'border-ember-line/10 hover:border-ember-line/25'
+              }`}
+            >
+              <span className={`text-sm font-semibold ${active ? 'text-ember-ink' : 'text-ember-cream'}`}>
+                {o.label}
+              </span>
+              <span className="text-xs text-ember-muted">{o.hint}</span>
             </button>
           );
         })}

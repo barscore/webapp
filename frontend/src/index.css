@@ -532,3 +532,28 @@ input[type='range'] {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Simple graphics mode — Impostazioni → Grafica: "Semplice" (the default).
+   Low-end / old-device profile: drops the three GPU-heavy things at once —
+   the backdrop-filter blur on `.glass`, the map-tile CSS filter, and every
+   animation/transition (incl. the infinite pin pulse and skeleton shimmer).
+   Same recipes as the no-blur / reduced-motion fallbacks above, but user-
+   selectable. Rich mode ([data-graphics='rich']) keeps the full visuals.
+   These rules are unlayered so they win over the @layer components `.glass`. */
+:root[data-graphics='simple'] {
+  --map-filter: none;
+}
+:root[data-graphics='simple'] .glass {
+  background: rgb(var(--glass) / 0.96);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+:root[data-graphics='simple'] *,
+:root[data-graphics='simple'] *::before,
+:root[data-graphics='simple'] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}

@@ -25,6 +25,12 @@
           if (meta) meta.setAttribute('content', themeColors[t]);
         }
       } catch (e) {}
+      // Graphics quality — applied before paint so low-end devices never render
+      // the heavy visuals first. Default "simple" (anything but "rich").
+      try {
+        var g = localStorage.getItem('rabar-graphics');
+        document.documentElement.dataset.graphics = g === 'rich' ? 'rich' : 'simple';
+      } catch (e) {}
       var themeFonts = {
         rabar: 'family=Syne:wght@600;700;800&family=DM+Sans:wght@400;500;700',
         'midnight-red': 'family=Space+Grotesk:wght@600;700&family=Source+Sans+3:wght@400;600;700',

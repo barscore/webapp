@@ -30,7 +30,20 @@ function AxisTick({ i, label, value }) {
   const [x, y] = point(i, 1.12);
   return (
     <g>
-      <image href={`/icons/sprite/${label.icon}.png`} x={x - 9} y={y - 26} width={18} height={18} />
+      {/* Alpha-mask + fill instead of a raw <image>: sprite PNGs come in mixed
+          colors (the bell is white for the header), so tint them all with the
+          brand primary like Icon.jsx does. */}
+      <mask id={`rabar-tick-${label.icon}`} style={{ maskType: 'alpha' }}>
+        <image href={`/icons/sprite/${label.icon}.png`} x={x - 9} y={y - 26} width={18} height={18} />
+      </mask>
+      <rect
+        x={x - 9}
+        y={y - 26}
+        width={18}
+        height={18}
+        fill="rgb(var(--ember-primary))"
+        mask={`url(#rabar-tick-${label.icon})`}
+      />
       <text x={x} y={y + 2} textAnchor="middle" fill="rgb(var(--ember-cream))" fontSize={12}>
         {label.axis}
       </text>

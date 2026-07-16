@@ -1,5 +1,5 @@
 // rabar service worker — static asset caching + offline fallback.
-const CACHE = 'rabar-v4';
+const CACHE = 'rabar-v5';
 const OFFLINE_URL = '/offline.html';
 const PRECACHE = ['/', '/index.html', '/offline.html', '/manifest.json'];
 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Icon from './Icon.jsx';
 import { eventsApi, placesApi } from '../services/api.js';
+import { useI18n } from '../i18n/index.js';
 
 // datetime-local vuole "YYYY-MM-DDTHH:mm" in ora locale.
 function toLocalInput(iso) {
@@ -14,6 +15,7 @@ function toLocalInput(iso) {
 // bar caricati in zona per legare l'evento a un locale; senza locale l'evento
 // viene posizionato al centro attuale della mappa (`center`).
 export default function EventComposer({ event = null, bars = [], center, onClose, onSaved }) {
+  const { t } = useI18n();
   const [title, setTitle] = useState(event?.title ?? '');
   const [description, setDescription] = useState(event?.description ?? '');
   const [barId, setBarId] = useState(event?.bar_id ?? '');
@@ -50,8 +52,8 @@ export default function EventComposer({ event = null, bars = [], center, onClose
 
   async function submit(e) {
     e.preventDefault();
-    if (title.trim().length < 2) return setError('Inserisci un titolo (min 2 caratteri)');
-    if (!startsAt) return setError('Inserisci data e ora di inizio');
+    if (title.trim().length < 2) return setError(t('ec.titleRequired'));
+    if (!startsAt) return setError(t('ec.startRequired'));
     setBusy(true);
     setError('');
     const payload = {
@@ -76,7 +78,7 @@ export default function EventComposer({ event = null, bars = [], center, onClose
       onSaved?.();
       onClose();
     } catch (err) {
-      setError(err?.response?.data?.error || 'Salvataggio non riuscito');
+      setError(err?.response?.data?.error || t('form.saveError'));
     } finally {
       setBusy(false);
     }
@@ -93,49 +95,49 @@ export default function EventComposer({ event = null, bars = [], center, onClose
         className="glass-flat fade-in max-h-[85vh] w-full max-w-md overflow-y-auto rounded-sheet p-5"
       >
         <div className="flex items-center gap-2">
-          <Icon name="bell" size={20} className="text-ember-ink" />
+          <Icon name="event" size={20} className="text-ember-ink" />
           <h3 className="font-display text-lg font-bold text-ember-cream">
-            {editing ? 'Modifica evento' : 'Crea evento'}
+            {editing ? t('ec.editTitle') : t('ec.createTitle')}
           </h3>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Chiudi"
+            aria-label={t('common.close')}
             className="ml-auto text-ember-muted hover:text-ember-cream"
           >
             <Icon name="close" size={18} />
           </button>
         </div>
 
-        <label className="mt-4 block text-xs text-ember-muted">Titolo *</label>
+        <label className="mt-4 block text-xs text-ember-muted">{t('ec.title')}</label>
         <input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           maxLength={120}
           autoFocus
-          placeholder="Es. Notte anni '90 — guest DJ"
+          placeholder={t('ec.titlePh')}
           className="field mt-1 py-2 text-sm"
         />
 
-        <label className="mt-3 block text-xs text-ember-muted">Descrizione</label>
+        <label className="mt-3 block text-xs text-ember-muted">{t('ec.desc')}</label>
         <textarea
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           maxLength={1000}
           rows={3}
-          placeholder="Line-up, ingresso, dress code…"
+          placeholder={t('ec.descPh')}
           className="field mt-1 resize-none py-2 text-sm"
         />
 
         {!editing && (
           <>
-            <label className="mt-3 block text-xs text-ember-muted">Locale (opzionale)</label>
+            <label className="mt-3 block text-xs text-ember-muted">{t('ec.venue')}</label>
             <select
               value={barId}
               onChange={(e) => setBarId(e.target.value)}
               className="field mt-1 py-2 text-sm"
             >
-              <option value="">Nessun locale — scrivi un indirizzo qui sotto</option>
+              <option value="">{t('ec.noVenue')}</option>
               {bars
                 .filter((b) => b.id && !b.id.startsWith?.('osm'))
                 .map((b) => (
@@ -147,7 +149,7 @@ export default function EventComposer({ event = null, bars = [], center, onClose
 
             {!barId && (
               <div className="relative">
-                <label className="mt-3 block text-xs text-ember-muted">Indirizzo</label>
+                <label className="mt-3 block text-xs text-ember-muted">{t('ec.address')}</label>
                 {place ? (
                   <div className="mt-1 flex items-center gap-2 rounded-lg border border-ember-primary/40 bg-ember-primary/10 px-3 py-2">
                     <Icon name="pin" size={14} className="shrink-0 text-ember-ink" />
@@ -160,7 +162,7 @@ export default function EventComposer({ event = null, bars = [], center, onClose
                         setPlace(null);
                         setAddress('');
                       }}
-                      aria-label="Rimuovi indirizzo"
+                      aria-label={t('ec.removeAddress')}
                       className="shrink-0 text-ember-muted hover:text-ember-cream"
                     >
                       <Icon name="close" size={14} />
@@ -172,7 +174,7 @@ export default function EventComposer({ event = null, bars = [], center, onClose
                       value={address}
                       onChange={(e) => setAddress(e.target.value)}
                       maxLength={200}
-                      placeholder="Es. Via Roma 12, Milano"
+                      placeholder={t('ec.addressPh')}
                       className="field mt-1 py-2 text-sm"
                     />
                     {addressResults.length > 0 && (
@@ -193,9 +195,7 @@ export default function EventComposer({ event = null, bars = [], center, onClose
                         ))}
                       </div>
                     )}
-                    <p className="mt-1 text-[11px] text-ember-muted">
-                      Senza indirizzo l'evento viene posizionato al centro attuale della mappa.
-                    </p>
+                    <p className="mt-1 text-[11px] text-ember-muted">{t('ec.noAddressHint')}</p>
                   </>
                 )}
               </div>
@@ -205,7 +205,7 @@ export default function EventComposer({ event = null, bars = [], center, onClose
 
         <div className="mt-3 grid grid-cols-2 gap-2">
           <div>
-            <label className="block text-xs text-ember-muted">Inizio *</label>
+            <label className="block text-xs text-ember-muted">{t('ec.start')}</label>
             <input
               type="datetime-local"
               value={startsAt}
@@ -214,7 +214,7 @@ export default function EventComposer({ event = null, bars = [], center, onClose
             />
           </div>
           <div>
-            <label className="block text-xs text-ember-muted">Fine</label>
+            <label className="block text-xs text-ember-muted">{t('ec.end')}</label>
             <input
               type="datetime-local"
               value={endsAt}
@@ -228,12 +228,10 @@ export default function EventComposer({ event = null, bars = [], center, onClose
 
         <button type="submit" disabled={busy} className="btn-primary mt-4 w-full py-3">
           <Icon name={busy ? 'reload' : 'check'} size={18} className={busy ? 'animate-spin' : ''} />
-          {busy ? 'Salvataggio…' : editing ? 'Salva modifiche' : 'Pubblica evento'}
+          {busy ? t('common.saving') : editing ? t('ec.saveChanges') : t('ec.publish')}
         </button>
         {!editing && (
-          <p className="mt-2 text-center text-[11px] text-ember-muted">
-            I tuoi follower riceveranno una notifica alla pubblicazione.
-          </p>
+          <p className="mt-2 text-center text-[11px] text-ember-muted">{t('ec.followersNote')}</p>
         )}
       </form>
     </div>

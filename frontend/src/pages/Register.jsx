@@ -4,10 +4,12 @@ import { useAuth } from '../hooks/useAuth.js';
 import { supabase } from '../services/supabase.js';
 import { AuthShell, Field } from './Login.jsx';
 import GoogleButton from '../components/GoogleButton.jsx';
+import { useI18n } from '../i18n/index.js';
 
 // Account sign-up (email/password or Google). The username lands in user
 // metadata; the DB trigger `handle_new_user` turns it into a profiles row.
 export default function Register() {
+  const { t } = useI18n();
   const { register } = useAuth();
   const navigate = useNavigate();
   const [username, setUsername] = useState('');
@@ -33,7 +35,7 @@ export default function Register() {
   async function handleSubmit(e) {
     e.preventDefault();
     if (!accepted) {
-      setError('Devi accettare Privacy e Termini e confermare di avere almeno 18 anni.');
+      setError(t('auth.mustAccept'));
       return;
     }
     setBusy(true);
@@ -42,7 +44,7 @@ export default function Register() {
       await register(email, password, username);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.error || 'Registrazione fallita');
+      setError(err.response?.data?.error || t('auth.registerFailed'));
     } finally {
       setBusy(false);
     }
@@ -50,14 +52,12 @@ export default function Register() {
 
   if (!open) {
     return (
-      <AuthShell title="Registrazioni chiuse">
-        <p className="text-center text-sm text-ember-muted">
-          La creazione di nuovi account è momentaneamente disabilitata. Riprova più tardi.
-        </p>
+      <AuthShell title={t('auth.regClosed')}>
+        <p className="text-center text-sm text-ember-muted">{t('auth.regClosedMsg')}</p>
         <p className="mt-4 text-center text-sm text-ember-muted">
-          Hai già un account?{' '}
+          {t('auth.haveAccount')}{' '}
           <Link to="/login" className="text-ember-ink underline">
-            Accedi
+            {t('common.login')}
           </Link>
         </p>
       </AuthShell>
@@ -65,11 +65,11 @@ export default function Register() {
   }
 
   return (
-    <AuthShell title="Crea account">
+    <AuthShell title={t('auth.createAccount')}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label="Username" value={username} onChange={setUsername} />
-        <Field label="Email" type="email" value={email} onChange={setEmail} />
-        <Field label="Password (min 8)" type="password" value={password} onChange={setPassword} />
+        <Field label={t('auth.username')} value={username} onChange={setUsername} />
+        <Field label={t('auth.email')} type="email" value={email} onChange={setEmail} />
+        <Field label={t('auth.passwordMin')} type="password" value={password} onChange={setPassword} />
         <label className="flex items-start gap-2 text-sm text-ember-muted">
           <input
             type="checkbox"
@@ -78,9 +78,11 @@ export default function Register() {
             className="mt-0.5 accent-ember-primary"
           />
           <span>
-            Ho almeno 18 anni e accetto la{' '}
-            <Link to="/privacy" className="text-ember-ink underline">Privacy</Link> e i{' '}
-            <Link to="/tos" className="text-ember-ink underline">Termini di servizio</Link>.
+            {t('auth.accept1')}
+            <Link to="/privacy" className="text-ember-ink underline">{t('common.privacy')}</Link>
+            {t('auth.accept2')}
+            <Link to="/tos" className="text-ember-ink underline">{t('common.tos')}</Link>
+            {t('auth.accept3')}
           </span>
         </label>
         {error && <p className="text-sm text-ember-danger">{error}</p>}
@@ -89,14 +91,14 @@ export default function Register() {
           disabled={busy || !accepted}
           className="btn-primary w-full py-2"
         >
-          {busy ? 'Creazione…' : 'Registrati'}
+          {busy ? t('auth.creating') : t('auth.register')}
         </button>
       </form>
-      <GoogleButton label="Registrati con Google" disabled={!accepted} />
+      <GoogleButton label={t('auth.googleRegister')} disabled={!accepted} />
       <p className="mt-4 text-center text-sm text-ember-muted">
-        Hai già un account?{' '}
+        {t('auth.haveAccount')}{' '}
         <Link to="/login" className="text-ember-ink underline">
-          Accedi
+          {t('common.login')}
         </Link>
       </p>
     </AuthShell>

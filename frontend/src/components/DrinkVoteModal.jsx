@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Icon from './Icon.jsx';
 import { drinksApi, placesApi, barsApi } from '../services/api.js';
 import { barKey, parseOsmToken } from '../utils/score.js';
+import { useI18n } from '../i18n/index.js';
 
 // Shared drink-vote flow, opened from both entry points:
 //   from a bar view    → pass `bar`,   the user picks the drink;
@@ -11,6 +12,7 @@ import { barKey, parseOsmToken } from '../utils/score.js';
 // Vote is a single 1–5, upserted server-side: same submit for create and edit.
 // Render only for authenticated users (callers gate on isAuthenticated).
 export default function DrinkVoteModal({ drink, bar, onClose, onVoted, onPropose }) {
+  const { t } = useI18n();
   const [pickedDrink, setPickedDrink] = useState(drink ?? null);
   const [pickedBar, setPickedBar] = useState(bar ?? null);
   const [search, setSearch] = useState('');
@@ -77,14 +79,14 @@ export default function DrinkVoteModal({ drink, bar, onClose, onVoted, onPropose
       const resolved = await barsApi.resolve({ ...parseOsmToken(barKey(place)), ...place });
       setPickedBar(resolved);
     } catch {
-      setError('Bar non disponibile, riprova');
+      setError(t('dvm.barUnavailable'));
     } finally {
       setBusy(false);
     }
   }
 
   async function submit() {
-    if (!rating) return setError('Scegli un voto da 1 a 5');
+    if (!rating) return setError(t('dvm.chooseVote'));
     setBusy(true);
     setError('');
     try {
@@ -92,7 +94,7 @@ export default function DrinkVoteModal({ drink, bar, onClose, onVoted, onPropose
       onVoted?.();
       onClose();
     } catch (err) {
-      setError(err?.response?.data?.error || 'Voto non riuscito, riprova');
+      setError(err?.response?.data?.error || t('dvm.voteFailed'));
     } finally {
       setBusy(false);
     }
@@ -106,17 +108,17 @@ export default function DrinkVoteModal({ drink, bar, onClose, onVoted, onPropose
       onVoted?.();
       onClose();
     } catch (err) {
-      setError(err?.response?.data?.error || 'Eliminazione non riuscita');
+      setError(err?.response?.data?.error || t('dvm.deleteFailed'));
     } finally {
       setBusy(false);
     }
   }
 
   const title = pickingDrink
-    ? 'Quale drink vuoi valutare?'
+    ? t('dvm.whichDrink')
     : pickingBar
-      ? 'Dove lo fanno?'
-      : 'Il tuo voto';
+      ? t('dvm.whereMade')
+      : t('dvm.yourVote');
 
   return (
     <div className="fixed inset-0 z-[2100] flex items-end justify-center bg-black/50 p-4 backdrop-blur-[3px] sm:items-center" onClick={onClose}>
@@ -127,7 +129,7 @@ export default function DrinkVoteModal({ drink, bar, onClose, onVoted, onPropose
         <div className="flex items-center gap-2">
           <Icon name="cocktail" size={20} className="text-ember-ink" />
           <h3 className="font-display text-lg font-bold text-ember-cream">{title}</h3>
-          <button type="button" onClick={onClose} aria-label="Chiudi" className="ml-auto text-ember-muted hover:text-ember-cream">
+          <button type="button" onClick={onClose} aria-label={t('common.close')} className="ml-auto text-ember-muted hover:text-ember-cream">
             <Icon name="close" size={18} />
           </button>
         </div>
@@ -135,7 +137,7 @@ export default function DrinkVoteModal({ drink, bar, onClose, onVoted, onPropose
         {/* Context line: what's fixed so far. */}
         <p className="mt-1 truncate text-sm text-ember-muted">
           {pickedDrink && <span className="font-semibold text-ember-cream">{pickedDrink.name}</span>}
-          {pickedDrink && pickedBar && ' da '}
+          {pickedDrink && pickedBar && t('dvm.at')}
           {pickedBar && <span className="font-semibold text-ember-cream">{pickedBar.name}</span>}
         </p>
 
@@ -146,12 +148,12 @@ export default function DrinkVoteModal({ drink, bar, onClose, onVoted, onPropose
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder={pickingDrink ? 'Cerca un drink…' : 'Cerca un bar…'}
+                placeholder={pickingDrink ? t('home.searchDrink') : t('home.searchBar')}
                 autoFocus
                 className="w-full bg-transparent text-sm text-ember-cream outline-none placeholder:text-ember-muted"
               />
               {search && (
-                <button onClick={() => setSearch('')} aria-label="Pulisci ricerca" className="text-ember-muted hover:text-ember-cream">
+                <button onClick={() => setSearch('')} aria-label={t('common.clearSearch')} className="text-ember-muted hover:text-ember-cream">
                   <Icon name="close" size={16} />
                 </button>
               )}
@@ -160,14 +162,14 @@ export default function DrinkVoteModal({ drink, bar, onClose, onVoted, onPropose
             <div className="no-scrollbar mt-2 min-h-0 flex-1 space-y-1 overflow-y-auto">
               {searching && (
                 <p className="flex items-center gap-2 px-1 py-2 text-sm text-ember-muted">
-                  <Icon name="reload" size={14} className="animate-spin" /> Ricerca…
+                  <Icon name="reload" size={14} className="animate-spin" /> {t('dvm.searching')}
                 </p>
               )}
               {!searching && results.length === 0 && (
                 <p className="px-1 py-2 text-sm text-ember-muted">
                   {pickingBar && search.trim().length < 2
-                    ? 'Scrivi almeno 2 lettere per cercare il bar.'
-                    : 'Nessun risultato.'}
+                    ? t('dvm.min2')
+                    : t('dvm.noResults')}
                 </p>
               )}
               {!searching &&
@@ -196,7 +198,7 @@ export default function DrinkVoteModal({ drink, bar, onClose, onVoted, onPropose
                   onClick={onPropose}
                   className="mt-1 flex w-full items-center justify-center gap-2 rounded-xl border border-dashed border-ember-line/15 px-3 py-2.5 text-sm text-ember-muted transition hover:text-ember-cream"
                 >
-                  <Icon name="plus" size={15} /> Non trovi il drink? Proponilo
+                  <Icon name="plus" size={15} /> {t('dvm.proposeIt')}
                 </button>
               )}
             </div>
@@ -212,7 +214,7 @@ export default function DrinkVoteModal({ drink, bar, onClose, onVoted, onPropose
                   key={v}
                   type="button"
                   onClick={() => setRating(v)}
-                  aria-label={`${v} su 5`}
+                  aria-label={t('dvm.nOf5', { n: v })}
                   aria-pressed={rating >= v}
                   className={`rounded-lg p-1.5 transition active:scale-95 ${
                     rating >= v ? 'text-ember-ink' : 'text-ember-line/20 hover:text-ember-line/40'
@@ -236,7 +238,7 @@ export default function DrinkVoteModal({ drink, bar, onClose, onVoted, onPropose
                   }}
                   className="text-xs text-ember-muted underline hover:text-ember-cream"
                 >
-                  Cambia drink
+                  {t('dvm.changeDrink')}
                 </button>
               )}
               {!bar && (
@@ -250,7 +252,7 @@ export default function DrinkVoteModal({ drink, bar, onClose, onVoted, onPropose
                   }}
                   className="text-xs text-ember-muted underline hover:text-ember-cream"
                 >
-                  Cambia bar
+                  {t('dvm.changeBar')}
                 </button>
               )}
             </div>
@@ -263,7 +265,7 @@ export default function DrinkVoteModal({ drink, bar, onClose, onVoted, onPropose
                   type="button"
                   onClick={removeVote}
                   disabled={busy}
-                  aria-label="Elimina il tuo voto"
+                  aria-label={t('dvm.deleteVote')}
                   className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-ember-line/5 text-ember-danger disabled:opacity-50"
                 >
                   <Icon name="trash" size={18} />
@@ -276,7 +278,7 @@ export default function DrinkVoteModal({ drink, bar, onClose, onVoted, onPropose
                 className="btn-primary flex-1 py-3"
               >
                 <Icon name={busy ? 'reload' : 'check'} size={18} className={busy ? 'animate-spin' : ''} />
-                {busy ? 'Salvataggio…' : existing ? 'Aggiorna voto' : 'Vota'}
+                {busy ? t('common.saving') : existing ? t('dvm.updateVote') : t('dvm.vote')}
               </button>
             </div>
           </>

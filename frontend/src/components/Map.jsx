@@ -23,6 +23,19 @@ function ZoomWatcher({ onZoom }) {
   return null;
 }
 
+// Leaflet caches the container size at init; on iOS standalone the viewport
+// (100dvh) settles after mount without firing window.resize, leaving tiles
+// rendered only in the pre-settle area. Watch the container itself instead.
+function ResizeFix() {
+  const map = useMap();
+  useEffect(() => {
+    const ro = new ResizeObserver(() => map.invalidateSize());
+    ro.observe(map.getContainer());
+    return () => ro.disconnect();
+  }, [map]);
+  return null;
+}
+
 // Smoothly pans to the focused bar without touching the query center.
 function FlyTo({ pos }) {
   const map = useMap();
@@ -115,6 +128,7 @@ function Map({ bars = [], center, zoom = 14, userPos, selectedKey, focus, onSele
         subdomains="abcd"
         maxZoom={20}
       />
+      <ResizeFix />
       <Recenter center={center} zoom={zoom} />
       <FlyTo pos={focus} />
       <ZoomWatcher onZoom={setZoomLevel} />

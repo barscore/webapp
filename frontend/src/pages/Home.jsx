@@ -101,22 +101,31 @@ function SearchPanel({ query, setQuery, autoFocus = false, placeholder }) {
   );
 }
 
-// Radius stepper — only in the "Vicino a me" section.
+// Radius slider — only in the "Vicino a me" section. Capped at 25 km; --fill
+// drives the track's primary→accent gradient (see .slider in index.css).
+const RADIUS_MAX = 25;
 function RadiusControl({ radius, setRadius }) {
   const { t } = useI18n();
+  const pct = ((radius - 1) / (RADIUS_MAX - 1)) * 100;
   return (
-    <div className="flex items-center gap-3 px-1 text-xs text-ember-muted">
-      <Icon name="funnel" size={14} className="text-ember-ink" />
-      <span className="whitespace-nowrap tabular-nums">{t('home.radius', { n: radius })}</span>
+    <div className="rounded-lg border border-ember-line/10 bg-ember-line/[0.04] px-3.5 pb-1.5 pt-2.5">
+      <div className="flex items-center gap-2 text-xs text-ember-muted">
+        <Icon name="funnel" size={14} className="text-ember-ink" />
+        <span className="font-semibold uppercase tracking-[0.08em]">{t('home.radiusTitle')}</span>
+        <span className="ml-auto rounded-full bg-ember-primary/15 px-2.5 py-0.5 font-display text-[12px] font-bold tabular-nums text-ember-ink">
+          {radius} km
+        </span>
+      </div>
       <input
         type="range"
         min="1"
-        max="100"
+        max={RADIUS_MAX}
         step="1"
         value={radius}
         onChange={(e) => setRadius(Number(e.target.value))}
         aria-label={t('home.radiusAria')}
-        className="ml-auto w-32 accent-ember-primary"
+        className="slider mt-1 w-full"
+        style={{ '--fill': `${pct}%` }}
       />
     </div>
   );
@@ -151,7 +160,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
     return (
       <>
         <div className="mb-3 flex items-center gap-2.5 px-1">
-          <Icon name="bell" size={16} className="text-ember-ink" />
+          <Icon name="event" size={16} className="text-ember-ink" />
           <h2 className="font-display text-sm font-extrabold uppercase tracking-[0.12em] text-ember-cream">
             {t('tabs.eventi')}
           </h2>
@@ -668,7 +677,7 @@ export default function Home() {
     cityResult: searchActive ? cityResult : null,
     onGoToCity,
     onReload: () => setReloadKey((k) => k + 1),
-    onWiden: () => setRadius((r) => Math.min(100, r + 3)),
+    onWiden: () => setRadius((r) => Math.min(25, r + 3)),
     onExplore: () => setTab('vicini'),
     onSuggest: () => setSuggestOpen(true),
     onSelect,
@@ -704,14 +713,16 @@ export default function Home() {
         </Link>
       </div>
 
-      {/* Account + repositioning — top right (fades out when sheet is fullscreen) */}
+      {/* Account + repositioning — top right (fades out when sheet is fullscreen).
+          Bell sits to the LEFT of the account button, on the same row. */}
       <div
         className={`absolute right-4 top-4 z-[1300] flex flex-col items-end gap-2 transition-all duration-300 ease-out ${
           sheetFull ? 'max-md:pointer-events-none max-md:-translate-y-6 max-md:opacity-0' : ''
         }`}
       >
-        <NotificationsBell />
-        <div ref={accountRef} className="relative">
+        <div className="flex items-center gap-2">
+          <NotificationsBell />
+          <div ref={accountRef} className="relative">
           <GlassButton
             label={isAuthenticated ? t('menu.account') : t('common.login')}
             onClick={() => (isAuthenticated ? setMenuOpen((o) => !o) : navigate('/login'))}
@@ -796,6 +807,10 @@ export default function Home() {
                 <Link to="/tos" onClick={() => setMenuOpen(false)} className="hover:text-ember-ink">
                   {t('common.terms')}
                 </Link>
+                <span className="text-ember-line/15">·</span>
+                <Link to="/riconoscimenti" onClick={() => setMenuOpen(false)} className="hover:text-ember-ink">
+                  {t('common.credits')}
+                </Link>
               </div>
               <button
                 onClick={() => {
@@ -808,9 +823,10 @@ export default function Home() {
               </button>
             </div>
           )}
+          </div>
         </div>
         <GlassButton label={t('home.myLocation')} onClick={locateMe}>
-          <Icon name="locate" size={22} />
+          <Icon name="pin" size={22} />
         </GlassButton>
       </div>
 

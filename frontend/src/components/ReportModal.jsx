@@ -1,20 +1,16 @@
 import { useState } from 'react';
 import Icon from './Icon.jsx';
 import { reportsApi } from '../services/api.js';
+import { useI18n } from '../i18n/index.js';
 
 // Categories must match REPORT_TYPES in backend/src/schemas/reportSchemas.js
 // and the CHECK constraint in database/add_reports.sql.
-const REPORT_TYPES = [
-  { value: 'bug', label: 'Problema tecnico / bug' },
-  { value: 'contenuto', label: 'Contenuto inappropriato' },
-  { value: 'account', label: 'Problema con l’account' },
-  { value: 'suggerimento', label: 'Suggerimento / idea' },
-  { value: 'altro', label: 'Altro' },
-];
+const REPORT_TYPES = ['bug', 'contenuto', 'account', 'suggerimento', 'altro'];
 
 // "Segnala" — generic report form opened from the account menu. Auth-only
 // (the entry point lives in the signed-in profile card).
 export default function ReportModal({ onClose, onSent }) {
+  const { t } = useI18n();
   const [type, setType] = useState('bug');
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
@@ -22,7 +18,7 @@ export default function ReportModal({ onClose, onSent }) {
 
   async function submit(e) {
     e.preventDefault();
-    if (message.trim().length < 5) return setError('Descrivi il problema (almeno 5 caratteri)');
+    if (message.trim().length < 5) return setError(t('report.tooShort'));
     setBusy(true);
     setError('');
     try {
@@ -30,7 +26,7 @@ export default function ReportModal({ onClose, onSent }) {
       onSent?.();
       onClose();
     } catch (err) {
-      setError(err?.response?.data?.error || 'Invio non riuscito, riprova');
+      setError(err?.response?.data?.error || t('suggest.sendFailed'));
     } finally {
       setBusy(false);
     }
@@ -45,17 +41,15 @@ export default function ReportModal({ onClose, onSent }) {
       >
         <div className="flex items-center gap-2">
           <Icon name="bell" size={20} className="text-ember-ink" />
-          <h3 className="font-display text-lg font-bold text-ember-cream">Segnala</h3>
-          <button type="button" onClick={onClose} aria-label="Chiudi" className="ml-auto text-ember-muted hover:text-ember-cream">
+          <h3 className="font-display text-lg font-bold text-ember-cream">{t('report.title')}</h3>
+          <button type="button" onClick={onClose} aria-label={t('common.close')} className="ml-auto text-ember-muted hover:text-ember-cream">
             <Icon name="close" size={18} />
           </button>
         </div>
-        <p className="mt-1 text-sm text-ember-muted">
-          Qualcosa non va? Dicci di cosa si tratta e ci pensiamo noi.
-        </p>
+        <p className="mt-1 text-sm text-ember-muted">{t('report.intro')}</p>
 
         <label htmlFor="report-type" className="mt-4 block text-xs text-ember-muted">
-          Tipo di segnalazione
+          {t('report.type')}
         </label>
         <select
           id="report-type"
@@ -63,15 +57,15 @@ export default function ReportModal({ onClose, onSent }) {
           onChange={(e) => setType(e.target.value)}
           className="field mt-1 py-2 text-sm"
         >
-          {REPORT_TYPES.map((t) => (
-            <option key={t.value} value={t.value}>
-              {t.label}
+          {REPORT_TYPES.map((v) => (
+            <option key={v} value={v}>
+              {t(`report.${v}`)}
             </option>
           ))}
         </select>
 
         <label htmlFor="report-message" className="mt-3 block text-xs text-ember-muted">
-          Descrizione *
+          {t('report.desc')}
         </label>
         <textarea
           id="report-message"
@@ -80,7 +74,7 @@ export default function ReportModal({ onClose, onSent }) {
           maxLength={1000}
           rows={4}
           autoFocus
-          placeholder="Descrivi il problema con più dettagli possibili…"
+          placeholder={t('report.descPh')}
           className="field mt-1 resize-none py-2 text-sm"
         />
 
@@ -92,7 +86,7 @@ export default function ReportModal({ onClose, onSent }) {
           className="btn-primary mt-4 w-full py-3"
         >
           <Icon name={busy ? 'reload' : 'check'} size={18} className={busy ? 'animate-spin' : ''} />
-          {busy ? 'Invio…' : 'Invia segnalazione'}
+          {busy ? t('common.sending') : t('suggest.send')}
         </button>
       </form>
     </div>

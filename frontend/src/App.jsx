@@ -23,6 +23,7 @@ const Leaderboard = lazy(() => import('./pages/Leaderboard.jsx'));
 const Admin = lazy(() => import('./pages/Admin.jsx'));
 const Privacy = lazy(() => import('./pages/Privacy.jsx'));
 const Tos = lazy(() => import('./pages/Tos.jsx'));
+const Credits = lazy(() => import('./pages/Credits.jsx'));
 const Maintenance = lazy(() => import('./pages/Maintenance.jsx'));
 const BoostResult = lazy(() => import('./pages/BoostResult.jsx'));
 
@@ -125,6 +126,7 @@ export default function App() {
         <Route path="/boost/esito" element={<BoostResult />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/tos" element={<Tos />} />
+        <Route path="/riconoscimenti" element={<Credits />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </Suspense>

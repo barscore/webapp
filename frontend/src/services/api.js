@@ -116,6 +116,12 @@ export const leaderboardApi = {
   list: () => api.get('/leaderboard').then((r) => expectArray(r.data.leaderboard, 'leaderboard')),
 };
 
+// Public user profiles: profile popup (leaderboard / riconoscimenti) + credits.
+export const usersApi = {
+  publicProfile: (id) => api.get(`/users/${id}`).then((r) => r.data.profile),
+  credits: () => api.get('/users/credits').then((r) => r.data),
+};
+
 // "Segnala il tuo bar" — create is public (works signed-out); list/moderation
 // are staff-only (backend enforces requireRole).
 export const suggestionsApi = {

@@ -9,13 +9,46 @@ import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import Toast from '../components/Toast.jsx';
 import OrganizerRequestForm from '../components/OrganizerRequestForm.jsx';
+import { LanguageSection } from '../components/LanguagePicker.jsx';
 import { pushSupported, getPushSubscription, enablePush, disablePush } from '../services/push.js';
 import { getConsent, resetConsent, onConsentChange } from '../services/consent.js';
 import { isAndroid, getProvider, setProvider } from '../utils/directions.js';
+import { useI18n } from '../i18n/index.js';
+
+// Group label — same typographic voice as the Home sheet section headers, so
+// Impostazioni reads as part of the same system.
+function GroupLabel({ icon, children }) {
+  return (
+    <h2 className="flex items-center gap-2 px-1 pt-2 font-display text-xs font-extrabold uppercase tracking-[0.12em] text-ember-muted">
+      <Icon name={icon} size={14} className="text-ember-ink" />
+      {children}
+    </h2>
+  );
+}
+
+// Selectable option tile shared by theme / graphics / maps pickers, so the
+// three sections stop drifting apart visually.
+function OptionTile({ active, onClick, children, className = '' }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`press rounded-lg border p-3 text-left transition-colors ${
+        active
+          ? 'border-ember-primary bg-ember-primary/10'
+          : 'border-ember-line/10 hover:border-ember-line/25'
+      } ${className}`}
+    >
+      {children}
+    </button>
+  );
+}
 
 // Account settings: read-only account details + credential changes (email /
 // password) via supabase-js. Credential updates never go through the backend.
 export default function Settings() {
+  const { t, dateLocale } = useI18n();
   const { isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
 
@@ -47,7 +80,7 @@ export default function Settings() {
         setProfile(p);
         setEmail(p.email || '');
       })
-      .catch(() => setToast({ msg: 'Impossibile caricare l’account', icon: 'info' }));
+      .catch(() => setToast({ msg: t('settings.errLoad'), icon: 'info' }));
   }, [isAuthenticated]);
 
   async function changeEmail(e) {
@@ -57,9 +90,9 @@ export default function Settings() {
     try {
       const { error } = await supabase.auth.updateUser({ email });
       if (error) throw error;
-      setToast({ msg: 'Controlla la mail per confermare', icon: 'check' });
+      setToast({ msg: t('settings.checkEmail'), icon: 'check' });
     } catch (err) {
-      setEmailErr(err.message || 'Errore durante l’aggiornamento');
+      setEmailErr(err.message || t('settings.updateErr'));
     } finally {
       setEmailBusy(false);
     }
@@ -67,8 +100,8 @@ export default function Settings() {
 
   async function changePassword(e) {
     e.preventDefault();
-    if (password.length < 6) return setPwErr('Minimo 6 caratteri');
-    if (password !== password2) return setPwErr('Le password non coincidono');
+    if (password.length < 6) return setPwErr(t('settings.pwMin'));
+    if (password !== password2) return setPwErr(t('settings.pwMismatch'));
     setPwBusy(true);
     setPwErr('');
     try {
@@ -76,9 +109,9 @@ export default function Settings() {
       if (error) throw error;
       setPassword('');
       setPassword2('');
-      setToast({ msg: 'Password aggiornata', icon: 'check' });
+      setToast({ msg: t('settings.pwUpdated'), icon: 'check' });
     } catch (err) {
-      setPwErr(err.message || 'Errore durante l’aggiornamento');
+      setPwErr(err.message || t('settings.updateErr'));
     } finally {
       setPwBusy(false);
     }
@@ -92,99 +125,96 @@ export default function Settings() {
       await supabase.auth.signOut();
       navigate('/');
     } catch (err) {
-      setDelErr(err.response?.data?.error || 'Eliminazione fallita');
+      setDelErr(err.response?.data?.error || t('settings.deleteFailed'));
       setDelBusy(false);
     }
   }
 
   return (
     <div className="min-h-full bg-ember-bg p-4">
-      <div className="mx-auto w-full max-w-lg space-y-5">
+      <div className="mx-auto w-full max-w-lg space-y-4">
         <div>
           <Link to="/" className="mb-4 inline-flex items-center gap-1 text-sm text-ember-muted">
-            <Icon name="arrow-left" size={15} /> Mappa
+            <Icon name="arrow-left" size={15} /> {t('common.map')}
           </Link>
           <div className="mb-5">
             <Logo size="sm" />
           </div>
           <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-ember-cream">
-            <Icon name="filters" size={22} className="text-ember-ink" /> Impostazioni
+            <Icon name="filters" size={22} className="text-ember-ink" /> {t('settings.title')}
           </h1>
         </div>
 
-        {/* Account details */}
+        {/* ---- Profilo ---- */}
+        <GroupLabel icon="user">{t('settings.groupProfile')}</GroupLabel>
         <section className="card p-4">
-          <h2 className="mb-3 font-display font-bold text-ember-cream">Dettagli account</h2>
-          <dl className="space-y-2 text-sm">
-            <Detail icon="user" label="Username" value={profile ? `@${profile.username}` : '…'} />
-            <Detail icon="link" label="Email" value={profile?.email || '…'} />
+          <dl className="space-y-2.5 text-sm">
+            <Detail icon="user" label={t('settings.username')} value={profile ? `@${profile.username}` : '…'} />
+            <Detail icon="link" label={t('settings.email')} value={profile?.email || '…'} />
             <Detail
               icon="review"
-              label="Valutazioni"
+              label={t('settings.ratings')}
               value={profile ? String(profile.ratings_count) : '…'}
             />
             <Detail
               icon="info"
-              label="Iscritto dal"
-              value={profile?.created_at ? new Date(profile.created_at).toLocaleDateString('it-IT') : '…'}
+              label={t('settings.since')}
+              value={profile?.created_at ? new Date(profile.created_at).toLocaleDateString(dateLocale) : '…'}
             />
           </dl>
         </section>
 
-        {/* Theme picker — client-side preference, saved in localStorage */}
+        {/* ---- Preferenze ---- */}
+        <GroupLabel icon="filters">{t('settings.groupPrefs')}</GroupLabel>
         <ThemeSection />
-
-        {/* Graphics quality — simple (default, low-end) vs rich */}
         <GraphicsSection />
-
+        <LanguageSection />
         {/* Maps app for directions — hidden on Android (always Google Maps) */}
         {!isAndroid() && <MapsSection />}
-
         {/* Notifiche push — opt-in esplicito, mai prompt a freddo */}
         <PushSection />
 
-        {/* Account organizzatore/PR — richiesta upgrade con verifica staff */}
+        {/* ---- Organizzatore ---- */}
+        <GroupLabel icon="event">{t('settings.groupOrganizer')}</GroupLabel>
         <OrganizerSection />
 
+        {/* ---- Privacy ---- */}
+        <GroupLabel icon="info">{t('settings.groupPrivacy')}</GroupLabel>
         {/* Ad-consent management — GDPR: withdrawing must be as easy as giving */}
         <CookieSection />
+        <section className="card flex items-center justify-center gap-3 p-3.5 text-sm text-ember-muted">
+          <Link to="/privacy" className="hover:text-ember-ink">{t('common.privacy')}</Link>
+          <span className="text-ember-line/15">·</span>
+          <Link to="/tos" className="hover:text-ember-ink">{t('common.terms')}</Link>
+          <span className="text-ember-line/15">·</span>
+          <Link to="/riconoscimenti" className="hover:text-ember-ink">{t('common.credits')}</Link>
+        </section>
 
-        {/* Change email */}
-        <form onSubmit={changeEmail} className="space-y-3 card p-4">
-          <h2 className="font-display font-bold text-ember-cream">Cambia email</h2>
-          <SettingsField label="Nuova email" type="email" value={email} onChange={setEmail} />
+        {/* ---- Sicurezza ---- */}
+        <GroupLabel icon="check">{t('settings.groupSecurity')}</GroupLabel>
+        <form onSubmit={changeEmail} className="card space-y-3 p-4">
+          <h3 className="font-display font-bold text-ember-cream">{t('settings.changeEmail')}</h3>
+          <SettingsField label={t('settings.newEmail')} type="email" value={email} onChange={setEmail} />
           {emailErr && <p className="text-sm text-ember-danger">{emailErr}</p>}
-          <button
-            type="submit"
-            disabled={emailBusy}
-            className="btn-primary w-full py-2"
-          >
-            {emailBusy ? 'Salvataggio…' : 'Aggiorna email'}
+          <button type="submit" disabled={emailBusy} className="btn-primary w-full py-2">
+            {emailBusy ? t('common.saving') : t('settings.updateEmail')}
           </button>
         </form>
 
-        {/* Change password */}
-        <form onSubmit={changePassword} className="space-y-3 card p-4">
-          <h2 className="font-display font-bold text-ember-cream">Cambia password</h2>
-          <SettingsField label="Nuova password" type="password" value={password} onChange={setPassword} />
-          <SettingsField label="Conferma password" type="password" value={password2} onChange={setPassword2} />
+        <form onSubmit={changePassword} className="card space-y-3 p-4">
+          <h3 className="font-display font-bold text-ember-cream">{t('settings.changePw')}</h3>
+          <SettingsField label={t('settings.newPw')} type="password" value={password} onChange={setPassword} />
+          <SettingsField label={t('settings.confirmPw')} type="password" value={password2} onChange={setPassword2} />
           {pwErr && <p className="text-sm text-ember-danger">{pwErr}</p>}
-          <button
-            type="submit"
-            disabled={pwBusy}
-            className="btn-primary w-full py-2"
-          >
-            {pwBusy ? 'Salvataggio…' : 'Aggiorna password'}
+          <button type="submit" disabled={pwBusy} className="btn-primary w-full py-2">
+            {pwBusy ? t('common.saving') : t('settings.updatePw')}
           </button>
         </form>
 
         {/* Danger zone — GDPR art. 17 self-service erasure */}
         <section className="space-y-3 rounded-card border border-ember-danger/40 bg-ember-card p-4">
-          <h2 className="font-display font-bold text-ember-danger">Elimina account</h2>
-          <p className="text-sm text-ember-muted">
-            Cancella definitivamente il tuo account e tutti i dati collegati (valutazioni, voti,
-            bar salvati). Operazione irreversibile.
-          </p>
+          <h3 className="font-display font-bold text-ember-danger">{t('settings.deleteTitle')}</h3>
+          <p className="text-sm text-ember-muted">{t('settings.deleteWarning')}</p>
           {delErr && <p className="text-sm text-ember-danger">{delErr}</p>}
           {!delConfirm ? (
             <button
@@ -192,11 +222,11 @@ export default function Settings() {
               onClick={() => setDelConfirm(true)}
               className="w-full rounded-lg border border-ember-danger py-2 font-semibold text-ember-danger"
             >
-              Elimina account
+              {t('settings.deleteTitle')}
             </button>
           ) : (
             <div className="space-y-2">
-              <p className="text-sm font-semibold text-ember-cream">Sei sicuro? Non si può annullare.</p>
+              <p className="text-sm font-semibold text-ember-cream">{t('settings.sure')}</p>
               <div className="flex gap-2">
                 <button
                   type="button"
@@ -204,7 +234,7 @@ export default function Settings() {
                   disabled={delBusy}
                   className="flex-1 rounded-lg border border-ember-line/10 py-2 font-semibold text-ember-cream disabled:opacity-50"
                 >
-                  Annulla
+                  {t('common.cancel')}
                 </button>
                 <button
                   type="button"
@@ -212,7 +242,7 @@ export default function Settings() {
                   disabled={delBusy}
                   className="btn flex-1 bg-ember-accent py-2 text-black"
                 >
-                  {delBusy ? 'Eliminazione…' : 'Conferma eliminazione'}
+                  {delBusy ? t('settings.deleting') : t('settings.confirmDelete')}
                 </button>
               </div>
             </div>
@@ -226,27 +256,18 @@ export default function Settings() {
 }
 
 function ThemeSection() {
+  const { t } = useI18n();
   const { theme, setTheme, themes } = useTheme();
   return (
     <section className="card p-4">
-      <h2 className="mb-3 font-display font-bold text-ember-cream">Tema</h2>
+      <h3 className="mb-3 font-display font-bold text-ember-cream">{t('settings.theme')}</h3>
       <div className="grid grid-cols-3 gap-2">
-        {themes.map((t) => {
-          const active = t.id === theme;
+        {themes.map((th) => {
+          const active = th.id === theme;
           return (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setTheme(t.id)}
-              aria-pressed={active}
-              className={`flex flex-col items-center gap-2 rounded-lg border p-3 transition-colors ${
-                active
-                  ? 'border-ember-primary bg-ember-primary/10'
-                  : 'border-ember-line/10 hover:border-ember-line/25'
-              }`}
-            >
+            <OptionTile key={th.id} active={active} onClick={() => setTheme(th.id)} className="flex flex-col items-center gap-2">
               <span className="flex -space-x-1.5">
-                {t.swatch.map((c) => (
+                {th.swatch.map((c) => (
                   <span
                     key={c}
                     className="h-5 w-5 rounded-full border border-ember-line/20"
@@ -254,12 +275,10 @@ function ThemeSection() {
                   />
                 ))}
               </span>
-              <span
-                className={`text-xs font-semibold ${active ? 'text-ember-ink' : 'text-ember-cream'}`}
-              >
-                {t.label}
+              <span className={`text-xs font-semibold ${active ? 'text-ember-ink' : 'text-ember-cream'}`}>
+                {th.label}
               </span>
-            </button>
+            </OptionTile>
           );
         })}
       </div>
@@ -270,34 +289,25 @@ function ThemeSection() {
 // Graphics quality: "simple" (default) turns off blur, the map filter and all
 // animations for old / low-end devices; "rich" restores the full look.
 function GraphicsSection() {
+  const { t } = useI18n();
   const { graphics, setGraphics } = useGraphics();
   const options = [
-    { id: 'simple', label: 'Semplice', hint: 'Ottimizzata per dispositivi vecchi o poco potenti' },
-    { id: 'rich', label: 'Completa', hint: 'Effetti, sfocature e animazioni complete' },
+    { id: 'simple', label: t('settings.gSimple'), hint: t('settings.gSimpleHint') },
+    { id: 'rich', label: t('settings.gRich'), hint: t('settings.gRichHint') },
   ];
   return (
     <section className="card p-4">
-      <h2 className="mb-3 font-display font-bold text-ember-cream">Grafica e animazioni</h2>
+      <h3 className="mb-3 font-display font-bold text-ember-cream">{t('settings.graphics')}</h3>
       <div className="grid grid-cols-2 gap-2">
         {options.map((o) => {
           const active = o.id === graphics;
           return (
-            <button
-              key={o.id}
-              type="button"
-              onClick={() => setGraphics(o.id)}
-              aria-pressed={active}
-              className={`flex flex-col gap-1 rounded-lg border p-3 text-left transition-colors ${
-                active
-                  ? 'border-ember-primary bg-ember-primary/10'
-                  : 'border-ember-line/10 hover:border-ember-line/25'
-              }`}
-            >
+            <OptionTile key={o.id} active={active} onClick={() => setGraphics(o.id)} className="flex flex-col gap-1">
               <span className={`text-sm font-semibold ${active ? 'text-ember-ink' : 'text-ember-cream'}`}>
                 {o.label}
               </span>
               <span className="text-xs text-ember-muted">{o.hint}</span>
-            </button>
+            </OptionTile>
           );
         })}
       </div>
@@ -308,6 +318,7 @@ function GraphicsSection() {
 // Maps-app preference for the "Indicazioni" button. Saved in localStorage
 // (shared with DirectionsButton via utils/directions.js). Not shown on Android.
 function MapsSection() {
+  const { t } = useI18n();
   const [provider, setP] = useState(getProvider);
   const options = [
     { id: 'google', label: 'Google Maps' },
@@ -319,25 +330,17 @@ function MapsSection() {
   }
   return (
     <section className="card p-4">
-      <h2 className="mb-1 font-display font-bold text-ember-cream">App per le indicazioni</h2>
-      <p className="mb-3 text-sm text-ember-muted">Con quale app aprire le indicazioni verso un locale.</p>
+      <h3 className="mb-1 font-display font-bold text-ember-cream">{t('settings.maps')}</h3>
+      <p className="mb-3 text-sm text-ember-muted">{t('settings.mapsHint')}</p>
       <div className="grid grid-cols-2 gap-2">
         {options.map((o) => {
           const active = o.id === provider;
           return (
-            <button
-              key={o.id}
-              type="button"
-              onClick={() => choose(o.id)}
-              aria-pressed={active}
-              className={`rounded-lg border p-3 text-sm font-semibold transition-colors ${
-                active
-                  ? 'border-ember-primary bg-ember-primary/10 text-ember-ink'
-                  : 'border-ember-line/10 text-ember-cream hover:border-ember-line/25'
-              }`}
-            >
-              {o.label}
-            </button>
+            <OptionTile key={o.id} active={active} onClick={() => choose(o.id)} className="text-center">
+              <span className={`text-sm font-semibold ${active ? 'text-ember-ink' : 'text-ember-cream'}`}>
+                {o.label}
+              </span>
+            </OptionTile>
           );
         })}
       </div>
@@ -348,24 +351,25 @@ function MapsSection() {
 // Current ad-consent state + a reset that reopens the global CookieBanner so
 // the user can pick again (a revoke after ads loaded triggers a reload in App).
 function CookieSection() {
+  const { t } = useI18n();
   const [choice, setChoice] = useState(getConsent);
   useEffect(() => onConsentChange(() => setChoice(getConsent())), []);
   const label =
     choice === 'granted'
-      ? 'Hai accettato: la pubblicità di Google è attiva.'
+      ? t('settings.cookieGranted')
       : choice === 'denied'
-        ? 'Hai rifiutato: nessuna pubblicità e nessun cookie pubblicitario.'
-        : 'Nessuna scelta ancora: nessuna pubblicità caricata.';
+        ? t('settings.cookieDenied')
+        : t('settings.cookieNone');
   return (
-    <section className="space-y-3 card p-4">
-      <h2 className="font-display font-bold text-ember-cream">Preferenze cookie</h2>
+    <section className="card space-y-3 p-4">
+      <h3 className="font-display font-bold text-ember-cream">{t('settings.cookie')}</h3>
       <p className="text-sm text-ember-muted">{label}</p>
       <button
         type="button"
         onClick={resetConsent}
         className="w-full rounded-lg border border-ember-line/10 py-2 font-semibold text-ember-cream"
       >
-        Modifica scelta
+        {t('settings.cookieChange')}
       </button>
     </section>
   );
@@ -374,6 +378,7 @@ function CookieSection() {
 // Toggle Web Push: chiede il permesso browser solo qui, registra/rimuove la
 // subscription sul backend. Nascosto se il browser non supporta il push.
 function PushSection() {
+  const { t } = useI18n();
   const [enabled, setEnabled] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState('');
@@ -396,7 +401,7 @@ function PushSection() {
         setEnabled(true);
       }
     } catch (e) {
-      setErr(e?.message || 'Operazione non riuscita');
+      setErr(e?.message || t('settings.pushErr'));
     } finally {
       setBusy(false);
     }
@@ -404,11 +409,8 @@ function PushSection() {
 
   return (
     <section className="card p-4">
-      <h2 className="mb-1 font-display font-bold text-ember-cream">Notifiche push</h2>
-      <p className="mb-3 text-sm text-ember-muted">
-        Ricevi una notifica quando chi segui pubblica un evento, quando un evento seguito cambia o
-        sta per iniziare.
-      </p>
+      <h3 className="mb-1 font-display font-bold text-ember-cream">{t('settings.push')}</h3>
+      <p className="mb-3 text-sm text-ember-muted">{t('settings.pushHint')}</p>
       {err && <p className="mb-2 text-sm text-ember-danger">{err}</p>}
       <button
         type="button"
@@ -421,7 +423,7 @@ function PushSection() {
             : 'border-ember-line/10 text-ember-cream'
         }`}
       >
-        {busy ? 'Un attimo…' : enabled ? 'Push attive — disattiva' : 'Attiva le notifiche push'}
+        {busy ? t('settings.pushWait') : enabled ? t('settings.pushOn') : t('settings.pushOff')}
       </button>
     </section>
   );
@@ -430,6 +432,7 @@ function PushSection() {
 // Stato richiesta organizzatore + form 3 domande. Un organizer approvato vede
 // la conferma; una richiesta pendente lo stato; un rifiuto la nota + retry.
 function OrganizerSection() {
+  const { t, dateLocale } = useI18n();
   const { user } = useAuth();
   const role = user?.role;
   const [req, setReq] = useState(undefined); // undefined = loading
@@ -445,11 +448,8 @@ function OrganizerSection() {
   if (role === 'organizer') {
     return (
       <section className="card p-4">
-        <h2 className="mb-1 font-display font-bold text-ember-cream">Account organizzatore</h2>
-        <p className="text-sm text-ember-muted">
-          Il tuo account è verificato: puoi pubblicare eventi e acquistare boost dalla scheda
-          Eventi.
-        </p>
+        <h3 className="mb-1 font-display font-bold text-ember-cream">{t('org.verifiedTitle')}</h3>
+        <p className="text-sm text-ember-muted">{t('org.verifiedBody')}</p>
       </section>
     );
   }
@@ -457,38 +457,33 @@ function OrganizerSection() {
 
   return (
     <section className="card p-4">
-      <h2 className="mb-1 font-display font-bold text-ember-cream">
-        Diventa organizzatore / PR
-      </h2>
+      <h3 className="mb-1 font-display font-bold text-ember-cream">{t('org.becomeTitle')}</h3>
 
       {req?.status === 'pending' && (
         <p className="text-sm text-ember-muted">
-          Richiesta inviata il {new Date(req.created_at).toLocaleDateString('it-IT')} — in attesa
-          di verifica da parte dello staff.
+          {t('org.pending', { date: new Date(req.created_at).toLocaleDateString(dateLocale) })}
         </p>
       )}
 
       {req?.status === 'rejected' && !showForm && (
         <div className="space-y-3">
           <p className="text-sm text-ember-muted">
-            La tua richiesta è stata rifiutata{req.admin_note ? `: "${req.admin_note}"` : '.'}
+            {t('org.rejected')}
+            {req.admin_note ? `: "${req.admin_note}"` : '.'}
           </p>
           <button
             type="button"
             onClick={() => setShowForm(true)}
             className="w-full rounded-lg border border-ember-line/10 py-2 font-semibold text-ember-cream"
           >
-            Riprova con nuove prove
+            {t('org.retry')}
           </button>
         </div>
       )}
 
       {(req === null || req?.status === 'approved' || showForm) && (
         <>
-          <p className="mb-4 text-sm text-ember-muted">
-            Pubblica gli eventi delle tue feste, fatti seguire e sponsorizza le serate in zona. Le
-            richieste vengono verificate manualmente dallo staff.
-          </p>
+          <p className="mb-4 text-sm text-ember-muted">{t('org.intro')}</p>
           <OrganizerRequestForm
             onDone={(r) => {
               setReq(r);

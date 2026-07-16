@@ -4,6 +4,7 @@ import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import { useAuth } from '../hooks/useAuth.js';
 import { supabase } from '../services/supabase.js';
+import { useI18n } from '../i18n/index.js';
 
 function fmt(ms) {
   const s = Math.max(0, Math.floor(ms / 1000));
@@ -24,6 +25,7 @@ function fmt(ms) {
 //                    betatester from the admin panel.
 // /login stays reachable so a privileged user can sign in.
 export default function Maintenance({ reason, eta, beta = false, pending = false }) {
+  const { t, dateLocale } = useI18n();
   const { user, logout } = useAuth();
   const etaMs = eta ? new Date(eta).getTime() : 0;
   const [now, setNow] = useState(Date.now());
@@ -66,19 +68,15 @@ export default function Maintenance({ reason, eta, beta = false, pending = false
             </span>
           </div>
           <h1 className="font-display text-2xl font-bold text-ember-cream">
-            Attendi l’approvazione di un moderatore
+            {t('maint.pendingTitle')}
           </h1>
-          <p className="mt-3 text-sm text-ember-muted">
-            Il tuo account è stato creato! rabar è in beta privata: un moderatore deve approvare
-            il tuo accesso prima che tu possa entrare. Di solito ci vuole poco — questa pagina si
-            sbloccherà da sola appena l’approvazione arriva.
-          </p>
+          <p className="mt-3 text-sm text-ember-muted">{t('maint.pendingBody')}</p>
           <button
             type="button"
             onClick={logout}
             className="mt-6 inline-block rounded-lg border border-ember-line/10 px-4 py-2 text-sm text-ember-muted hover:border-ember-primary/50 hover:text-ember-cream"
           >
-            Esci
+            {t('common.logout')}
           </button>
         </div>
       </div>
@@ -97,35 +95,33 @@ export default function Maintenance({ reason, eta, beta = false, pending = false
           </span>
         </div>
         <h1 className="font-display text-2xl font-bold text-ember-cream">
-          {beta ? 'Beta test in corso' : 'Sito in manutenzione'}
+          {beta ? t('maint.betaTitle') : t('maint.title')}
         </h1>
         <p className="mt-3 text-sm text-ember-muted">
-          {beta
-            ? 'rabar è in beta privata: l’accesso è momentaneamente riservato ai beta tester. Torna a trovarci per il lancio!'
-            : 'Stiamo effettuando lavori di manutenzione. Il sito è temporaneamente in sola lettura e alcune funzioni non sono disponibili.'}
+          {beta ? t('maint.betaBody') : t('maint.body')}
         </p>
 
         {reason && (
           <div className="mt-4 rounded-lg bg-ember-line/[0.03] p-3 text-left text-sm">
-            <div className="text-xs uppercase tracking-wide text-ember-muted">Motivo</div>
+            <div className="text-xs uppercase tracking-wide text-ember-muted">{t('maint.reason')}</div>
             <div className="mt-0.5 text-ember-cream">{reason}</div>
           </div>
         )}
 
         {etaMs > 0 && (
           <div className="mt-3 rounded-lg bg-ember-line/[0.03] p-3 text-sm">
-            <div className="text-xs uppercase tracking-wide text-ember-muted">Tempo stimato</div>
+            <div className="text-xs uppercase tracking-wide text-ember-muted">{t('maint.eta')}</div>
             {remaining > 0 ? (
               <>
                 <div className="mt-0.5 font-display text-lg font-bold tabular-nums text-ember-ink">
                   {fmt(remaining)}
                 </div>
                 <div className="text-xs text-ember-muted">
-                  ritorno previsto {new Date(etaMs).toLocaleString('it-IT')}
+                  {t('maint.expectedReturn', { date: new Date(etaMs).toLocaleString(dateLocale) })}
                 </div>
               </>
             ) : (
-              <div className="mt-0.5 text-ember-cream">A breve — grazie per la pazienza.</div>
+              <div className="mt-0.5 text-ember-cream">{t('maint.soon')}</div>
             )}
           </div>
         )}
@@ -134,7 +130,7 @@ export default function Maintenance({ reason, eta, beta = false, pending = false
           to="/login"
           className="mt-6 inline-block rounded-lg border border-ember-line/10 px-4 py-2 text-sm text-ember-muted hover:border-ember-primary/50 hover:text-ember-cream"
         >
-          {beta ? 'Sei un beta tester? Accedi' : 'Sei un amministratore? Accedi'}
+          {beta ? t('maint.betaLogin') : t('maint.adminLogin')}
         </Link>
       </div>
     </div>

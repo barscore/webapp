@@ -1,4 +1,5 @@
 import { Component } from 'react';
+import { t } from '../i18n/index.js';
 
 // Chunk-load failures after a redeploy: the old index.html (often held by the
 // service worker cache) points at asset hashes that no longer exist on the
@@ -66,12 +67,10 @@ export default class ErrorBoundary extends Component {
       <div className="grid min-h-[100dvh] place-items-center bg-ember-bg p-6 text-ember-cream">
         <div className="w-full max-w-md rounded-2xl border border-ember-line/10 bg-ember-card p-6 text-center">
           <h1 className="font-display text-xl font-bold">
-            {stale ? 'Aggiornamento in corso…' : 'Qualcosa è andato storto'}
+            {stale ? t('err.updating') : t('err.oops')}
           </h1>
           <p className="mt-2 text-sm text-ember-muted">
-            {stale
-              ? 'Sto ricaricando la versione aggiornata dell’app.'
-              : 'L’app ha riscontrato un errore imprevisto.'}
+            {stale ? t('err.stale') : t('err.generic')}
           </p>
           {!stale && (
             <pre className="mt-4 max-h-48 overflow-auto rounded-lg bg-ember-line/10 p-3 text-left text-xs text-ember-ink">
@@ -87,7 +86,7 @@ export default class ErrorBoundary extends Component {
             }}
             className="mt-5 inline-block rounded-lg border border-ember-line/10 px-4 py-2 text-sm hover:border-ember-primary/50"
           >
-            Ricarica l’app
+            {t('err.reload')}
           </button>
         </div>
       </div>

@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth.js';
+import { useI18n } from '../i18n/index.js';
 
 // "Continua con Google" — triggers Supabase OAuth redirect.
-export default function GoogleButton({ label = 'Continua con Google', disabled = false }) {
+export default function GoogleButton({ label, disabled = false }) {
+  const { t } = useI18n();
   const { loginWithGoogle } = useAuth();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -13,7 +15,7 @@ export default function GoogleButton({ label = 'Continua con Google', disabled =
     try {
       await loginWithGoogle();
     } catch (e) {
-      setError(e.message || 'Errore Google');
+      setError(e.message || t('auth.googleError'));
       setBusy(false);
     }
   }
@@ -22,7 +24,7 @@ export default function GoogleButton({ label = 'Continua con Google', disabled =
     <div>
       <div className="my-4 flex items-center gap-3 text-xs text-ember-muted">
         <span className="h-px flex-1 bg-ember-line/10" />
-        oppure
+        {t('common.or')}
         <span className="h-px flex-1 bg-ember-line/10" />
       </div>
       <button
@@ -32,7 +34,7 @@ export default function GoogleButton({ label = 'Continua con Google', disabled =
         className="flex w-full items-center justify-center gap-2 rounded-lg border border-ember-line/10 bg-ember-cream py-2 font-medium text-ember-bg disabled:opacity-50"
       >
         <GoogleIcon />
-        {busy ? 'Reindirizzamento…' : label}
+        {busy ? t('auth.redirecting') : label || t('auth.googleContinue')}
       </button>
       {error && <p className="mt-2 text-sm text-ember-danger">{error}</p>}
     </div>

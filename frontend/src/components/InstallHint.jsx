@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import Icon from './Icon.jsx';
 import { useAuth } from '../hooks/useAuth.js';
 import { tutorialSeen } from './TutorialSplash.jsx';
+import { useI18n } from '../i18n/index.js';
 
 // One-time "installa l'app" hint for mobile browsers. Three variants:
 //   iOS               — no install API: Safari Condividi → "Aggiungi alla
@@ -23,6 +24,22 @@ const isStandalone = () =>
   window.matchMedia('(display-mode: standalone)').matches ||
   window.navigator.standalone === true;
 
+// Bold-aware copy: dictionaries mark bold spans as **testo**.
+function B({ k }) {
+  const { t } = useI18n();
+  return t(k)
+    .split('**')
+    .map((part, i) =>
+      i % 2 ? (
+        <strong key={i} className="text-ember-cream">
+          {part}
+        </strong>
+      ) : (
+        part
+      ),
+    );
+}
+
 function Step({ n, children }) {
   return (
     <li className="flex items-start gap-2.5">
@@ -35,6 +52,7 @@ function Step({ n, children }) {
 }
 
 export default function InstallHint() {
+  const { t } = useI18n();
   const { loading } = useAuth();
   const [deferred, setDeferred] = useState(null); // saved beforeinstallprompt event
   const [open, setOpen] = useState(false);
@@ -92,7 +110,7 @@ export default function InstallHint() {
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Installa l'app"
+        aria-label={t('install.aria')}
         className="glass-flat fade-in w-full max-w-sm space-y-4 rounded-sheet p-5"
       >
         <div className="flex items-start justify-between gap-3">
@@ -101,43 +119,35 @@ export default function InstallHint() {
           </div>
           <button
             onClick={dismiss}
-            aria-label="Chiudi"
+            aria-label={t('common.close')}
             className="text-ember-muted hover:text-ember-cream"
           >
             <Icon name="close" size={18} />
           </button>
         </div>
 
-        <h2 className="font-display text-xl font-bold text-ember-cream">
-          Installa rabar sul telefono
-        </h2>
-        <p className="text-sm text-ember-muted">
-          Gratis e senza store: la avvii dalla schermata Home, a schermo intero, come una vera
-          app.
-        </p>
+        <h2 className="font-display text-xl font-bold text-ember-cream">{t('install.title')}</h2>
+        <p className="text-sm text-ember-muted">{t('install.body')}</p>
 
         {deferred ? null : isIos ? (
           <ol className="space-y-2 text-sm text-ember-muted">
             <Step n={1}>
-              Apri rabar in <strong className="text-ember-cream">Safari</strong>
+              <B k="install.ios1" />
             </Step>
             <Step n={2}>
-              Tocca <strong className="text-ember-cream">Condividi</strong>{' '}
-              <Icon name="share" size={14} className="text-ember-ink" />
+              <B k="install.ios2" /> <Icon name="share" size={14} className="text-ember-ink" />
             </Step>
             <Step n={3}>
-              Scegli{' '}
-              <strong className="text-ember-cream">Aggiungi alla schermata Home</strong>
+              <B k="install.ios3" />
             </Step>
           </ol>
         ) : (
           <ol className="space-y-2 text-sm text-ember-muted">
             <Step n={1}>
-              Apri il <strong className="text-ember-cream">menu del browser</strong> (⋮)
+              <B k="install.and1" />
             </Step>
             <Step n={2}>
-              Tocca <strong className="text-ember-cream">Installa app</strong> oppure{' '}
-              <strong className="text-ember-cream">Aggiungi a schermata Home</strong>
+              <B k="install.and2" />
             </Step>
           </ol>
         )}
@@ -148,7 +158,7 @@ export default function InstallHint() {
             onClick={dismiss}
             className="flex-1 rounded-lg border border-ember-line/10 py-2.5 text-sm font-semibold text-ember-muted hover:text-ember-cream"
           >
-            Non ora
+            {t('install.notNow')}
           </button>
           {deferred ? (
             <button
@@ -156,7 +166,7 @@ export default function InstallHint() {
               onClick={install}
               className="flex flex-1 items-center justify-center gap-2 rounded-lg bg-ember-primary py-2.5 text-sm font-semibold text-ember-on-primary active:scale-[0.98]"
             >
-              <Icon name="plus" size={16} /> Installa
+              <Icon name="plus" size={16} /> {t('install.install')}
             </button>
           ) : (
             <button
@@ -164,7 +174,7 @@ export default function InstallHint() {
               onClick={dismiss}
               className="btn-primary flex-1 py-2.5 text-sm active:scale-[0.98]"
             >
-              Ho capito
+              {t('install.gotIt')}
             </button>
           )}
         </div>

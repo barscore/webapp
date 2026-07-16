@@ -1,12 +1,11 @@
 import { useState } from 'react';
 import Icon from './Icon.jsx';
 import { organizerApi } from '../services/api.js';
+import { useI18n } from '../i18n/index.js';
 
-const TYPES = [
-  { id: 'pr', label: 'PR' },
-  { id: 'organizzatore', label: 'Organizzatore' },
-  { id: 'proprietario', label: 'Proprietario di attività' },
-];
+// Type labels come from the dictionaries (orf.type.<id>); channel labels are
+// proper nouns except volantinaggio/altro (orf.ch.<id>).
+const TYPES = ['pr', 'organizzatore', 'proprietario'];
 
 const CHANNELS = [
   ['instagram', 'Instagram'],
@@ -15,12 +14,13 @@ const CHANNELS = [
   ['telegram', 'Telegram'],
   ['whatsapp', 'WhatsApp'],
   ['tiktok', 'TikTok'],
-  ['volantinaggio', 'Volantinaggio'],
-  ['altro', 'Altro'],
+  ['volantinaggio', null],
+  ['altro', null],
 ];
 
 // Form richiesta account organizzatore/PR — le 3 domande di verifica.
 export default function OrganizerRequestForm({ onDone }) {
+  const { t } = useI18n();
   const [type, setType] = useState('pr');
   const [proof, setProof] = useState('');
   const [channels, setChannels] = useState(new Set(['instagram']));
@@ -40,10 +40,10 @@ export default function OrganizerRequestForm({ onDone }) {
 
   async function submit(e) {
     e.preventDefault();
-    if (proof.trim().length < 10) return setError('Descrivi la prova (almeno 10 caratteri)');
-    if (channels.size === 0) return setError('Seleziona almeno un canale');
-    if (channels.has('altro') && !other.trim()) return setError('Descrivi il canale "altro"');
-    if (collabs.trim().length < 5) return setError('Indica le collaborazioni degli ultimi 6 mesi');
+    if (proof.trim().length < 10) return setError(t('orf.proofRequired'));
+    if (channels.size === 0) return setError(t('orf.channelRequired'));
+    if (channels.has('altro') && !other.trim()) return setError(t('orf.otherRequired'));
+    if (collabs.trim().length < 5) return setError(t('orf.collabsRequired'));
     setBusy(true);
     setError('');
     try {
@@ -56,7 +56,7 @@ export default function OrganizerRequestForm({ onDone }) {
       });
       onDone?.(req);
     } catch (err) {
-      setError(err?.response?.data?.error || 'Invio non riuscito, riprova');
+      setError(err?.response?.data?.error || t('suggest.sendFailed'));
     } finally {
       setBusy(false);
     }
@@ -65,21 +65,21 @@ export default function OrganizerRequestForm({ onDone }) {
   return (
     <form onSubmit={submit} className="space-y-4">
       <div>
-        <p className="mb-2 text-sm font-semibold text-ember-cream">Tipo di account</p>
+        <p className="mb-2 text-sm font-semibold text-ember-cream">{t('orf.accountType')}</p>
         <div className="grid grid-cols-3 gap-2">
-          {TYPES.map((t) => (
+          {TYPES.map((id) => (
             <button
-              key={t.id}
+              key={id}
               type="button"
-              onClick={() => setType(t.id)}
-              aria-pressed={type === t.id}
+              onClick={() => setType(id)}
+              aria-pressed={type === id}
               className={`rounded-lg border p-2 text-xs font-semibold transition-colors ${
-                type === t.id
+                type === id
                   ? 'border-ember-primary bg-ember-primary/10 text-ember-ink'
                   : 'border-ember-line/10 text-ember-cream hover:border-ember-line/25'
               }`}
             >
-              {t.label}
+              {t(`orf.type.${id}`)}
             </button>
           ))}
         </div>
@@ -87,23 +87,21 @@ export default function OrganizerRequestForm({ onDone }) {
 
       <div>
         <label className="mb-1 block text-sm font-semibold text-ember-cream">
-          1. Dimostra che sei un PR/organizzatore
+          {t('orf.q1')}
         </label>
         <textarea
           value={proof}
           onChange={(e) => setProof(e.target.value)}
           maxLength={1000}
           rows={4}
-          placeholder={
-            'Es.: link a un evento passato con il tuo nome in locandina, screenshot delle liste/tavoli che gestisci, profilo Instagram con lo storico degli eventi, lettera o contratto del locale…'
-          }
+          placeholder={t('orf.q1Ph')}
           className="field resize-none py-2 text-sm"
         />
       </div>
 
       <div>
         <p className="mb-1 text-sm font-semibold text-ember-cream">
-          2. Con quali canali / gruppi sposti le persone?
+          {t('orf.q2')}
         </p>
         <div className="flex flex-wrap gap-1.5">
           {CHANNELS.map(([id, label]) => {
@@ -120,7 +118,7 @@ export default function OrganizerRequestForm({ onDone }) {
                     : 'border-ember-line/10 text-ember-muted hover:text-ember-cream'
                 }`}
               >
-                {label}
+                {label ?? t(`orf.ch.${id}`)}
               </button>
             );
           })}
@@ -130,7 +128,7 @@ export default function OrganizerRequestForm({ onDone }) {
             value={other}
             onChange={(e) => setOther(e.target.value)}
             maxLength={200}
-            placeholder="Quale altro canale?"
+            placeholder={t('orf.otherPh')}
             className="field mt-2 py-2 text-sm"
           />
         )}
@@ -138,14 +136,14 @@ export default function OrganizerRequestForm({ onDone }) {
 
       <div>
         <label className="mb-1 block text-sm font-semibold text-ember-cream">
-          3. Con quali locali/organizzatori hai collaborato negli ultimi 6 mesi?
+          {t('orf.q3')}
         </label>
         <textarea
           value={collabs}
           onChange={(e) => setCollabs(e.target.value)}
           maxLength={1000}
           rows={3}
-          placeholder="Nomi dei locali, organizzazioni o eventi, con periodo indicativo…"
+          placeholder={t('orf.q3Ph')}
           className="field resize-none py-2 text-sm"
         />
       </div>
@@ -154,7 +152,7 @@ export default function OrganizerRequestForm({ onDone }) {
 
       <button type="submit" disabled={busy} className="btn-primary w-full py-2">
         <Icon name={busy ? 'reload' : 'check'} size={16} className={busy ? 'animate-spin' : ''} />
-        {busy ? 'Invio…' : 'Invia richiesta'}
+        {busy ? t('common.sending') : t('orf.send')}
       </button>
     </form>
   );

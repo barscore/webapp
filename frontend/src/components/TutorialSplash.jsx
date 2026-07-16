@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import Icon from './Icon.jsx';
 import Logo from './Logo.jsx';
+import { useI18n } from '../i18n/index.js';
 
 // One-time onboarding splash: shown the first time the app is opened on this
 // device, signed in or not. Dismissal is remembered per device, so someone who
@@ -17,102 +18,81 @@ export function tutorialSeen() {
   return Object.keys(localStorage).some((k) => k.startsWith(LEGACY_PREFIX));
 }
 
+// Bold-aware copy: the dictionaries mark bold spans as **testo**.
+function B({ k }) {
+  const { t } = useI18n();
+  return t(k)
+    .split('**')
+    .map((part, i) => (i % 2 ? <strong key={i}>{part}</strong> : part));
+}
+
 const STEPS = [
   {
     icon: 'cocktail',
-    title: 'Benvenuto/a su rabar!',
+    title: 'tour.s1.title',
     body: (
       <>
-        <p>
-          La mappa dei bar valutata dalla community su cinque assi: prezzo, qualità drinks,
-          socialità, varietà e orari.
-        </p>
-        <p>Un tour veloce di 30 secondi per iniziare.</p>
+        <p><B k="tour.s1.p1" /></p>
+        <p><B k="tour.s1.p2" /></p>
       </>
     ),
   },
   {
     icon: 'edit',
-    title: 'Le valutazioni',
+    title: 'tour.s2.title',
     body: (
       <>
-        <p>
-          Apri un bar dalla mappa o dalla lista e tocca <strong>Valuta</strong>: cinque slider
-          da 1 a 5 più un commento opzionale. Una sola valutazione per bar.
-        </p>
+        <p><B k="tour.s2.p1" /></p>
         <p className="flex items-start gap-2">
           <Icon name="edit" size={16} className="mt-0.5 shrink-0 text-ember-ink" />
-          <span>
-            Per <strong>modificarla</strong>, riapri il bar già valutato e aggiorna gli slider.
-          </span>
+          <span><B k="tour.s2.p2" /></span>
         </p>
         <p className="flex items-start gap-2">
           <Icon name="trash" size={16} className="mt-0.5 shrink-0 text-ember-danger" />
-          <span>
-            Per <strong>eliminarla</strong>, usa il cestino nel form o la pagina{' '}
-            <strong>Le tue valutazioni</strong> dal menu.
-          </span>
+          <span><B k="tour.s2.p3" /></span>
         </p>
       </>
     ),
   },
   {
     icon: 'cocktail',
-    title: 'I drink',
+    title: 'tour.s3.title',
     body: (
       <>
-        <p>
-          In ogni scheda bar trovi <strong>I migliori drink qui</strong>: la classifica dei drink
-          votati dalla community in quel locale.
-        </p>
-        <p>
-          Tocca <strong>Valuta un drink</strong> e dai un voto da 1 a 5 stelle — un voto per drink
-          per bar, modificabile quando vuoi. Da una pagina drink puoi anche votarlo in un altro
-          bar.
-        </p>
-        <p>
-          Non trovi il tuo drink preferito? <strong>Proponilo</strong>: entra nel catalogo dopo
-          l’approvazione.
-        </p>
+        <p><B k="tour.s3.p1" /></p>
+        <p><B k="tour.s3.p2" /></p>
+        <p><B k="tour.s3.p3" /></p>
       </>
     ),
   },
   {
     iceCube: true,
-    title: 'Gli ice cubes',
+    title: 'tour.s4.title',
     body: (
       <>
         <p>
-          Ogni valutazione pubblicata ti fa guadagnare <strong>10 ice cubes</strong>{' '}
+          <B k="tour.s4.p1" />{' '}
           <img src="/icons/ice.png" alt="" className="inline-block h-4 w-4 object-contain align-text-bottom" />
-          . Più bar valuti, più ne accumuli.
+          <B k="tour.s4.p1b" />
         </p>
-        <p>
-          Il tuo totale è sempre visibile in alto nella mappa, e nella{' '}
-          <strong>Classifica</strong> vedi il tuo rank rispetto agli altri utenti.
-        </p>
+        <p><B k="tour.s4.p2" /></p>
       </>
     ),
   },
   {
     icon: 'search',
-    title: 'La barra di ricerca',
+    title: 'tour.s5.title',
     body: (
       <>
-        <p>
-          Cerca qualsiasi bar per nome, ovunque nel mondo: su mobile dal tab{' '}
-          <strong>Cerca</strong> in basso, su desktop dalla barra sempre visibile.
-        </p>
-        <p>
-          Bastano 2 lettere per avviare la ricerca; tocca un risultato per aprire la scheda del
-          bar.
-        </p>
+        <p><B k="tour.s5.p1" /></p>
+        <p><B k="tour.s5.p2" /></p>
       </>
     ),
   },
 ];
 
 export default function TutorialSplash() {
+  const { t } = useI18n();
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState(0);
 
@@ -137,17 +117,17 @@ export default function TutorialSplash() {
       className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-[3px]"
       role="dialog"
       aria-modal="true"
-      aria-label="Tutorial di benvenuto"
+      aria-label={t('tour.aria')}
     >
       <div className="glass-flat fade-in w-full max-w-sm space-y-4 rounded-sheet p-5">
         <div className="flex items-center justify-between">
           <Logo size="sm" />
           <button
             onClick={dismiss}
-            aria-label="Salta il tutorial"
+            aria-label={t('tour.skipAria')}
             className="text-sm text-ember-muted hover:text-ember-cream"
           >
-            Salta
+            {t('tour.skip')}
           </button>
         </div>
 
@@ -159,7 +139,7 @@ export default function TutorialSplash() {
           )}
         </div>
 
-        <h2 className="font-display text-xl font-bold text-ember-cream">{s.title}</h2>
+        <h2 className="font-display text-xl font-bold text-ember-cream">{t(s.title)}</h2>
         <div className="space-y-2 text-sm text-ember-muted">{s.body}</div>
 
         <div className="flex items-center justify-between pt-1">
@@ -177,7 +157,7 @@ export default function TutorialSplash() {
             {step > 0 && (
               <button
                 onClick={() => setStep(step - 1)}
-                aria-label="Passo precedente"
+                aria-label={t('tour.prevAria')}
                 className="rounded-lg bg-ember-bg p-2.5 text-ember-cream"
               >
                 <Icon name="arrow-left" size={16} />
@@ -189,11 +169,11 @@ export default function TutorialSplash() {
             >
               {last ? (
                 <>
-                  <Icon name="check" size={16} /> Inizia
+                  <Icon name="check" size={16} /> {t('tour.start')}
                 </>
               ) : (
                 <>
-                  Avanti <Icon name="arrow-right" size={16} />
+                  {t('tour.next')} <Icon name="arrow-right" size={16} />
                 </>
               )}
             </button>

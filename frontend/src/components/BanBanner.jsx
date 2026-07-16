@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../hooks/useAuth.js';
 import { supabase } from '../services/supabase.js';
 import Icon from './Icon.jsx';
+import { useI18n } from '../i18n/index.js';
 
 // Format ms → "2g 04h 13m 09s" (drops the day segment when 0).
 function fmt(ms) {
@@ -19,6 +20,7 @@ function fmt(ms) {
 // suspended. Reads own moderation state via the anon key (backend calls 403 for
 // these accounts). Closable; "Dettagli" reveals reason + a live countdown.
 export default function BanBanner() {
+  const { t, dateLocale } = useI18n();
   const { user } = useAuth();
   const [mod, setMod] = useState(null); // { banned, suspended_until, moderation_note }
   const [open, setOpen] = useState(false);
@@ -64,17 +66,17 @@ export default function BanBanner() {
         <div className="flex items-center gap-2">
           <Icon name="bell" size={18} className="shrink-0" />
           <span className="min-w-0 flex-1 text-sm font-semibold">
-            {banned ? 'Sei stato bannato' : 'Il tuo account è sospeso'}
+            {banned ? t('ban.banned') : t('ban.suspended')}
           </span>
           <button
             onClick={() => setOpen((o) => !o)}
             className="rounded-md bg-ember-line/20 px-2 py-1 text-xs font-semibold hover:bg-ember-line/30"
           >
-            {open ? 'Nascondi' : 'Dettagli'}
+            {open ? t('ban.hide') : t('ban.details')}
           </button>
           <button
             onClick={() => setDismissed(true)}
-            aria-label="Chiudi"
+            aria-label={t('common.close')}
             className="grid h-7 w-7 place-items-center rounded-md hover:bg-ember-line/20"
           >
             <Icon name="close" size={15} />
@@ -84,22 +86,22 @@ export default function BanBanner() {
         {open && (
           <div className="space-y-1 rounded-lg bg-black/15 p-2.5 text-sm">
             <div>
-              <span className="opacity-70">Motivo: </span>
-              {mod?.moderation_note || 'Nessun motivo fornito'}
+              <span className="opacity-70">{t('ban.reason')}</span>
+              {mod?.moderation_note || t('ban.noReason')}
             </div>
             {banned ? (
               <div>
-                <span className="opacity-70">Durata: </span>permanente (fino a sblocco da un
-                amministratore)
+                <span className="opacity-70">{t('ban.duration')}</span>
+                {t('ban.permanent')}
               </div>
             ) : (
               <>
                 <div>
-                  <span className="opacity-70">Riattivazione: </span>
-                  {new Date(suspendedUntil).toLocaleString('it-IT')}
+                  <span className="opacity-70">{t('ban.reactivation')}</span>
+                  {new Date(suspendedUntil).toLocaleString(dateLocale)}
                 </div>
                 <div className="font-display font-bold tabular-nums">
-                  Tra {fmt(suspendedUntil - now)}
+                  {t('ban.in', { t: fmt(suspendedUntil - now) })}
                 </div>
               </>
             )}

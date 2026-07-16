@@ -8,7 +8,7 @@ import { useI18n } from '../i18n/index.js';
 const TABS = [
   { id: 'vicini', icon: 'locate' },
   { id: 'salvati', icon: 'bookmark' },
-  { id: 'eventi', icon: 'bell' },
+  { id: 'eventi', icon: 'event' },
   { id: 'drinks', icon: 'cocktail' },
   { id: 'cerca', icon: 'search' },
 ];
@@ -44,8 +44,9 @@ export default function NavTabs({ tab, onTab, savedCount = 0, variant = 'bar', e
             <span className="relative">
               <Icon name={t.icon} size={20} />
               {/* Badge label is black: every theme's accent is a bright warm
-                  hue, where white text lands at 2–3:1 and black at 7:1+. */}
-              {t.id === 'salvati' && savedCount > 0 && (
+                  hue, where white text lands at 2–3:1 and black at 7:1+.
+                  Desktop rail only — the mobile bottom bar stays clean. */}
+              {rail && t.id === 'salvati' && savedCount > 0 && (
                 <span className="absolute -right-2 -top-2 min-w-[15px] rounded-full bg-ember-accent px-1 text-[10px] font-bold leading-[15px] text-black">
                   {savedCount}
                 </span>

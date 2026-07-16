@@ -4,6 +4,7 @@ import { organizerApi, eventsApi } from '../services/api.js';
 import Icon from './Icon.jsx';
 import EventComposer from './EventComposer.jsx';
 import BoostModal from './BoostModal.jsx';
+import { useI18n } from '../i18n/index.js';
 
 const FMT = new Intl.DateTimeFormat('it-IT', {
   weekday: 'short',
@@ -19,6 +20,7 @@ const BANNER_KEY = 'boost-banner-dismissed:v1';
 // "Crea evento" e gestione dei propri eventi (modifica/annulla/boost).
 // Per tutti gli altri ruoli non renderizza nulla.
 export default function OrganizerTools({ center, bars = [], onChanged }) {
+  const { t } = useI18n();
   const { role } = useAuth();
   const [composer, setComposer] = useState(null); // null | { event? }
   const [boost, setBoost] = useState(null); // null | { target, label }
@@ -47,7 +49,7 @@ export default function OrganizerTools({ center, bars = [], onChanged }) {
   }
 
   async function cancelEvent(ev) {
-    if (!window.confirm(`Annullare "${ev.title}"? I follower verranno avvisati.`)) return;
+    if (!window.confirm(t('ot.cancelConfirm', { title: ev.title }))) return;
     try {
       await eventsApi.remove(ev.id);
       setMine((list) =>
@@ -66,13 +68,12 @@ export default function OrganizerTools({ center, bars = [], onChanged }) {
         <div className="flex items-center gap-2.5 rounded-card border border-ember-primary/40 bg-ember-primary/10 p-3">
           <Icon name="euro" size={18} className="shrink-0 text-ember-ink" />
           <p className="min-w-0 flex-1 text-xs leading-snug text-ember-cream">
-            <b>Metti in evidenza le tue feste.</b> Con un boost il tuo evento appare in cima alla
-            lista con l'etichetta "Sponsorizzato".
+            <b>{t('ot.bannerTitle')}</b> {t('ot.bannerBody')}
           </p>
           <button
             type="button"
             onClick={dismissBanner}
-            aria-label="Chiudi"
+            aria-label={t('common.close')}
             className="shrink-0 text-ember-muted hover:text-ember-cream"
           >
             <Icon name="close" size={14} />
@@ -86,7 +87,7 @@ export default function OrganizerTools({ center, bars = [], onChanged }) {
           onClick={() => setComposer({})}
           className="btn-primary flex-1 py-2 text-sm"
         >
-          <Icon name="plus" size={15} /> Crea evento
+          <Icon name="plus" size={15} /> {t('ot.create')}
         </button>
         <button
           type="button"
@@ -94,7 +95,7 @@ export default function OrganizerTools({ center, bars = [], onChanged }) {
           aria-expanded={mineOpen}
           className="chip"
         >
-          <Icon name="star" size={15} className="text-ember-ink" /> I miei eventi
+          <Icon name="star" size={15} className="text-ember-ink" /> {t('ot.mine')}
           <Icon name={mineOpen ? 'chevron-up' : 'chevron-down'} size={13} />
         </button>
       </div>
@@ -102,7 +103,7 @@ export default function OrganizerTools({ center, bars = [], onChanged }) {
       {mineOpen && (
         <div className="card divide-y divide-ember-line/5 overflow-hidden">
           {mine.length === 0 && (
-            <p className="p-3 text-sm text-ember-muted">Non hai ancora pubblicato eventi.</p>
+            <p className="p-3 text-sm text-ember-muted">{t('ot.noneYet')}</p>
           )}
           {mine.map((ev) => (
             <div key={ev.id} className="flex items-center gap-2 p-3">
@@ -111,12 +112,12 @@ export default function OrganizerTools({ center, bars = [], onChanged }) {
                   {ev.title}
                   {ev.sponsored && (
                     <span className="ml-2 rounded-full bg-ember-primary/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ember-ink">
-                      Sponsorizzato
+                      {t('ev.sponsored')}
                     </span>
                   )}
                   {ev.cancelled_at && (
                     <span className="ml-2 rounded-full bg-ember-danger/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ember-danger">
-                      Annullato
+                      {t('ot.cancelled')}
                     </span>
                   )}
                 </p>
@@ -130,7 +131,7 @@ export default function OrganizerTools({ center, bars = [], onChanged }) {
                     <button
                       type="button"
                       onClick={() => setBoost({ target: { event_id: ev.id }, label: ev.title })}
-                      aria-label="Sponsorizza"
+                      aria-label={t('ot.boost')}
                       className="chip !px-2.5"
                     >
                       <Icon name="euro" size={14} className="text-ember-ink" />
@@ -139,7 +140,7 @@ export default function OrganizerTools({ center, bars = [], onChanged }) {
                   <button
                     type="button"
                     onClick={() => setComposer({ event: ev })}
-                    aria-label="Modifica"
+                    aria-label={t('common.edit')}
                     className="chip !px-2.5"
                   >
                     <Icon name="edit" size={14} className="text-ember-ink" />
@@ -147,7 +148,7 @@ export default function OrganizerTools({ center, bars = [], onChanged }) {
                   <button
                     type="button"
                     onClick={() => cancelEvent(ev)}
-                    aria-label="Annulla evento"
+                    aria-label={t('ot.cancelEvent')}
                     className="chip !px-2.5"
                   >
                     <Icon name="trash" size={14} className="text-ember-danger" />

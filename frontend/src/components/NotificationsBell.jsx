@@ -3,17 +3,14 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
 import { notificationsApi } from '../services/api.js';
 import Icon from './Icon.jsx';
+import { useI18n } from '../i18n/index.js';
 
-const FMT = new Intl.DateTimeFormat('it-IT', {
-  day: 'numeric',
-  month: 'short',
-  hour: '2-digit',
-  minute: '2-digit',
-});
+const FMT_OPTS = { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
 
 // Campanella con badge non lette + pannello inbox. Poll leggero (60s) mentre
 // l'app è aperta; l'apertura del pannello segna tutto come letto.
 export default function NotificationsBell() {
+  const { t, dateLocale } = useI18n();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
@@ -72,7 +69,7 @@ export default function NotificationsBell() {
       <button
         type="button"
         onClick={toggleOpen}
-        aria-label="Notifiche"
+        aria-label={t('notif.title')}
         className="glass press relative flex h-11 w-11 items-center justify-center rounded-full text-ember-cream transition-colors hover:text-ember-ink"
       >
         <Icon name="bell" size={20} />
@@ -86,10 +83,10 @@ export default function NotificationsBell() {
       {open && (
         <div className="glass-flat fade-in absolute right-0 z-[1400] mt-2 max-h-[60vh] w-72 overflow-y-auto rounded-lg2">
           <div className="border-b border-ember-line/5 px-3 py-2.5 font-display text-sm font-bold text-ember-cream">
-            Notifiche
+            {t('notif.title')}
           </div>
           {items.length === 0 && (
-            <p className="px-3 py-4 text-sm text-ember-muted">Nessuna notifica.</p>
+            <p className="px-3 py-4 text-sm text-ember-muted">{t('notif.empty')}</p>
           )}
           {items.map((n) => (
             <button
@@ -110,7 +107,7 @@ export default function NotificationsBell() {
                     </span>
                   )}
                   <span className="mt-1 block text-[10px] uppercase tracking-wide text-ember-muted/70">
-                    {FMT.format(new Date(n.created_at))}
+                    {new Intl.DateTimeFormat(dateLocale, FMT_OPTS).format(new Date(n.created_at))}
                   </span>
                 </span>
               </span>

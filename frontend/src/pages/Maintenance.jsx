@@ -132,6 +132,11 @@ export default function Maintenance({ reason, eta, beta = false, pending = false
         >
           {beta ? t('maint.betaLogin') : t('maint.adminLogin')}
         </Link>
+
+        <div className="mt-4 flex justify-center gap-4 text-xs text-ember-muted">
+          <Link to="/privacy" className="hover:text-ember-cream">{t('common.privacy')}</Link>
+          <Link to="/tos" className="hover:text-ember-cream">{t('common.terms')}</Link>
+        </div>
       </div>
     </div>
   );

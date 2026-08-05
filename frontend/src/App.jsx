@@ -77,12 +77,15 @@ export default function App() {
     };
   }, [location.pathname]);
 
-  // Lock screens. /login always stays open so a privileged user can sign in.
+  // Lock screens. /login always stays open so a privileged user can sign in;
+  // /privacy + /tos stay reachable too (legal notices must be public even
+  // while the app is locked).
   // The role loads async after the session — wait for it before gating, or a
   // signed-in betatester would flash the lock screen on every load.
   const roleReady = !isAuthenticated || role !== null;
   const canBeta = isAdmin || role === 'moderator' || role === 'betatester';
-  if (!loading && roleReady && location.pathname !== '/login') {
+  const alwaysOpen = ['/login', '/privacy', '/tos'].includes(location.pathname);
+  if (!loading && roleReady && !alwaysOpen) {
     // Maintenance: only admins pass (incl. /admin to flip it back off).
     if (maint?.maintenance_mode && !isAdmin) {
       return (

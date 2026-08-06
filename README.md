@@ -1,6 +1,6 @@
 # rabar 🍺
 
-Mappa interattiva dei bar con valutazioni comunitarie su **prezzo**, **qualità dell'alcol** e **socialità**.
+Mappa interattiva dei bar con valutazioni comunitarie su **prezzo**, **qualità dei drinks** e **socialità**.
 
 ## Tech Stack
 

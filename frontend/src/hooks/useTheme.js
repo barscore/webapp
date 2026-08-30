@@ -39,6 +39,12 @@ export const THEMES = [
     swatch: ['#F8F2E4', '#D6452C', '#E89005'],
     metaColor: '#D6452C',
   },
+  {
+    id: 'mar7yyy',
+    label: 'mar7yyy',
+    swatch: ['#FFEFDA', '#DC8665', '#534666'],
+    metaColor: '#DC8665',
+  },
 ];
 
 const DEFAULT_THEME = 'rabar';
@@ -54,6 +60,7 @@ const THEME_FONTS = {
   'gold-rush': 'family=Barlow+Condensed:wght@700;900&family=DM+Sans:wght@400;500;700',
   'electric-blue': 'family=Unbounded:wght@600;700&family=Karla:wght@400;500;700',
   aperitif: 'family=Archivo:wght@400;700;800&family=Instrument+Sans:wght@400;500;600;700',
+  mar7yyy: 'family=Playfair+Display:wght@700;800&family=Inter:wght@400;500;600;700',
 };
 
 export function getTheme() {

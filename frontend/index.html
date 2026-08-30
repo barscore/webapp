@@ -18,6 +18,7 @@
           'gold-rush': '#FFB800',
           'electric-blue': '#5B8CFF',
           aperitif: '#D6452C',
+          mar7yyy: '#DC8665',
         };
         if (themeColors[t]) {
           document.documentElement.dataset.theme = t;
@@ -37,6 +38,7 @@
         'gold-rush': 'family=Barlow+Condensed:wght@700;900&family=DM+Sans:wght@400;500;700',
         'electric-blue': 'family=Unbounded:wght@600;700&family=Karla:wght@400;500;700',
         aperitif: 'family=Archivo:wght@400;700;800&family=Instrument+Sans:wght@400;500;600;700',
+        mar7yyy: 'family=Playfair+Display:wght@700;800&family=Inter:wght@400;500;600;700',
       };
       var fontLink = document.createElement('link');
       fontLink.rel = 'stylesheet';
@@ -91,7 +93,7 @@
     <!-- Theme type systems: rabar = Syne + DM Sans · midnight-red = Space
          Grotesk + Source Sans 3 · gold-rush = Barlow Condensed + DM Sans ·
          electric-blue = Unbounded + Karla · aperitif = Archivo + Instrument
-         Sans. The stylesheet link (#rabar-fonts) is injected by the theme
+         Sans · mar7yyy = Playfair Display + Inter. The stylesheet link (#rabar-fonts) is injected by the theme
          bootstrap script above with only the active theme's families. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

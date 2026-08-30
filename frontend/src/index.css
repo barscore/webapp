@@ -174,6 +174,43 @@
   --shadow-3: 0 20px 50px -12px rgb(43 33 26 / 0.22);
 }
 
+/* MAR7YYY — la brand identity personale di Martino (vault AI/Claude/Brand-Identity).
+   Secondo tema chiaro: crema + terracotta con lo slate del marchio nelle hairline.
+   La terracotta non regge come TESTO su crema (2.8:1), quindi ink/danger usano il
+   secondary #934845, come dice la tavola dell'identità. */
+[data-theme='mar7yyy'] {
+  color-scheme: light;
+  --ember-bg: 255 239 218; /* #FFEFDA base, crema */
+  --ember-card: 253 248 251; /* #FDF8FB surface */
+  --ember-sheet: 255 247 236; /* #FFF7EC — fra crema e surface */
+  --ember-primary: 220 134 101; /* #DC8665 terracotta — campiture e bottoni */
+  --ember-accent: 238 180 98; /* #EEB462 warm gold — 11.3:1 col testo nero hardcoded */
+  --ember-cream: 29 27 29; /* #1D1B1D on-surface — il token "cream" è il testo */
+  --ember-muted: 73 69 77; /* #49454D on-surface variant — 8.9:1 su card */
+  --ember-line: 83 70 102; /* #534666 dark slate — la griglia del brand */
+  /* Il brand non ha un verde: si tiene quello scuro di aperitif (6.8:1 su card). */
+  --ember-good: 22 101 52; /* #166534 */
+  --ember-ink: 147 72 69; /* #934845 secondary — 6.2:1 su card, 5.7:1 su crema */
+  --ember-danger: 147 72 69; /* #934845 — l'oro come testo sarebbe 1.9:1 */
+  --ember-on-primary: 29 27 29; /* 5.3:1 sulla terracotta (il bianco sarebbe 3.2:1) */
+  --map-bg: #1b1622;
+  --map-filter: sepia(0.3) hue-rotate(-20deg) saturate(1.2) brightness(1.18)
+    contrast(1.1);
+  --font-display: 'Playfair Display', Georgia, serif;
+  --font-body: 'Inter', system-ui, sans-serif;
+
+  /* Vetro invertito come su aperitif: bordo slate, ombre slate, tinta più densa
+     perché i pannelli galleggiano sulla stessa mappa scura degli altri temi. */
+  --glass-alpha: 0.9;
+  --glass-blur: blur(14px) saturate(1.05);
+  --glass-edge: 83 70 102;
+  --glass-edge-a: 0.12;
+  --glass-hi: inset 0 1px 0 rgb(255 255 255 / 0.7);
+  --shadow-1: 0 1px 2px rgb(83 70 102 / 0.1);
+  --shadow-2: 0 8px 24px -6px rgb(83 70 102 / 0.16);
+  --shadow-3: 0 20px 50px -12px rgb(83 70 102 / 0.22);
+}
+
 html,
 body,
 #root {
@@ -556,10 +593,12 @@ input[type='range'].slider {
 }
 
 /* Chrome that sits DIRECTLY on the map (no surface behind it) must stay light:
-   the basemap is dark in every theme, but on the light "aperitif" theme
-   --ember-cream is espresso, so a bare wordmark there would be dark-on-dark.
-   Elements with their own surface (the glass buttons) are unaffected. */
-[data-theme='aperitif'] .on-map {
+   the basemap is dark in every theme, but on the light themes (aperitif,
+   mar7yyy) --ember-cream is the dark text color, so a bare wordmark there
+   would be dark-on-dark. Elements with their own surface (the glass buttons)
+   are unaffected. */
+[data-theme='aperitif'] .on-map,
+[data-theme='mar7yyy'] .on-map {
   --ember-cream: 255 255 255;
 }
 

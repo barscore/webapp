@@ -98,12 +98,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-    <!-- Warm up the map tile CDN (CARTO, subdomains a-d) so the first tiles
-         start downloading without a fresh DNS+TLS round-trip. -->
-    <link rel="preconnect" href="https://a.basemaps.cartocdn.com" />
-    <link rel="preconnect" href="https://b.basemaps.cartocdn.com" />
-    <link rel="dns-prefetch" href="https://c.basemaps.cartocdn.com" />
-    <link rel="dns-prefetch" href="https://d.basemaps.cartocdn.com" />
+    <!-- Warm up the OSM tile server so the first tiles start downloading
+         without a fresh DNS+TLS round-trip. -->
+    <link rel="preconnect" href="https://tile.openstreetmap.org" />
 
     <!-- Structured data: helps search engines understand the app. -->
     <script type="application/ld+json">

@@ -121,12 +121,14 @@ function Map({ bars = [], center, zoom = 14, userPos, selectedKey, focus, onSele
       scrollWheelZoom
       zoomControl={false}
     >
-      {/* Dark navy basemap (free CARTO tiles) — recolored to blue via CSS. */}
+      {/* Plain OpenStreetMap tiles: CARTO started watermarking its basemaps
+          with "API key required", and a key is not an option here. The tiles
+          are light — the .leaflet-tile-pane filter in index.css turns them
+          into the active theme's map (see --map-filter). */}
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-        subdomains="abcd"
-        maxZoom={20}
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+        maxZoom={19}
       />
       <ResizeFix />
       <Recenter center={center} zoom={zoom} />

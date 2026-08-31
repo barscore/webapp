@@ -47,10 +47,12 @@
   --ember-danger: 255 122 94; /* #FF7A5E — 5.41:1 on card */
   --ember-on-primary: 29 29 30; /* label inside a primary fill — 5.63:1 */
   --map-bg: #0e1626;
-  /* Legibility first: lift the dark CARTO tiles instead of crushing them —
-     higher brightness makes streets/labels readable, mild contrast only. */
-  --map-filter: sepia(0.35) hue-rotate(178deg) saturate(1.4) brightness(1.25)
-    contrast(1.12);
+  /* The basemap is plain OpenStreetMap, which is LIGHT. Every dark theme
+     rebuilds it: grayscale first (so forests and motorways stop fighting the
+     palette), invert, then sepia+hue-rotate to tint the result. brightness
+     stays near 1 — crushing it makes street labels unreadable. */
+  --map-filter: grayscale(1) invert(1) sepia(0.6) hue-rotate(190deg) saturate(1.8)
+    brightness(0.95) contrast(0.9);
   --font-display: 'Syne', system-ui, sans-serif;
   --font-body: 'DM Sans', system-ui, sans-serif;
 
@@ -85,8 +87,8 @@
   --ember-danger: 245 166 35; /* accent works as text here (8.22:1) */
   --ember-on-primary: 255 255 255; /* white on the rose fill — 4.79:1 (bg would be 4.05) */
   --map-bg: #14101c;
-  --map-filter: sepia(0.25) hue-rotate(215deg) saturate(1.25) brightness(1.22)
-    contrast(1.1);
+  --map-filter: grayscale(1) invert(1) sepia(0.6) hue-rotate(218deg) saturate(2.0)
+    brightness(0.95) contrast(0.9);
   --font-display: 'Space Grotesk', system-ui, sans-serif;
   --font-body: 'Source Sans 3', system-ui, sans-serif;
 }
@@ -106,8 +108,8 @@
   --ember-danger: 255 87 65; /* accent works as text here (5.31:1) */
   --ember-on-primary: 17 17 17; /* 10.89:1 */
   --map-bg: #101010;
-  --map-filter: grayscale(0.25) sepia(0.2) hue-rotate(5deg) saturate(1.15)
-    brightness(1.22) contrast(1.1);
+  --map-filter: grayscale(1) invert(1) sepia(0.6) hue-rotate(200deg) saturate(0.4)
+    brightness(0.95) contrast(0.9);
   --font-display: 'Barlow Condensed', system-ui, sans-serif;
   --font-body: 'DM Sans', system-ui, sans-serif;
 }
@@ -127,14 +129,14 @@
   --ember-danger: 255 107 74; /* accent works as text here (5.25:1) */
   --ember-on-primary: 10 14 22; /* 6.11:1 */
   --map-bg: #0a0e16;
-  --map-filter: sepia(0.35) hue-rotate(190deg) saturate(1.6) brightness(1.25)
-    contrast(1.12);
+  --map-filter: grayscale(1) invert(1) sepia(0.6) hue-rotate(185deg) saturate(2.6)
+    brightness(0.95) contrast(0.9);
   --font-display: 'Unbounded', system-ui, sans-serif;
   --font-body: 'Karla', system-ui, sans-serif;
 }
 
-/* APERITIF — brand kit "Aperitivo" (tema4.pdf). The only light theme: text
-   and hairlines flip to espresso; the map keeps the dark tiles per the kit. */
+/* APERITIF — brand kit "Aperitivo" (tema4.pdf). First light theme: text and
+   hairlines flip to espresso, and the map goes light with them. */
 [data-theme='aperitif'] {
   color-scheme: light;
   --ember-bg: 248 242 228; /* #F8F2E4 bg-base */
@@ -155,15 +157,15 @@
   /* Neither espresso (3.56) nor white (4.42) clears AA on the terracotta fill;
      black does (4.75). Keeps the brand primary itself untouched. */
   --ember-on-primary: 0 0 0;
-  --map-bg: #171210;
-  --map-filter: sepia(0.35) hue-rotate(-15deg) saturate(1.2) brightness(1.15)
-    contrast(1.1);
+  /* Light theme, light map: no inversion, just a warm wash over the OSM tiles. */
+  --map-bg: #efe6d2;
+  --map-filter: grayscale(0.5) sepia(0.4) hue-rotate(-12deg) saturate(1.0) brightness(1.02)
+    contrast(0.95);
   --font-display: 'Archivo', system-ui, sans-serif;
   --font-body: 'Instrument Sans', system-ui, sans-serif;
 
-  /* Glass inverts: espresso edge, warm shadows, and a denser tint — the panels
-     float over the SAME dark map as every other theme, so a light glass needs
-     more opacity to keep espresso text readable. */
+  /* Glass inverts: espresso edge, warm shadows, and a denser tint so espresso
+     text stays readable over whatever the map is showing underneath. */
   --glass-alpha: 0.9;
   --glass-blur: blur(14px) saturate(1.05);
   --glass-edge: 43 33 26;
@@ -193,14 +195,14 @@
   --ember-ink: 147 72 69; /* #934845 secondary — 6.2:1 su card, 5.7:1 su crema */
   --ember-danger: 147 72 69; /* #934845 — l'oro come testo sarebbe 1.9:1 */
   --ember-on-primary: 29 27 29; /* 5.3:1 sulla terracotta (il bianco sarebbe 3.2:1) */
-  --map-bg: #1b1622;
-  --map-filter: sepia(0.3) hue-rotate(-20deg) saturate(1.2) brightness(1.18)
-    contrast(1.1);
+  --map-bg: #fff3e2;
+  --map-filter: grayscale(0.5) sepia(0.28) hue-rotate(-28deg) saturate(1.15) brightness(1.02)
+    contrast(0.95);
   --font-display: 'Playfair Display', Georgia, serif;
   --font-body: 'Inter', system-ui, sans-serif;
 
   /* Vetro invertito come su aperitif: bordo slate, ombre slate, tinta più densa
-     perché i pannelli galleggiano sulla stessa mappa scura degli altri temi. */
+     perché il testo scuro deve restare leggibile su quello che c'è sotto. */
   --glass-alpha: 0.9;
   --glass-blur: blur(14px) saturate(1.05);
   --glass-edge: 83 70 102;
@@ -244,9 +246,11 @@ textarea,
   font-family: inherit;
 }
 
-/* Themed map: recolor the CARTO dark basemap toward the active palette.
-   Only the tile pane is filtered, so brand pins and the user-location dot
-   keep their real colors. */
+/* Themed map: the OSM basemap is light, so each theme's --map-filter is what
+   makes the map dark (or warm) and tints it toward the active palette. Only the
+   tile pane is filtered, so brand pins and the user-location dot keep their real
+   colors. Unlike the other visual effects this one is NOT optional — dropping it
+   would leave a dark theme with a white map. */
 .leaflet-tile-pane {
   filter: var(--map-filter);
 }
@@ -592,16 +596,6 @@ input[type='range'].slider {
   animation: none;
 }
 
-/* Chrome that sits DIRECTLY on the map (no surface behind it) must stay light:
-   the basemap is dark in every theme, but on the light themes (aperitif,
-   mar7yyy) --ember-cream is the dark text color, so a bare wordmark there
-   would be dark-on-dark. Elements with their own surface (the glass buttons)
-   are unaffected. */
-[data-theme='aperitif'] .on-map,
-[data-theme='mar7yyy'] .on-map {
-  --ember-cream: 255 255 255;
-}
-
 /* Browsers without backdrop-filter get the flat recipe — same look, no blur. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .glass {
@@ -638,14 +632,10 @@ input[type='range'].slider {
 /* ---------------------------------------------------------------------------
    Simple graphics mode — Impostazioni → Grafica: "Semplice" (the default).
    Low-end / old-device profile: drops the three GPU-heavy things at once —
-   the backdrop-filter blur on `.glass`, the map-tile CSS filter, and every
-   animation/transition (incl. the infinite pin pulse and skeleton shimmer).
+   the backdrop-filter blur on `.glass` and every animation/transition (incl. the infinite pin pulse and skeleton shimmer).
    Same recipes as the no-blur / reduced-motion fallbacks above, but user-
    selectable. Rich mode ([data-graphics='rich']) keeps the full visuals.
    These rules are unlayered so they win over the @layer components `.glass`. */
-:root[data-graphics='simple'] {
-  --map-filter: none;
-}
 :root[data-graphics='simple'] .glass {
   background: rgb(var(--glass) / 0.96);
   -webkit-backdrop-filter: none;

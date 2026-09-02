@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Map from '../components/Map.jsx';
 import BarRow from '../components/BarRow.jsx';
@@ -17,6 +17,8 @@ import ReportModal from '../components/ReportModal.jsx';
 import ProposeDrinkModal from '../components/ProposeDrinkModal.jsx';
 import { LanguageMenuRow } from '../components/LanguagePicker.jsx';
 import { useI18n } from '../i18n/index.js';
+import AdSlot from '../components/AdSlot.jsx';
+import { LIST_AD_EVERY } from '../services/adsense.js';
 
 // Lazy: loading BarSheet on first bar tap keeps the landing bundle small.
 const BarSheet = lazy(() => import('../components/BarSheet.jsx'));
@@ -24,6 +26,7 @@ import { placesApi, eventsApi, meApi, drinksApi } from '../services/api.js';
 import { barKey } from '../utils/score.js';
 import { openUntil23 } from '../utils/hours.js';
 import { useAuth } from '../hooks/useAuth.js';
+import PlusBadge from '../components/PlusBadge.jsx';
 import { useBookmarks } from '../hooks/useBookmarks.js';
 import { useSheetDrag, useIsMobile } from '../hooks/useSheetDrag.js';
 
@@ -350,8 +353,15 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
 
       {!loading && list.length > 0 && (
         <div className="stagger space-y-2.5 pb-2">
-          {list.map((bar) => (
-            <BarRow key={barKey(bar)} bar={bar} onSelect={onSelect} />
+          {list.map((bar, i) => (
+            <Fragment key={barKey(bar)}>
+              <BarRow bar={bar} onSelect={onSelect} />
+              {/* In-list ad every LIST_AD_EVERY rows, never right after the
+                  last one (an ad as the final row reads as a broken list). */}
+              {(i + 1) % LIST_AD_EVERY === 0 && i < list.length - 1 && (
+                <AdSlot name="list" className="rounded-card overflow-hidden" />
+              )}
+            </Fragment>
           ))}
         </div>
       )}
@@ -362,7 +372,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
 export default function Home() {
   const navigate = useNavigate();
   const { t, dateLocale } = useI18n();
-  const { isAuthenticated, isAdmin, user, logout } = useAuth();
+  const { isAuthenticated, isAdmin, user, logout, isPlus } = useAuth();
   const { has, count, savedBars } = useBookmarks();
   const isMobile = useIsMobile();
 
@@ -735,6 +745,7 @@ export default function Home() {
               <div className="border-b border-ember-line/5 px-3 py-3">
                 <div className="flex items-center gap-2 text-sm font-semibold text-ember-cream">
                   <Icon name="user" size={16} className="text-ember-ink" />@{user.username}
+                  <PlusBadge plus={isPlus} />
                 </div>
                 {profile?.email && (
                   <div className="mt-1 truncate text-xs text-ember-muted">{profile.email}</div>

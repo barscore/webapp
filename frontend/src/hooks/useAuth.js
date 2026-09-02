@@ -23,6 +23,8 @@ function toUser(sessionUser) {
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
+  // rabar+ expiry, from the same profile row as the role. Plus = in the future.
+  const [plusUntil, setPlusUntil] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -42,26 +44,32 @@ export function AuthProvider({ children }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  // App role lives in the profiles table (not the JWT). Load it when the user
-  // changes; RLS "profiles_select_all" allows reading with the anon key.
+  // App role and rabar+ entitlement live in the profiles table (not the JWT).
+  // Load them when the user changes; RLS lets a user read their own row.
+  const [plusTick, setPlusTick] = useState(0);
   useEffect(() => {
     if (!user) {
       setRole(null);
+      setPlusUntil(null);
       return;
     }
     let active = true;
     supabase
       .from('profiles')
-      .select('role')
+      .select('role, plus_until')
       .eq('id', user.id)
       .maybeSingle()
       .then(({ data }) => {
-        if (active) setRole(data?.role ?? 'user');
+        if (!active) return;
+        setRole(data?.role ?? 'user');
+        setPlusUntil(data?.plus_until ?? null);
       });
+    // `role !== null` is the "profile row has landed" signal used by the
+    // callers that must not act on a half-loaded session (theme lock, ads).
     return () => {
       active = false;
     };
-  }, [user]);
+  }, [user, plusTick]);
 
   // Email/password sign-in.
   async function login(email, password) {
@@ -96,12 +104,21 @@ export function AuthProvider({ children }) {
     setUser(null);
   }
 
+  // Re-read the profile row — used after a rabar+ checkout comes back, so the
+  // badge and the unlocked themes appear without a reload.
+  const refreshPlus = () => setPlusTick((n) => n + 1);
+
+  const isPlus = !!plusUntil && new Date(plusUntil) > new Date();
+
   const value = {
-    user: user ? { ...user, role } : null,
+    user: user ? { ...user, role, plus: isPlus } : null,
     role,
     loading,
     isAuthenticated: !!user,
     isAdmin: role === 'admin',
+    isPlus,
+    plusUntil,
+    refreshPlus,
     login,
     register,
     loginWithGoogle,

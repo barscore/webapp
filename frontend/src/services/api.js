@@ -2,7 +2,7 @@ import axios from 'axios';
 import { supabase } from './supabase.js';
 
 let baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
-// A bare host ("rabar-api.up.railway.app", no scheme) would be treated by
+// A bare host ("rabarbackend.vercel.app", no scheme) would be treated by
 // axios as a RELATIVE path and every call would silently hit the frontend's
 // own static server instead of the API. Force an absolute URL.
 if (!/^https?:\/\//i.test(baseURL)) baseURL = `https://${baseURL}`;
@@ -259,6 +259,15 @@ export const boostsApi = {
   tiers: () => api.get('/boosts/tiers').then((r) => expectArray(r.data.tiers, 'tiers')),
   checkout: (payload) => api.post('/boosts/checkout', payload).then((r) => r.data.url),
   session: (sid) => api.get(`/boosts/session/${sid}`).then((r) => r.data.order),
+};
+
+// rabar+ — abbonamento (badge "+", tutti i temi, niente pubblicità).
+// I prezzi arrivano dal server: il client manda solo il piano scelto.
+export const plusApi = {
+  plans: () => api.get('/plus/plans').then((r) => expectArray(r.data.plans, 'plusPlans')),
+  status: () => api.get('/plus/status').then((r) => r.data),
+  checkout: (plan) => api.post('/plus/checkout', { plan }).then((r) => r.data.url),
+  portal: () => api.post('/plus/portal').then((r) => r.data.url),
 };
 
 // Moderazione organizzatori (staff): richieste ruolo + rivendicazioni bar.

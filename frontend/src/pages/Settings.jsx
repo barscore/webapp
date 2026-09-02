@@ -7,6 +7,7 @@ import { supabase } from '../services/supabase.js';
 import { meApi, organizerApi } from '../services/api.js';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
+import PlusBadge from '../components/PlusBadge.jsx';
 import Toast from '../components/Toast.jsx';
 import OrganizerRequestForm from '../components/OrganizerRequestForm.jsx';
 import { LanguageSection } from '../components/LanguagePicker.jsx';
@@ -166,6 +167,7 @@ export default function Settings() {
 
         {/* ---- Preferenze ---- */}
         <GroupLabel icon="filters">{t('settings.groupPrefs')}</GroupLabel>
+        <PlusSection />
         <ThemeSection />
         <GraphicsSection />
         <LanguageSection />
@@ -255,18 +257,56 @@ export default function Settings() {
   );
 }
 
+// Riquadro rabar+: stato dell'abbonamento e ingresso alla pagina /plus.
+function PlusSection() {
+  const { t } = useI18n();
+  const { isPlus } = useAuth();
+  return (
+    <Link to="/plus" className="press card flex items-center gap-3 p-4">
+      <PlusBadge plus size="md" />
+      <span className="min-w-0 flex-1">
+        <span className="block font-display font-bold text-ember-cream">rabar+</span>
+        <span className="block text-xs text-ember-muted">
+          {isPlus ? t('plus.settingsActive') : t('plus.settingsPitch')}
+        </span>
+      </span>
+      <Icon name="arrow-right" size={15} className="shrink-0 text-ember-muted" />
+    </Link>
+  );
+}
+
 function ThemeSection() {
   const { t } = useI18n();
   const { theme, setTheme, themes } = useTheme();
+  const { isPlus } = useAuth();
+  const navigate = useNavigate();
   return (
     <section className="card p-4">
-      <h3 className="mb-3 font-display font-bold text-ember-cream">{t('settings.theme')}</h3>
+      <h3 className="mb-3 flex items-center gap-2 font-display font-bold text-ember-cream">
+        {t('settings.theme')}
+        {!isPlus && (
+          <span className="text-[11px] font-semibold normal-case text-ember-muted">
+            {t('plus.themesLocked')}
+          </span>
+        )}
+      </h3>
       <div className="grid grid-cols-3 gap-2">
         {themes.map((th) => {
           const active = th.id === theme;
+          // Palette bloccata: il tocco porta alla pagina rabar+ invece di
+          // applicare un tema che l'utente non ha.
+          const locked = th.plus && !isPlus;
           return (
-            <OptionTile key={th.id} active={active} onClick={() => setTheme(th.id)} className="flex flex-col items-center gap-2">
-              <span className="flex -space-x-1.5">
+            <OptionTile
+              key={th.id}
+              active={active}
+              onClick={() => (locked ? navigate('/plus') : setTheme(th.id))}
+              className="relative flex flex-col items-center gap-2"
+            >
+              {locked && (
+                <PlusBadge plus className="absolute right-1.5 top-1.5 opacity-80" />
+              )}
+              <span className={`flex -space-x-1.5 ${locked ? 'opacity-45' : ''}`}>
                 {th.swatch.map((c) => (
                   <span
                     key={c}

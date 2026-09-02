@@ -8,6 +8,7 @@ import RatingForm from '../components/RatingForm.jsx';
 import BarDrinksSection from '../components/BarDrinksSection.jsx';
 import DirectionsButton from '../components/DirectionsButton.jsx';
 import Icon from '../components/Icon.jsx';
+import PlusBadge from '../components/PlusBadge.jsx';
 import Toast from '../components/Toast.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import ClaimModal from '../components/ClaimModal.jsx';
@@ -20,6 +21,7 @@ import { shareBar } from '../utils/share.js';
 // that live only in OpenStreetMap until first visited.
 import { parseOsmToken } from '../utils/score.js';
 import { useI18n } from '../i18n/index.js';
+import AdSlot from '../components/AdSlot.jsx';
 
 const PAGE_SIZE = 10;
 
@@ -324,6 +326,7 @@ export default function BarDetail() {
                       <span className="flex items-center gap-1.5 font-medium text-ember-cream">
                         <Icon name="user" size={14} className="text-ember-muted" />
                         @{r.profiles?.username || t('common.user')}
+                        <PlusBadge plus={r.profiles?.plus} />
                       </span>
                       <span className="flex items-center gap-2 text-xs text-ember-ink">
                         <span className="flex items-center gap-0.5">
@@ -408,6 +411,8 @@ export default function BarDetail() {
             </div>
           )}
         </section>
+
+        <AdSlot name="bar" className="rounded-card overflow-hidden" />
       </div>
 
       {claimOpen && (

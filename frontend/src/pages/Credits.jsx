@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { usersApi } from '../services/api.js';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
+import PlusBadge from '../components/PlusBadge.jsx';
 import ProfileModal from '../components/ProfileModal.jsx';
 import { SkeletonRows } from '../components/Skeleton.jsx';
 import { useI18n } from '../i18n/index.js';
@@ -25,7 +26,10 @@ function PersonRow({ u, onOpen }) {
       className="press flex w-full items-center gap-3 rounded-card border border-ember-line/5 bg-ember-card p-3 text-left transition-colors hover:border-ember-primary/40"
     >
       <Avatar user={u} className="h-9 w-9" />
-      <span className="min-w-0 flex-1 truncate text-sm font-semibold text-ember-cream">@{u.username}</span>
+      <span className="flex min-w-0 flex-1 items-center gap-1.5 truncate text-sm font-semibold text-ember-cream">
+        <span className="truncate">@{u.username}</span>
+        <PlusBadge plus={u.plus} />
+      </span>
       <Icon name="arrow-right" size={14} className="shrink-0 text-ember-muted" />
     </button>
   );
@@ -84,8 +88,9 @@ export default function Credits() {
               <span className="flex items-center gap-4 rounded-[calc(var(--r-lg)-2px)] bg-ember-card px-4 py-4">
                 <Avatar user={data.founder} className="h-14 w-14" iconSize={26} />
                 <span className="min-w-0">
-                  <span className="block truncate font-display text-lg font-bold text-ember-cream">
-                    @{data.founder.username}
+                  <span className="flex items-center gap-1.5 truncate font-display text-lg font-bold text-ember-cream">
+                    <span className="truncate">@{data.founder.username}</span>
+                    <PlusBadge plus={data.founder.plus} size="md" />
                   </span>
                   <span className="mt-0.5 block text-xs font-bold uppercase tracking-[0.1em] text-ember-ink">
                     {t('credits.founder')}

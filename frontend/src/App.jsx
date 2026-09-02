@@ -9,6 +9,7 @@ import InstallHint from './components/InstallHint.jsx';
 import CookieBanner from './components/CookieBanner.jsx';
 import { loadAdsense, adsenseLoaded } from './services/adsense.js';
 import { consentGranted, onConsentChange } from './services/consent.js';
+import { enforcePlusTheme } from './hooks/useTheme.js';
 
 // Route-level code splitting: only Home (the landing map) ships in the initial
 // bundle; every other page loads on first navigation. Keeps heavy deps out of
@@ -26,26 +27,41 @@ const Tos = lazy(() => import('./pages/Tos.jsx'));
 const Credits = lazy(() => import('./pages/Credits.jsx'));
 const Maintenance = lazy(() => import('./pages/Maintenance.jsx'));
 const BoostResult = lazy(() => import('./pages/BoostResult.jsx'));
+const Plus = lazy(() => import('./pages/Plus.jsx'));
 
 // Blank dark screen while a lazy page chunk downloads (matches the app bg, so
 // no white flash).
 const Fallback = <div className="h-[100dvh] w-full bg-ember-bg" />;
 
 export default function App() {
-  const { isAdmin, role, isAuthenticated, loading } = useAuth();
+  const { isAdmin, role, isAuthenticated, loading, isPlus } = useAuth();
   const location = useLocation();
   const [maint, setMaint] = useState(null); // { maintenance_mode, maintenance_reason, maintenance_eta, beta_mode }
+
+  // The profile row (role + rabar+) lands after the session; act on it only
+  // once it's actually there, or a subscriber would get one frame of ads and a
+  // theme reset on every load.
+  const profileReady = !loading && (!isAuthenticated || role !== null);
 
   // AdSense strictly after consent (EU ePrivacy prior-blocking): no ad script,
   // no ad requests, no ad cookies until the user hits "Accetta". A revoke after
   // the script is already in the page needs a reload to actually drop it.
+  // rabar+ skips the loader entirely: no script, not just no visible units.
   useEffect(() => {
+    if (!profileReady) return;
+    if (isPlus) return;
     if (consentGranted()) loadAdsense();
     return onConsentChange(() => {
       if (consentGranted()) loadAdsense();
       else if (adsenseLoaded()) window.location.reload();
     });
-  }, []);
+  }, [profileReady, isPlus]);
+
+  // Themes beyond the default are a rabar+ perk: when the subscription lapses
+  // (or never existed) the app falls back to the default palette.
+  useEffect(() => {
+    if (profileReady) enforcePlusTheme(isPlus);
+  }, [profileReady, isPlus]);
 
   // Poll the maintenance/beta switches on every navigation so a non-admin user
   // gets locked out (and released) without a manual reload.
@@ -127,6 +143,7 @@ export default function App() {
         <Route path="/classifica" element={<Leaderboard />} />
         <Route path="/admin" element={<Admin />} />
         <Route path="/boost/esito" element={<BoostResult />} />
+        <Route path="/plus" element={<Plus />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/tos" element={<Tos />} />
         <Route path="/riconoscimenti" element={<Credits />} />

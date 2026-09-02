@@ -1,33 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Static routes. Replace https://rabar.app with your production domain. -->
+<!-- Static routes. Replace https://rabar.vercel.app with the real domain once one is registered. -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://rabar.app/</loc>
+    <loc>https://rabar.vercel.app/</loc>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://rabar.app/classifica</loc>
+    <loc>https://rabar.vercel.app/classifica</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://rabar.app/login</loc>
+    <loc>https://rabar.vercel.app/login</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://rabar.app/register</loc>
+    <loc>https://rabar.vercel.app/register</loc>
     <changefreq>monthly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://rabar.app/privacy</loc>
+    <loc>https://rabar.vercel.app/privacy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
   <url>
-    <loc>https://rabar.app/tos</loc>
+    <loc>https://rabar.vercel.app/tos</loc>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>

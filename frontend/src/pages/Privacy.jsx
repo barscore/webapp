@@ -45,7 +45,7 @@ function PrivacyIt() {
         <ul className="list-disc space-y-1 pl-5">
           <li>Fornire il servizio (esecuzione del contratto).</li>
           <li>Sicurezza, prevenzione spam e abusi (legittimo interesse).</li>
-          <li>Pubblicità tramite Google AdSense (solo con il tuo consenso).</li>
+          <li>Pubblicità tramite Google AdSense sul web e Google AdMob nelle app Android e iOS (solo con il tuo consenso).</li>
         </ul>
       </Section>
 
@@ -53,8 +53,11 @@ function PrivacyIt() {
         <p>
           Ci appoggiamo a: <strong>Supabase</strong> (autenticazione e database),{' '}
           <strong>OpenStreetMap</strong> / Overpass / Nominatim (mappe e ricerca luoghi),{' '}
-          <strong>Google AdSense</strong> (pubblicità, caricata solo dopo il tuo consenso).
-          Ciascun fornitore tratta i dati secondo la propria informativa.
+          <strong>Google AdSense</strong> (pubblicità sul web, caricata solo dopo il tuo
+          consenso) e <strong>Google AdMob</strong> (pubblicità nelle app Android e iOS, con
+          consenso raccolto dal form Google UMP; su iOS l'identificativo pubblicitario richiede
+          anche il permesso di tracciamento del sistema). Ciascun fornitore tratta i dati secondo
+          la propria informativa.
         </p>
       </Section>
 
@@ -129,7 +132,7 @@ function PrivacyEn() {
         <ul className="list-disc space-y-1 pl-5">
           <li>Providing the service (performance of the contract).</li>
           <li>Security, spam and abuse prevention (legitimate interest).</li>
-          <li>Advertising via Google AdSense (only with your consent).</li>
+          <li>Advertising via Google AdSense on the web and Google AdMob in the Android and iOS apps (only with your consent).</li>
         </ul>
       </Section>
 
@@ -137,8 +140,11 @@ function PrivacyEn() {
         <p>
           We rely on: <strong>Supabase</strong> (authentication and database),{' '}
           <strong>OpenStreetMap</strong> / Overpass / Nominatim (maps and place search),{' '}
-          <strong>Google AdSense</strong> (advertising, loaded only after your consent). Each
-          provider processes data under its own privacy policy.
+          <strong>Google AdSense</strong> (advertising on the web, loaded only after your
+          consent) and <strong>Google AdMob</strong> (advertising in the Android and iOS apps,
+          with consent collected by Google's UMP form; on iOS the advertising identifier also
+          requires the system tracking permission). Each provider processes data under its own
+          privacy policy.
         </p>
       </Section>
 

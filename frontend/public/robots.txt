@@ -5,4 +5,4 @@ Disallow: /admin
 Disallow: /impostazioni
 Disallow: /le-tue-valutazioni
 
-Sitemap: https://rabar.app/sitemap.xml
+Sitemap: https://rabar.vercel.app/sitemap.xml

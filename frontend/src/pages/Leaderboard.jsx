@@ -5,9 +5,11 @@ import { useAuth } from '../hooks/useAuth.js';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import ProfileModal from '../components/ProfileModal.jsx';
+import PlusBadge from '../components/PlusBadge.jsx';
 import { SkeletonRows } from '../components/Skeleton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { useI18n } from '../i18n/index.js';
+import AdSlot from '../components/AdSlot.jsx';
 
 // Ice-cube icon (colored png, not a sprite mask).
 function IceCube({ size = 16 }) {
@@ -55,8 +57,9 @@ function PodiumSpot({ u, rank, me, onOpen }) {
           {rank}
         </span>
       </span>
-      <span className="mt-1 w-full truncate text-sm font-semibold text-ember-cream">
-        @{u.username}
+      <span className="mt-1 flex w-full items-center justify-center gap-1 truncate text-sm font-semibold text-ember-cream">
+        <span className="truncate">@{u.username}</span>
+        <PlusBadge plus={u.plus} />
         {me && <span className="ml-1 text-[10px] text-ember-ink">{t('board.you')}</span>}
       </span>
       <span className="flex items-center gap-1 font-display text-sm font-bold tabular-nums text-ember-cream">
@@ -144,6 +147,8 @@ export default function Leaderboard() {
           </div>
         )}
 
+        {!loading && podium.length > 0 && <AdSlot name="board" className="rounded-card overflow-hidden" />}
+
         {!loading && rest.length > 0 && (
           <ol className="stagger space-y-2">
             {rest.map((u, i) => {
@@ -163,8 +168,9 @@ export default function Leaderboard() {
                       {i + 4}
                     </span>
                     <Avatar user={u} className="h-8 w-8" />
-                    <span className="min-w-0 flex-1 truncate text-ember-cream">
-                      @{u.username}
+                    <span className="flex min-w-0 flex-1 items-center gap-1 truncate text-ember-cream">
+                      <span className="truncate">@{u.username}</span>
+                      <PlusBadge plus={u.plus} />
                       {me && <span className="ml-1 text-xs text-ember-ink">{t('board.you')}</span>}
                     </span>
                     <span className="flex items-center gap-1 font-display font-bold tabular-nums text-ember-cream">

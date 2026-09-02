@@ -7,6 +7,8 @@ import { useEffect, useState } from 'react';
 
 const STORAGE_KEY = 'rabar-theme';
 
+// `plus: true` = theme reserved to rabar+ subscribers. The default theme is
+// always free, so an expired subscription can never leave the app themeless.
 export const THEMES = [
   {
     id: 'rabar',
@@ -14,33 +16,39 @@ export const THEMES = [
     // Swatches for the theme picker: [background, primary, accent].
     swatch: ['#1D1D1E', '#E07B1A', '#FF4F30'],
     metaColor: '#E07B1A',
+    plus: false,
   },
   {
     id: 'midnight-red',
+    plus: true,
     label: 'Midnight Red',
     swatch: ['#0F0C12', '#C94060', '#F5A623'],
     metaColor: '#C94060',
   },
   {
     id: 'gold-rush',
+    plus: true,
     label: 'Gold Rush',
     swatch: ['#111111', '#FFB800', '#FF5741'],
     metaColor: '#FFB800',
   },
   {
     id: 'electric-blue',
+    plus: true,
     label: 'Electric Blue',
     swatch: ['#0A0E16', '#5B8CFF', '#FF6B4A'],
     metaColor: '#5B8CFF',
   },
   {
     id: 'aperitif',
+    plus: true,
     label: 'Aperitif',
     swatch: ['#F8F2E4', '#D6452C', '#E89005'],
     metaColor: '#D6452C',
   },
   {
     id: 'mar7yyy',
+    plus: true,
     label: 'mar7yyy',
     swatch: ['#FFEFDA', '#DC8665', '#534666'],
     metaColor: '#DC8665',
@@ -49,6 +57,9 @@ export const THEMES = [
 
 const DEFAULT_THEME = 'rabar';
 const VALID_IDS = new Set(THEMES.map((t) => t.id));
+const PLUS_IDS = new Set(THEMES.filter((t) => t.plus).map((t) => t.id));
+
+export const isPlusTheme = (id) => PLUS_IDS.has(id);
 
 // Google Fonts query for each theme's two families (display + body, matching
 // index.css --font-display/--font-body). Only the active theme's fonts are
@@ -84,6 +95,25 @@ function applyTheme(id) {
   const fontLink = document.getElementById('rabar-fonts');
   const href = `https://fonts.googleapis.com/css2?${THEME_FONTS[id] || THEME_FONTS[DEFAULT_THEME]}&display=swap`;
   if (fontLink && fontLink.getAttribute('href') !== href) fontLink.setAttribute('href', href);
+}
+
+/**
+ * Drop a rabar+ theme when the subscription isn't (or is no longer) there.
+ * Called once the profile row has actually landed — acting on a half-loaded
+ * session would flash a subscriber back to the default theme on every load.
+ * Returns true if the theme was reset, so the caller can re-render.
+ */
+export function enforcePlusTheme(isPlus) {
+  if (isPlus) return false;
+  const current = getTheme();
+  if (!isPlusTheme(current)) return false;
+  applyTheme(DEFAULT_THEME);
+  try {
+    localStorage.setItem(STORAGE_KEY, DEFAULT_THEME);
+  } catch {
+    /* private mode */
+  }
+  return true;
 }
 
 export function useTheme() {

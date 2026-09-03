@@ -1,27 +1,34 @@
 import { useState } from 'react';
 import Icon from './Icon.jsx';
-import { organizerApi } from '../services/api.js';
+import ProofUpload from './ProofUpload.jsx';
+import { organizerApi, uploadProofs } from '../services/api.js';
 import { useI18n } from '../i18n/index.js';
 
-// "Sei il proprietario? Rivendica questo bar" — richiede account organizer.
-// L'approvazione (admin) assegna bars.owner_id e sblocca il boost del bar.
+// "Sei il proprietario? Rivendica questo bar" — aperta a ogni utente loggato:
+// è così che si diventa proprietario. L'approvazione (admin) assegna
+// bars.owner_id, promuove l'account a organizer/proprietario e sblocca il boost.
 export default function ClaimModal({ bar, onClose, onSent }) {
   const { t } = useI18n();
-  const [proof, setProof] = useState('');
+  const [files, setFiles] = useState([]);
+  const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
   async function submit(e) {
     e.preventDefault();
-    if (proof.trim().length < 10) return setError(t('orf.proofRequired'));
+    if (files.length === 0) return setError(t('proof.required'));
     setBusy(true);
     setError('');
     try {
-      await organizerApi.claimBar(bar.id, proof.trim());
+      const proof_files = await uploadProofs(files);
+      await organizerApi.claimBar(bar.id, {
+        proof_files,
+        note: note.trim() || undefined,
+      });
       onSent?.();
       onClose();
     } catch (err) {
-      setError(err?.response?.data?.error || t('suggest.sendFailed'));
+      setError(err?.response?.data?.error || t('proof.uploadFailed'));
     } finally {
       setBusy(false);
     }
@@ -35,11 +42,13 @@ export default function ClaimModal({ bar, onClose, onSent }) {
       <form
         onSubmit={submit}
         onClick={(e) => e.stopPropagation()}
-        className="glass-flat fade-in w-full max-w-md rounded-sheet p-5"
+        className="glass-flat fade-in max-h-[90vh] w-full max-w-md overflow-y-auto rounded-sheet p-5"
       >
         <div className="flex items-center gap-2">
           <Icon name="pin" size={20} className="text-ember-ink" />
-          <h3 className="font-display text-lg font-bold text-ember-cream">{t('claim.title', { name: bar.name })}</h3>
+          <h3 className="font-display text-lg font-bold text-ember-cream">
+            {t('claim.title', { name: bar.name })}
+          </h3>
           <button
             type="button"
             onClick={onClose}
@@ -51,14 +60,19 @@ export default function ClaimModal({ bar, onClose, onSent }) {
         </div>
         <p className="mt-1 text-sm text-ember-muted">{t('claim.intro')}</p>
 
-        <label className="mt-4 block text-xs text-ember-muted">{t('claim.proof')}</label>
+        <div className="mt-4">
+          <ProofUpload files={files} onChange={setFiles} disabled={busy} />
+        </div>
+
+        <label className="mt-4 block text-sm font-semibold text-ember-cream">
+          {t('claim.note')}
+        </label>
         <textarea
-          value={proof}
-          onChange={(e) => setProof(e.target.value)}
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
           maxLength={1000}
-          rows={4}
-          autoFocus
-          placeholder={t('claim.proofPh')}
+          rows={3}
+          placeholder={t('claim.notePh')}
           className="field mt-1 resize-none py-2 text-sm"
         />
 
@@ -66,7 +80,7 @@ export default function ClaimModal({ bar, onClose, onSent }) {
 
         <button type="submit" disabled={busy} className="btn-primary mt-4 w-full py-3">
           <Icon name={busy ? 'reload' : 'check'} size={18} className={busy ? 'animate-spin' : ''} />
-          {busy ? t('common.sending') : t('claim.send')}
+          {busy ? t('proof.uploading') : t('claim.send')}
         </button>
       </form>
     </div>

@@ -111,6 +111,38 @@ export const meApi = {
   deleteAccount: () => api.delete('/me').then((r) => r.data),
 };
 
+// Allegati di verifica (rivendicazione bar, richiesta PR/organizzatore).
+export const PROOF_EXTS = ['jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'pdf'];
+export const PROOF_ACCEPT = 'image/jpeg,image/png,image/webp,image/heic,image/heif,application/pdf';
+export const PROOF_MAX_FILES = 3;
+export const PROOF_MAX_BYTES = 8 * 1024 * 1024;
+
+const extOf = (name) => (name.split('.').pop() || '').toLowerCase();
+
+/**
+ * Carica i file di prova e restituisce i path da mandare col form.
+ * Il bucket è privato: il backend firma un upload URL per ogni file (path sotto
+ * la cartella dell'utente), qui si fa solo il PUT dei byte. Nessuna credenziale
+ * dello storage tocca il browser.
+ */
+export async function uploadProofs(files) {
+  const { data } = await api.post('/me/uploads/proof', {
+    files: [...files].map((f) => ({ ext: extOf(f.name) })),
+  });
+  const uploads = expectArray(data.uploads, 'proofUploads');
+  await Promise.all(
+    uploads.map(async (u, i) => {
+      const res = await fetch(u.url, {
+        method: 'PUT',
+        headers: { 'content-type': u.content_type },
+        body: files[i],
+      });
+      if (!res.ok) throw new Error(`upload ${res.status}`);
+    }),
+  );
+  return uploads.map((u) => u.path);
+}
+
 // Public ice-cube leaderboard (all users, ranked).
 export const leaderboardApi = {
   list: () => api.get('/leaderboard').then((r) => expectArray(r.data.leaderboard, 'leaderboard')),
@@ -230,8 +262,8 @@ export const organizerApi = {
     api.post('/me/organizer-request', payload).then((r) => r.data.request),
   myClaims: () => api.get('/me/claims').then((r) => expectArray(r.data.claims, 'claims')),
   myEvents: () => api.get('/me/events').then((r) => expectArray(r.data.events, 'myEvents')),
-  claimBar: (barId, proof) =>
-    api.post(`/bars/${barId}/claim`, { proof }).then((r) => r.data.claim),
+  claimBar: (barId, payload) =>
+    api.post(`/bars/${barId}/claim`, payload).then((r) => r.data.claim),
 };
 
 // Follow di eventi/organizzatori. PUT/DELETE idempotenti (toggle ottimistico).
@@ -256,7 +288,12 @@ export const pushApi = {
 
 // Boost sponsorizzati (Stripe Checkout). tiers è pubblico; checkout solo organizer.
 export const boostsApi = {
-  tiers: () => api.get('/boosts/tiers').then((r) => expectArray(r.data.tiers, 'tiers')),
+  // { tiers: [...], radius: { min_km, max_km, cents_per_km_per_day } }
+  tiers: () =>
+    api.get('/boosts/tiers').then((r) => ({
+      tiers: expectArray(r.data.tiers, 'tiers'),
+      radius: r.data.radius ?? null,
+    })),
   checkout: (payload) => api.post('/boosts/checkout', payload).then((r) => r.data.url),
   session: (sid) => api.get(`/boosts/session/${sid}`).then((r) => r.data.order),
 };

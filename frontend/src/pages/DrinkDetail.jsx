@@ -148,34 +148,46 @@ export default function DrinkDetail() {
             />
           ) : (
             <ol className="space-y-2">
-              {bars.map((b, i) => (
-                <li key={b.id}>
-                  <Link
-                    to={`/bar/${b.id}`}
-                    className="flex w-full items-center gap-3 rounded-2xl border border-ember-line/5 bg-ember-line/[0.03] px-3 py-3 transition hover:border-ember-line/10 hover:bg-ember-line/[0.06]"
-                  >
-                    <span className="w-7 shrink-0 text-center font-display text-lg font-extrabold tabular-nums text-ember-muted">
-                      {(page - 1) * PAGE_SIZE + i + 1}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block truncate font-display text-[15px] font-bold text-ember-cream">
-                        {b.name}
+              {bars.map((b, i) => {
+                // Sponsored bars sit on top with the tag and no rank number;
+                // the numbered ranking continues underneath them.
+                const rank = b.sponsored
+                  ? null
+                  : (page - 1) * PAGE_SIZE + bars.slice(0, i).filter((x) => !x.sponsored).length + 1;
+                return (
+                  <li key={b.id}>
+                    <Link
+                      to={`/bar/${b.id}`}
+                      className="flex w-full items-center gap-3 rounded-2xl border border-ember-line/5 bg-ember-line/[0.03] px-3 py-3 transition hover:border-ember-line/10 hover:bg-ember-line/[0.06]"
+                    >
+                      <span className="w-7 shrink-0 text-center font-display text-lg font-extrabold tabular-nums text-ember-muted">
+                        {rank ?? <Icon name="euro" size={14} className="mx-auto text-ember-ink" />}
                       </span>
-                      <span className="block truncate text-xs text-ember-muted">
-                        {[b.address, b.city].filter(Boolean).join(', ')}
-                        {b.distance_km != null && ` · ${b.distance_km} km`}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-display text-[15px] font-bold text-ember-cream">
+                          {b.sponsored && (
+                            <span className="mr-1.5 inline-block rounded-full bg-ember-primary/15 px-1.5 py-0.5 align-middle text-[9px] font-bold uppercase tracking-wide text-ember-ink">
+                              {t('ev.sponsored')}
+                            </span>
+                          )}
+                          {b.name}
+                        </span>
+                        <span className="block truncate text-xs text-ember-muted">
+                          {[b.address, b.city].filter(Boolean).join(', ')}
+                          {b.distance_km != null && ` · ${b.distance_km} km`}
+                        </span>
                       </span>
-                    </span>
-                    <span className="flex shrink-0 items-center gap-1 font-display text-base font-extrabold tabular-nums text-ember-ink">
-                      <Icon name="star" size={14} />
-                      {Number(b.avg_rating).toFixed(1)}
-                    </span>
-                    <span className="shrink-0 text-xs text-ember-muted">
-                      {b.total_ratings} {b.total_ratings === 1 ? t('common.vote') : t('common.votes')}
-                    </span>
-                  </Link>
-                </li>
-              ))}
+                      <span className="flex shrink-0 items-center gap-1 font-display text-base font-extrabold tabular-nums text-ember-ink">
+                        <Icon name="star" size={14} />
+                        {Number(b.avg_rating).toFixed(1)}
+                      </span>
+                      <span className="shrink-0 text-xs text-ember-muted">
+                        {b.total_ratings} {b.total_ratings === 1 ? t('common.vote') : t('common.votes')}
+                      </span>
+                    </Link>
+                  </li>
+                );
+              })}
             </ol>
           )}
 

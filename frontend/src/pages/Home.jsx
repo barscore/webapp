@@ -567,10 +567,15 @@ export default function Home() {
     if (tab === 'salvati') list = isAuthenticated ? savedBars : list.filter((b) => has(b.id));
     // Only show bars open at least until 23:00 local time. Venues whose
     // opening_hours are missing/unknown are kept (see openUntil23).
-    list = list.filter((b) => openUntil23(b.opening_hours));
+    // Sponsored bars are paid placement — never filtered out.
+    list = list.filter((b) => b.sponsored || openUntil23(b.opening_hours));
     // Optional filter: only bars rated by the community (drop the unrated).
-    if (ratedOnly) list = list.filter((b) => (b.total_ratings ?? 0) > 0);
-    return [...list].sort((a, b) => (a.distance_km ?? 1e9) - (b.distance_km ?? 1e9));
+    if (ratedOnly) list = list.filter((b) => b.sponsored || (b.total_ratings ?? 0) > 0);
+    return [...list].sort(
+      (a, b) =>
+        (b.sponsored ? 1 : 0) - (a.sponsored ? 1 : 0) ||
+        (a.distance_km ?? 1e9) - (b.distance_km ?? 1e9),
+    );
   }, [searchActive, searchResults, bars, tab, has, isAuthenticated, savedBars, ratedOnly]);
 
   // Fire the global bar search (debounced) whenever the query changes.

@@ -1027,18 +1027,39 @@ const ORG_FILTERS = [
   { v: 'all', label: 'Tutte' },
 ];
 
-const CHANNEL_LABELS = {
-  instagram: 'Instagram',
-  facebook: 'Facebook',
-  x: 'X',
-  telegram: 'Telegram',
-  whatsapp: 'WhatsApp',
-  tiktok: 'TikTok',
-  volantinaggio: 'Volantinaggio',
-  altro: 'Altro',
-};
+// Allegati di verifica: il backend manda signed URL a scadenza (bucket privato),
+// quindi qui si mostrano e basta. I PDF non hanno anteprima: si aprono.
+function Proofs({ items }) {
+  if (!items?.length) return <p className="text-sm text-ember-muted">Nessun allegato.</p>;
+  return (
+    <div className="flex flex-wrap gap-2">
+      {items.map((p) =>
+        p.pdf ? (
+          <a
+            key={p.path}
+            href={p.url}
+            target="_blank"
+            rel="noreferrer"
+            className="flex h-20 w-20 flex-col items-center justify-center gap-1 rounded-lg border border-ember-line/15 text-[10px] text-ember-cream hover:border-ember-primary/60"
+          >
+            <Icon name="link" size={18} className="text-ember-ink" />
+            PDF
+          </a>
+        ) : (
+          <a key={p.path} href={p.url} target="_blank" rel="noreferrer">
+            <img
+              src={p.url}
+              alt=""
+              className="h-20 w-20 rounded-lg border border-ember-line/15 object-cover"
+            />
+          </a>
+        ),
+      )}
+    </div>
+  );
+}
 
-// Richieste account organizzatore (form 3 domande) + rivendicazioni bar.
+// Richieste account PR/organizzatore + rivendicazioni bar (con allegati).
 function OrganizersTab({ notify }) {
   const [status, setStatus] = useState('pending');
   const [requests, setRequests] = useState([]);
@@ -1133,21 +1154,30 @@ function OrganizersTab({ notify }) {
                 {new Date(r.created_at).toLocaleDateString('it-IT')}
               </span>
             </div>
+            {r.collaborations && (
+              <>
+                <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-ember-muted">
+                  Collaborazioni
+                </p>
+                <p className="whitespace-pre-wrap text-sm text-ember-cream/90">
+                  {r.collaborations}
+                </p>
+              </>
+            )}
+            {r.note && (
+              <>
+                <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-ember-muted">
+                  Nota
+                </p>
+                <p className="whitespace-pre-wrap text-sm text-ember-cream/90">{r.note}</p>
+              </>
+            )}
             <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-ember-muted">
-              1 · Prova
+              Allegati
             </p>
-            <p className="whitespace-pre-wrap text-sm text-ember-cream/90">{r.proof}</p>
-            <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-ember-muted">
-              2 · Canali
-            </p>
-            <p className="text-sm text-ember-cream/90">
-              {(r.channels ?? []).map((ch) => CHANNEL_LABELS[ch] ?? ch).join(', ')}
-              {r.channels_other ? ` — ${r.channels_other}` : ''}
-            </p>
-            <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-ember-muted">
-              3 · Collaborazioni (ultimi 6 mesi)
-            </p>
-            <p className="whitespace-pre-wrap text-sm text-ember-cream/90">{r.collaborations}</p>
+            <div className="mt-1">
+              <Proofs items={r.proofs} />
+            </div>
             {r.admin_note && (
               <p className="mt-1 text-xs text-ember-muted">Nota: {r.admin_note}</p>
             )}
@@ -1181,7 +1211,15 @@ function OrganizersTab({ notify }) {
                 {new Date(cl.created_at).toLocaleDateString('it-IT')}
               </span>
             </div>
-            <p className="mt-2 whitespace-pre-wrap text-sm text-ember-cream/90">{cl.proof}</p>
+            {cl.note && (
+              <p className="mt-2 whitespace-pre-wrap text-sm text-ember-cream/90">{cl.note}</p>
+            )}
+            <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-ember-muted">
+              Allegati
+            </p>
+            <div className="mt-1">
+              <Proofs items={cl.proofs} />
+            </div>
             {cl.admin_note && (
               <p className="mt-1 text-xs text-ember-muted">Nota: {cl.admin_note}</p>
             )}

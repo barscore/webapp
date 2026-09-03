@@ -11,8 +11,7 @@ import Icon from '../components/Icon.jsx';
 import PlusBadge from '../components/PlusBadge.jsx';
 import Toast from '../components/Toast.jsx';
 import EmptyState from '../components/EmptyState.jsx';
-import ClaimModal from '../components/ClaimModal.jsx';
-import BoostModal from '../components/BoostModal.jsx';
+import BarOwnerActions from '../components/BarOwnerActions.jsx';
 import { barsApi, ratingsApi } from '../services/api.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { useBookmarks } from '../hooks/useBookmarks.js';
@@ -42,8 +41,6 @@ export default function BarDetail() {
   const [showInfo, setShowInfo] = useState(false);
   const [helpful, setHelpful] = useState({});
   const [toast, setToast] = useState(null);
-  const [claimOpen, setClaimOpen] = useState(false);
-  const [boostOpen, setBoostOpen] = useState(false);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -182,7 +179,7 @@ export default function BarDetail() {
           <div className="min-w-0">
             {bar.sponsored && (
               <span className="mb-1 inline-block rounded-full bg-ember-primary/15 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ember-ink">
-                Sponsorizzato
+                {t('ev.sponsored')}
               </span>
             )}
             <h1 className="font-display text-[30px] font-extrabold leading-tight tracking-tight text-ember-cream">
@@ -209,21 +206,13 @@ export default function BarDetail() {
             </a>
           )}
           <DirectionsButton bar={bar} />
-          {user?.role === 'organizer' && bar.owner_id === user.id && (
-            <button onClick={() => setBoostOpen(true)} className="chip">
-              <Icon name="euro" size={15} className="text-ember-ink" /> Boost
-            </button>
-          )}
-          {user?.role === 'organizer' && !bar.owner_id && (
-            <button onClick={() => setClaimOpen(true)} className="chip">
-              <Icon name="pin" size={15} className="text-ember-ink" /> Sei il proprietario?
-            </button>
-          )}
           <button onClick={() => setShowInfo((o) => !o)} aria-expanded={showInfo} className="chip">
             <Icon name="info" size={15} className="text-ember-ink" /> {t('bar.info')}
             <Icon name={showInfo ? 'chevron-up' : 'chevron-down'} size={13} />
           </button>
         </div>
+
+        <BarOwnerActions bar={bar} onToast={setToast} />
 
         {showInfo && (
           <div className="card space-y-1 p-4 text-sm text-ember-muted">
@@ -415,20 +404,6 @@ export default function BarDetail() {
         <AdSlot name="bar" className="rounded-card overflow-hidden" />
       </div>
 
-      {claimOpen && (
-        <ClaimModal
-          bar={bar}
-          onClose={() => setClaimOpen(false)}
-          onSent={() => setToast({ msg: 'Rivendicazione inviata, ti avvisiamo noi', icon: 'check' })}
-        />
-      )}
-      {boostOpen && (
-        <BoostModal
-          target={{ bar_id: bar.id }}
-          label={bar.name}
-          onClose={() => setBoostOpen(false)}
-        />
-      )}
       <Toast message={toast?.msg} icon={toast?.icon} onDone={() => setToast(null)} />
     </div>
   );

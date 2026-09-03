@@ -1,31 +1,52 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Icon from './Icon.jsx';
 import { boostsApi } from '../services/api.js';
 import { useI18n } from '../i18n/index.js';
 
 const euros = (cents) => `€${(cents / 100).toFixed(2).replace('.', ',')}`;
 
-// Scelta durata boost → redirect a Stripe Checkout. `target` è
-// { event_id } oppure { bar_id }; `label` è il nome di ciò che si booststa.
+// Scelta durata boost (+ raggio, per i bar) → redirect a Stripe Checkout.
+// `target` è { event_id } oppure { bar_id }; `label` è il nome di ciò che si
+// boostsa. Per i bar l'owner sceglie anche un raggio di visibilità 1..50 km:
+// il bar comparirà in lista (e primo) per chi è entro quella distanza.
 export default function BoostModal({ target, label, onClose }) {
   const { t } = useI18n();
+  const isBar = !!target.bar_id;
   const [tiers, setTiers] = useState([]);
+  const [radiusCfg, setRadiusCfg] = useState(null);
   const [tier, setTier] = useState('7d');
+  const [radius, setRadius] = useState(15);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     boostsApi
       .tiers()
-      .then(setTiers)
+      .then(({ tiers, radius }) => {
+        setTiers(tiers);
+        setRadiusCfg(radius);
+      })
       .catch(() => setError(t('boost.errPrices')));
   }, []);
+
+  const selected = tiers.find((tr) => tr.tier === tier);
+
+  const surcharge = useMemo(() => {
+    if (!isBar || !radiusCfg || !selected) return 0;
+    return Math.round(radiusCfg.cents_per_km_per_day * radius * selected.days);
+  }, [isBar, radiusCfg, selected, radius]);
+
+  const total = (selected?.amount_cents ?? 0) + surcharge;
 
   async function checkout() {
     setBusy(true);
     setError('');
     try {
-      const url = await boostsApi.checkout({ tier, ...target });
+      const url = await boostsApi.checkout({
+        tier,
+        ...target,
+        ...(isBar ? { sponsor_radius_km: radius } : {}),
+      });
       window.location.assign(url); // Stripe Checkout
     } catch (err) {
       setError(err?.response?.data?.error || t('boost.errCheckout'));
@@ -83,6 +104,39 @@ export default function BoostModal({ target, label, onClose }) {
             );
           })}
         </div>
+
+        {isBar && radiusCfg && (
+          <div className="mt-4">
+            <div className="flex items-baseline justify-between">
+              <label htmlFor="boost-radius" className="text-sm font-semibold text-ember-cream">
+                {t('boost.radiusLabel')}
+              </label>
+              <span className="font-display text-sm font-bold tabular-nums text-ember-ink">
+                {t('boost.radiusValue', { n: radius })}
+              </span>
+            </div>
+            <input
+              id="boost-radius"
+              type="range"
+              min={radiusCfg.min_km}
+              max={radiusCfg.max_km}
+              step={1}
+              value={radius}
+              onChange={(e) => setRadius(Number(e.target.value))}
+              className="mt-2 w-full accent-ember-primary"
+            />
+            <p className="mt-1 text-[11px] text-ember-muted">{t('boost.radiusHint')}</p>
+          </div>
+        )}
+
+        {selected && (
+          <div className="mt-4 flex items-baseline justify-between border-t border-ember-line/10 pt-3">
+            <span className="text-sm text-ember-muted">{t('boost.total')}</span>
+            <span className="font-display text-xl font-bold tabular-nums text-ember-cream">
+              {euros(total)}
+            </span>
+          </div>
+        )}
 
         {error && <p className="mt-3 text-sm text-ember-danger">{error}</p>}
 

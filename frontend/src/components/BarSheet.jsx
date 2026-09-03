@@ -11,6 +11,7 @@ import Icon from './Icon.jsx';
 import PlusBadge from './PlusBadge.jsx';
 import Toast from './Toast.jsx';
 import EmptyState from './EmptyState.jsx';
+import BarOwnerActions from './BarOwnerActions.jsx';
 import { barsApi, ratingsApi } from '../services/api.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { useBookmarks } from '../hooks/useBookmarks.js';
@@ -219,6 +220,8 @@ export default function BarSheet({ seed, onClose, onChanged }) {
                   <Icon name="share" size={15} />
                 </button>
               </div>
+
+              <BarOwnerActions bar={bar} onToast={setToast} />
 
               {showInfo && (
                 <div className="card space-y-1 p-4 text-sm text-ember-muted">

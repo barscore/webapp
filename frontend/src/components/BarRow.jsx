@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Pin from './Pin.jsx';
 import ScoreBadge from './ScoreBadge.jsx';
 import { scoreMeta, barKey, isDisco } from '../utils/score.js';
+import { useI18n } from '../i18n/index.js';
 
 // Bottom-sheet list row: band-tinted thumbnail · name + meta · score badge.
 // Tapping opens the bar sheet (Home passes onSelect). Falls back to navigating
@@ -12,6 +13,7 @@ import { scoreMeta, barKey, isDisco } from '../utils/score.js';
 // browser skip layout/paint for off-screen rows on long lists.
 function BarRow({ bar, onSelect }) {
   const navigate = useNavigate();
+  const { t } = useI18n();
   const meta = scoreMeta(bar);
   const { variant, tint, hasReviews } = meta;
   const cover = bar.cover_image_url || bar.bar_images?.[0]?.url;
@@ -43,7 +45,7 @@ function BarRow({ bar, onSelect }) {
         <h3 className="truncate font-display text-[16px] font-bold leading-tight text-ember-cream">
           {bar.sponsored && (
             <span className="mr-1.5 inline-block rounded-full bg-ember-primary/15 px-1.5 py-0.5 align-middle text-[9px] font-bold uppercase tracking-wide text-ember-ink">
-              Sponsorizzato
+              {t('ev.sponsored')}
             </span>
           )}
           {bar.name}

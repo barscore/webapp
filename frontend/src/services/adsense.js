@@ -17,6 +17,27 @@ export const SLOTS = {
   board: import.meta.env.VITE_ADSENSE_SLOT_BOARD,
 };
 
+// Ogni unità vuole il SUO markup: una In-feed senza `data-ad-layout-key` e una
+// In-article senza `data-ad-layout` non sono l'unità che hai creato, e Google
+// non riempie il posto. Le chiavi le dà AdSense insieme allo slot id.
+//   list  — In-feed, riga dentro l'elenco bar
+//   bar   — In-article, in fondo alla scheda del bar
+//   board — Display responsive, sotto il podio della classifica
+export const AD_UNITS = {
+  list: {
+    'data-ad-format': 'fluid',
+    'data-ad-layout-key': import.meta.env.VITE_ADSENSE_LAYOUT_KEY_LIST,
+  },
+  bar: {
+    'data-ad-format': 'fluid',
+    'data-ad-layout': 'in-article',
+  },
+  board: {
+    'data-ad-format': 'auto',
+    'data-full-width-responsive': 'true',
+  },
+};
+
 // How many bar rows between two in-list ads.
 export const LIST_AD_EVERY = 6;
 

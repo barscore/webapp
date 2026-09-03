@@ -491,7 +491,7 @@ export default {
   'plus.renews': '{date} 续订',
   'plus.endsOn': '有效期至 {date}，之后不再续订',
   'plus.manage': '管理订阅',
-  'plus.legal': '由 Stripe 处理付款。自动续订，可随时在管理门户取消。',
+  'plus.legal': '价格含增值税。由 Stripe 处理付款。自动续订，可随时在管理门户取消。',
   'plus.pendingBody': '已收到付款，正在开通 rabar+…',
   'plus.errPlans': '无法加载订阅方案',
   'plus.errCheckout': '无法开始付款',

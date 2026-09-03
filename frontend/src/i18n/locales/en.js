@@ -491,7 +491,7 @@ export default {
   'plus.renews': 'Renews on {date}',
   'plus.endsOn': 'Active until {date}, then it stops',
   'plus.manage': 'Manage subscription',
-  'plus.legal': 'Payment handled by Stripe. Renews automatically, cancel anytime from the billing portal.',
+  'plus.legal': 'Prices include VAT. Payment handled by Stripe. Renews automatically, cancel anytime from the billing portal.',
   'plus.pendingBody': 'Payment received, activating rabar+…',
   'plus.errPlans': 'Could not load the plans',
   'plus.errCheckout': 'Could not start the payment',

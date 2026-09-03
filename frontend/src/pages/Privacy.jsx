@@ -11,8 +11,8 @@ export default function Privacy() {
 }
 
 const mail = (
-  <a href="mailto:privacy@rabar.app" className="text-ember-ink hover:underline">
-    privacy@rabar.app
+  <a href="mailto:privacy@rabar.it" className="text-ember-ink hover:underline">
+    privacy@rabar.it
   </a>
 );
 

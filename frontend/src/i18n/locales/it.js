@@ -517,7 +517,7 @@ export default {
   'plus.renews': 'Si rinnova il {date}',
   'plus.endsOn': 'Attivo fino al {date}, poi non si rinnova',
   'plus.manage': 'Gestisci abbonamento',
-  'plus.legal': 'Pagamento gestito da Stripe. Rinnovo automatico, disdici quando vuoi dal portale di gestione.',
+  'plus.legal': 'Prezzi IVA inclusa. Pagamento gestito da Stripe. Rinnovo automatico, disdici quando vuoi dal portale di gestione.',
   'plus.pendingBody': 'Pagamento ricevuto, stiamo attivando rabar+…',
   'plus.errPlans': 'Impossibile caricare i piani',
   'plus.errCheckout': 'Impossibile avviare il pagamento',

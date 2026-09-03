@@ -10,8 +10,8 @@ export default function Tos() {
 }
 
 const abuseMail = (
-  <a href="mailto:abuse@rabar.app" className="text-ember-ink hover:underline">
-    abuse@rabar.app
+  <a href="mailto:abuse@rabar.it" className="text-ember-ink hover:underline">
+    abuse@rabar.it
   </a>
 );
 

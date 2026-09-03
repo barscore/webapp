@@ -499,4 +499,6 @@ export default {
   'plus.settingsActive': 'Subscription active — manage it here',
   'plus.settingsPitch': '+ badge, every theme, no ads',
   'plus.themesLocked': '— all themes with rabar+',
+  'plus.portalTitle': 'Manage on Stripe',
+  'plus.portalBody': 'Cancel, switch plan or download invoices. Sign in with your billing email.',
 };

@@ -56,13 +56,7 @@ export function AuthProvider({ children }) {
     let active = true;
     supabase
       .from('profiles')
-      // Niente lista di colonne, di proposito: qui dentro c'e' il RUOLO, cioe'
-      // l'autorizzazione, e non deve dipendere da un extra a pagamento. Con
-      // `role, plus_until` bastava che add_plus.sql non fosse ancora girato
-      // (PostgREST 42703) per far fallire tutta la select e lasciare un admin
-      // senza pannello sulla propria app. La riga e' quella dell'utente,
-      // gia' leggibile da lui.
-      .select('*')
+      .select('role, plus_until')
       .eq('id', user.id)
       .maybeSingle()
       .then(({ data, error }) => {
@@ -75,6 +69,18 @@ export function AuthProvider({ children }) {
         // aspettano, e nessuno agisce su una supposizione.
         if (error) {
           console.error('[rabar] lettura del profilo fallita', error);
+          // Il ruolo e' l'autorizzazione, `plus_until` un extra a pagamento:
+          // non devono cadere insieme. Con add_plus.sql non ancora girato la
+          // select intera falliva (PostgREST 42703) e un admin restava senza
+          // pannello sulla propria app. Qui si riprova col solo `role`.
+          supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', user.id)
+            .maybeSingle()
+            .then(({ data: only, error: err2 }) => {
+              if (active && !err2) setRole(only?.role ?? 'user');
+            });
           return;
         }
         setRole(data?.role ?? 'user');

@@ -257,21 +257,51 @@ export default function Settings() {
   );
 }
 
+// Portale clienti Stripe, pagina di accesso pubblica: si entra con l'email
+// dell'abbonamento e Stripe manda un link di verifica. È l'alternativa senza
+// backend a POST /plus/portal, che dalla pagina /plus apre lo stesso portale
+// con un click solo. Sta qui perché è la via che funziona anche da un altro
+// dispositivo, o quando l'account dell'app e quello del pagamento non
+// coincidono. URL fisso dell'account: pubblico, non è un segreto.
+const STRIPE_PORTAL_LOGIN_URL = 'https://billing.stripe.com/p/login/9B6cMYgEw3LH1zBe0t1ck00';
+
 // Riquadro rabar+: stato dell'abbonamento e ingresso alla pagina /plus.
 function PlusSection() {
   const { t } = useI18n();
   const { isPlus } = useAuth();
   return (
-    <Link to="/plus" className="press card flex items-center gap-3 p-4">
-      <PlusBadge plus size="md" />
-      <span className="min-w-0 flex-1">
-        <span className="block font-display font-bold text-ember-cream">rabar+</span>
-        <span className="block text-xs text-ember-muted">
-          {isPlus ? t('plus.settingsActive') : t('plus.settingsPitch')}
+    <>
+      <Link to="/plus" className="press card flex items-center gap-3 p-4">
+        <PlusBadge plus size="md" />
+        <span className="min-w-0 flex-1">
+          <span className="block font-display font-bold text-ember-cream">rabar+</span>
+          <span className="block text-xs text-ember-muted">
+            {isPlus ? t('plus.settingsActive') : t('plus.settingsPitch')}
+          </span>
         </span>
-      </span>
-      <Icon name="arrow-right" size={15} className="shrink-0 text-ember-muted" />
-    </Link>
+        <Icon name="arrow-right" size={15} className="shrink-0 text-ember-muted" />
+      </Link>
+
+      {/* Solo a chi ha davvero un abbonamento: senza, il portale risponde che
+          non c'è niente da gestire. */}
+      {isPlus && (
+        <a
+          href={STRIPE_PORTAL_LOGIN_URL}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="press card flex items-center gap-3 p-4"
+        >
+          <Icon name="euro" size={18} className="shrink-0 text-ember-ink" />
+          <span className="min-w-0 flex-1">
+            <span className="block font-display font-bold text-ember-cream">
+              {t('plus.portalTitle')}
+            </span>
+            <span className="block text-xs text-ember-muted">{t('plus.portalBody')}</span>
+          </span>
+          <Icon name="link" size={15} className="shrink-0 text-ember-muted" />
+        </a>
+      )}
+    </>
   );
 }
 

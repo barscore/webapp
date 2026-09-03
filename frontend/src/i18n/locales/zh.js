@@ -499,4 +499,6 @@ export default {
   'plus.settingsActive': '订阅生效中 — 在此管理',
   'plus.settingsPitch': '+ 徽章、全部主题、无广告',
   'plus.themesLocked': '— rabar+ 解锁全部主题',
+  'plus.portalTitle': '\u5728 Stripe \u7ba1\u7406',
+  'plus.portalBody': '\u53d6\u6d88\u8ba2\u9605\u3001\u66f4\u6539\u5957\u9910\u6216\u4e0b\u8f7d\u53d1\u7968\uff0c\u4f7f\u7528\u8ba2\u9605\u90ae\u7bb1\u767b\u5f55\u3002',
 };

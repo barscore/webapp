@@ -499,4 +499,6 @@ export default {
   'plus.settingsActive': 'Подписка активна — управляйте здесь',
   'plus.settingsPitch': 'Значок +, все темы, без рекламы',
   'plus.themesLocked': '— все темы с rabar+',
+  'plus.portalTitle': '\u0423\u043f\u0440\u0430\u0432\u043b\u0435\u043d\u0438\u0435 \u0432 Stripe',
+  'plus.portalBody': '\u041e\u0442\u043c\u0435\u043d\u0430, \u0441\u043c\u0435\u043d\u0430 \u0442\u0430\u0440\u0438\u0444\u0430 \u0438 \u0441\u0447\u0435\u0442\u0430. \u0412\u0445\u043e\u0434 \u043f\u043e e\u2011mail \u043f\u043e\u0434\u043f\u0438\u0441\u043a\u0438.',
 };

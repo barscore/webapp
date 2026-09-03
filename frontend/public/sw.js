@@ -1,5 +1,5 @@
 // rabar service worker — static asset caching + offline fallback.
-const CACHE = 'rabar-v5';
+const CACHE = 'rabar-v6';
 const OFFLINE_URL = '/offline.html';
 const PRECACHE = ['/', '/index.html', '/offline.html', '/manifest.json'];
 
@@ -61,11 +61,21 @@ self.addEventListener('fetch', (event) => {
 
   // Only handle same-origin http(s) GETs. Skip cross-origin (e.g. AdSense),
   // chrome-extension:// and non-GET — they can't be cached and throw on put().
+  //
+  // /assets/ e' escluso di proposito. Sono i chunk con l'hash nel nome, quindi
+  // immutabili e gia' serviti con cache-control immutable: la cache-first qui
+  // non aggiungeva niente, e in piu' rompeva i <link rel="modulepreload"> che
+  // Vite mette in index.html ("cross-world service worker resource mismatch"
+  // in console) — il preload avviene nel mondo della pagina, la risposta
+  // arrivava dal service worker, e il browser buttava via il preload per
+  // riscaricare il file. Non costa nulla offline: le navigazioni sono
+  // network-first e ripiegano su offline.html, non sull'app.
   if (
     request.method !== 'GET' ||
     url.origin !== self.location.origin ||
     !url.protocol.startsWith('http') ||
     url.pathname.startsWith('/api') ||
+    url.pathname.startsWith('/assets/') ||
     request.url.includes(':3000')
   ) {
     return;

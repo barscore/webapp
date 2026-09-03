@@ -525,4 +525,6 @@ export default {
   'plus.settingsActive': 'Abbonamento attivo — gestiscilo qui',
   'plus.settingsPitch': 'Badge +, tutti i temi, niente pubblicità',
   'plus.themesLocked': '— tutti i temi con rabar+',
+  'plus.portalTitle': 'Gestisci su Stripe',
+  'plus.portalBody': 'Disdici, cambia piano o scarica le fatture. Accedi con l\u2019email dell\u2019abbonamento.',
 };

@@ -500,4 +500,6 @@ export default {
   'plus.settingsActive': 'Suscripción activa — gestiónala aquí',
   'plus.settingsPitch': 'Insignia +, todos los temas, sin publicidad',
   'plus.themesLocked': '— todos los temas con rabar+',
+  'plus.portalTitle': 'Gestionar en Stripe',
+  'plus.portalBody': 'Cancela, cambia de plan o descarga facturas. Entra con el correo de la suscripci\u00f3n.',
 };

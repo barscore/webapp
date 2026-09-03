@@ -56,11 +56,27 @@ export function AuthProvider({ children }) {
     let active = true;
     supabase
       .from('profiles')
-      .select('role, plus_until')
+      // Niente lista di colonne, di proposito: qui dentro c'e' il RUOLO, cioe'
+      // l'autorizzazione, e non deve dipendere da un extra a pagamento. Con
+      // `role, plus_until` bastava che add_plus.sql non fosse ancora girato
+      // (PostgREST 42703) per far fallire tutta la select e lasciare un admin
+      // senza pannello sulla propria app. La riga e' quella dell'utente,
+      // gia' leggibile da lui.
+      .select('*')
       .eq('id', user.id)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
         if (!active) return;
+        // Una lettura FALLITA non vuol dire "utente semplice". Trattarla come
+        // tale declassava chiunque a `user`: con profiles.plus_until ancora
+        // assente dal DB (PostgREST 42703) un admin si vedeva la schermata
+        // "attendi l'approvazione di un moderatore" sulla propria app. Qui il
+        // ruolo resta indeciso — `role === null` e' il segnale che i gate
+        // aspettano, e nessuno agisce su una supposizione.
+        if (error) {
+          console.error('[rabar] lettura del profilo fallita', error);
+          return;
+        }
         setRole(data?.role ?? 'user');
         setPlusUntil(data?.plus_until ?? null);
       });

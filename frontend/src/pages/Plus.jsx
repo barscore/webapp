@@ -25,6 +25,10 @@ export default function Plus() {
   const [status, setStatus] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  // Consenso all'esecuzione immediata + presa d'atto della perdita del recesso
+  // (Cod. Cons. art. 59 c.1 lett. o). Parte da false: una spunta già messa
+  // non è un consenso.
+  const [withdrawalOk, setWithdrawalOk] = useState(false);
   // Tornati dal checkout: il webhook può arrivare qualche secondo dopo il
   // redirect, quindi si aspetta lo stato invece di dichiarare vittoria subito.
   const [justPaid, setJustPaid] = useState(
@@ -61,6 +65,12 @@ export default function Plus() {
   }, [isAuthenticated, justPaid]);
 
   async function subscribe() {
+    // Senza la presa d'atto il recesso resta esercitabile per 12 mesi e 14
+    // giorni (art. 53): il pagamento non parte.
+    if (!withdrawalOk) {
+      setError(t('legal.withdrawalRequired'));
+      return;
+    }
     setBusy(true);
     setError('');
     try {
@@ -191,14 +201,26 @@ export default function Plus() {
               })}
             </div>
 
+            {isAuthenticated && (
+              <label className="flex items-start gap-2 text-sm text-ember-muted">
+                <input
+                  type="checkbox"
+                  checked={withdrawalOk}
+                  onChange={(e) => setWithdrawalOk(e.target.checked)}
+                  className="mt-0.5 accent-ember-primary"
+                />
+                <span>{t('legal.withdrawalPlus')}</span>
+              </label>
+            )}
+
             {error && <p className="text-sm text-ember-danger">{error}</p>}
 
             {isAuthenticated ? (
               <button
                 type="button"
                 onClick={subscribe}
-                disabled={busy || plans.length === 0}
-                className="btn-primary w-full py-3"
+                disabled={busy || plans.length === 0 || !withdrawalOk}
+                className="btn-primary w-full py-3 disabled:opacity-50"
               >
                 <Icon name={busy ? 'reload' : 'plus'} size={18} className={busy ? 'animate-spin' : ''} />
                 {busy ? t('auth.redirecting') : t('plus.subscribe')}

@@ -267,6 +267,9 @@ export default {
   'settings.deleteTitle': 'Delete account',
   'settings.deleteWarning': 'Permanently deletes your account and all linked data (ratings, votes, saved bars). This cannot be undone.',
   'settings.deleteFailed': 'Deletion failed',
+  'settings.exportTitle': 'Export my data',
+  'settings.exportHint': 'Download everything rabar holds about you as a JSON file: profile, ratings, votes, saved bars, notifications.',
+  'settings.exportFailed': 'Export failed',
   'settings.sure': "Are you sure? This can't be undone.",
   'settings.confirmDelete': 'Confirm deletion',
   'settings.deleting': 'Deleting…',
@@ -510,4 +513,10 @@ export default {
   'plus.themesLocked': '— all themes with rabar+',
   'plus.portalTitle': 'Manage on Stripe',
   'plus.portalBody': 'Cancel, switch plan or download invoices. Sign in with your billing email.',
+
+  // Legal (withdrawal, reviews)
+  'legal.withdrawalPlus': 'I ask for rabar+ to start immediately and acknowledge that, once it has been supplied, I lose my 14-day right of withdrawal.',
+  'legal.withdrawalBoost': 'I ask for the boost to start immediately and acknowledge that, once it has been supplied, I lose my 14-day right of withdrawal.',
+  'legal.withdrawalRequired': 'You need to accept this to proceed to payment.',
+  'legal.reviewsNote': 'Ratings are written by users. We do not verify that the author actually visited the venue: each account can rate a bar only once, and we moderate after publication.',
 };

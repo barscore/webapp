@@ -68,6 +68,8 @@ export default function Settings() {
   const [delConfirm, setDelConfirm] = useState(false);
   const [delBusy, setDelBusy] = useState(false);
   const [delErr, setDelErr] = useState('');
+  const [expBusy, setExpBusy] = useState(false);
+  const [expErr, setExpErr] = useState('');
 
   useEffect(() => {
     if (!loading && !isAuthenticated) navigate('/login');
@@ -115,6 +117,18 @@ export default function Settings() {
       setPwErr(err.message || t('settings.updateErr'));
     } finally {
       setPwBusy(false);
+    }
+  }
+
+  async function exportData() {
+    setExpBusy(true);
+    setExpErr('');
+    try {
+      await meApi.exportData();
+    } catch (err) {
+      setExpErr(err.response?.data?.error || t('settings.exportFailed'));
+    } finally {
+      setExpBusy(false);
     }
   }
 
@@ -212,6 +226,23 @@ export default function Settings() {
             {pwBusy ? t('common.saving') : t('settings.updatePw')}
           </button>
         </form>
+
+        {/* Portabilità — GDPR art. 20. Accanto alla cancellazione perché sono
+            la stessa cosa dal punto di vista dell'utente («i miei dati»), ma
+            senza lo stile distruttivo: scaricare non rompe niente. */}
+        <section className="space-y-3 rounded-card border border-ember-line/10 bg-ember-card p-4">
+          <h3 className="font-display font-bold text-ember-cream">{t('settings.exportTitle')}</h3>
+          <p className="text-sm text-ember-muted">{t('settings.exportHint')}</p>
+          {expErr && <p className="text-sm text-ember-danger">{expErr}</p>}
+          <button
+            type="button"
+            onClick={exportData}
+            disabled={expBusy}
+            className="w-full rounded-lg border border-ember-line/20 py-2 font-semibold text-ember-cream disabled:opacity-50"
+          >
+            {expBusy ? t('common.loading') : t('settings.exportTitle')}
+          </button>
+        </section>
 
         {/* Danger zone — GDPR art. 17 self-service erasure */}
         <section className="space-y-3 rounded-card border border-ember-danger/40 bg-ember-card p-4">

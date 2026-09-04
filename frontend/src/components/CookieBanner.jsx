@@ -24,21 +24,25 @@ export default function CookieBanner() {
           {t('cookie.text')}{' '}
           <Link to="/privacy" className="text-ember-ink underline">{t('common.privacy')}</Link>.
         </p>
+        {/* Pari evidenza, non per estetica: le linee guida del Garante del
+            10/06/2021 chiedono che rifiutare costi quanto accettare. "Rifiuta"
+            era un outline contro un btn-primary pieno — stesso livello, ma non
+            stesso peso. Ora i due bottoni condividono classe, dimensione e
+            contrasto: cambia solo l'etichetta. */}
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={() => choose(false)}
-            className="flex-1 whitespace-nowrap rounded-lg border border-ember-line/10 px-4 py-2 text-sm font-semibold text-ember-cream sm:flex-none"
-          >
-            {t('cookie.reject')}
-          </button>
-          <button
-            type="button"
-            onClick={() => choose(true)}
-            className="btn-primary flex-1 whitespace-nowrap px-4 py-2 text-sm sm:flex-none"
-          >
-            {t('cookie.accept')}
-          </button>
+          {[
+            { label: t('cookie.reject'), granted: false },
+            { label: t('cookie.accept'), granted: true },
+          ].map(({ label, granted }) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => choose(granted)}
+              className="flex-1 whitespace-nowrap rounded-lg border border-ember-line/20 bg-ember-line/5 px-4 py-2 text-sm font-semibold text-ember-cream transition-colors duration-[var(--dur-1)] hover:bg-ember-line/10 sm:flex-none"
+            >
+              {label}
+            </button>
+          ))}
         </div>
       </div>
     </div>

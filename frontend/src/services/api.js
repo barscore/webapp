@@ -109,6 +109,21 @@ export const meApi = {
   profile: () => api.get('/me').then((r) => r.data.profile),
   ratings: () => api.get('/me/ratings').then((r) => expectArray(r.data.ratings, 'meRatings')),
   deleteAccount: () => api.delete('/me').then((r) => r.data),
+  // Portabilità (art. 20 GDPR). Il backend manda un Content-Disposition, ma
+  // axios legge comunque il corpo invece di lasciar scaricare il browser: il
+  // salvataggio va innescato a mano da un object URL. Revocato subito dopo,
+  // altrimenti il blob resta in memoria fino al reload.
+  exportData: async () => {
+    const res = await api.get('/me/export', { responseType: 'blob' });
+    const url = URL.createObjectURL(res.data);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'rabar-dati.json';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  },
 };
 
 // Allegati di verifica (rivendicazione bar, richiesta PR/organizzatore).
@@ -163,8 +178,8 @@ export const suggestionsApi = {
       ...r.data,
       suggestions: expectArray(r.data.suggestions, 'suggestions'),
     })),
-  setStatus: (id, status) =>
-    api.patch(`/suggestions/${id}`, { status }).then((r) => r.data.suggestion),
+  setStatus: (id, status, admin_note) =>
+    api.patch(`/suggestions/${id}`, { status, admin_note }).then((r) => r.data.suggestion),
   remove: (id) => api.delete(`/suggestions/${id}`).then((r) => r.data),
 };
 
@@ -177,7 +192,8 @@ export const reportsApi = {
       ...r.data,
       reports: expectArray(r.data.reports, 'reports'),
     })),
-  setStatus: (id, status) => api.patch(`/reports/${id}`, { status }).then((r) => r.data.report),
+  setStatus: (id, status, admin_note) =>
+    api.patch(`/reports/${id}`, { status, admin_note }).then((r) => r.data.report),
   remove: (id) => api.delete(`/reports/${id}`).then((r) => r.data),
 };
 
@@ -249,8 +265,8 @@ export const drinksApi = {
       ...r.data,
       suggestions: expectArray(r.data.suggestions, 'drinkSuggestions'),
     })),
-  setSuggestionStatus: (id, status) =>
-    api.patch(`/drinks/suggestions/${id}`, { status }).then((r) => r.data),
+  setSuggestionStatus: (id, status, admin_note) =>
+    api.patch(`/drinks/suggestions/${id}`, { status, admin_note }).then((r) => r.data),
   removeSuggestion: (id) => api.delete(`/drinks/suggestions/${id}`).then((r) => r.data),
 };
 

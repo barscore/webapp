@@ -227,22 +227,27 @@ CREATE POLICY "bars_select_all" ON public.bars FOR SELECT USING (is_active = TRU
 CREATE POLICY "ratings_select_all" ON public.ratings FOR SELECT USING (TRUE);
 CREATE POLICY "summary_select_all" ON public.bar_ratings_summary FOR SELECT USING (TRUE);
 CREATE POLICY "images_select_all" ON public.bar_images FOR SELECT USING (TRUE);
--- A user may read/update only their own profile. No public SELECT: profiles
--- hold email + moderation fields and RLS is row-level, not column-level.
+-- A user may READ only their own profile. No public SELECT: profiles hold email
+-- + moderation fields and RLS is row-level, not column-level.
 -- Public profile data (usernames on reviews, leaderboard) is served by the
 -- backend via the service-role key, which selects only safe columns.
 CREATE POLICY "profiles_select_own" ON public.profiles
   FOR SELECT USING (auth.uid() = id);
-CREATE POLICY "profiles_update_own" ON public.profiles
-  FOR UPDATE USING (auth.uid() = id);
 
--- A user may write their own ratings (the backend still mediates via service role).
-CREATE POLICY "ratings_insert_own" ON public.ratings
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "ratings_update_own" ON public.ratings
-  FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "ratings_delete_own" ON public.ratings
-  FOR DELETE USING (auth.uid() = user_id);
+-- Nessuna policy di UPDATE su profiles, e non è una dimenticanza. Supabase
+-- concede GRANT ALL su public a `authenticated`, quindi RLS è l'unico freno —
+-- ma è row-level: una `FOR UPDATE USING (auth.uid() = id)` verifica solo che la
+-- riga resti la propria, mai QUALE colonna cambia. Con la anon key (pubblica:
+-- bundle web, APK, ios/Rabar/Config/Config.swift) bastava
+--   supabase.from('profiles').update({ role: 'admin' }).eq('id', <proprio id>)
+-- per prendersi il pannello admin, e allo stesso modo `plus_until`, `banned`,
+-- `rewarded_count`. Il profilo lo scrivono solo il trigger handle_new_user e il
+-- backend con la service-role key. Vedi fix_rls_hardening.sql.
+
+-- Nemmeno le scritture su ratings passano dal client: un ban non revoca
+-- l'access token già emesso, quindi requireAuth blocca l'utente sull'API ma
+-- PostgREST no — e la strada diretta salta anche `ratings_enabled`,
+-- `maintenance_mode`, `beta_mode` e ogni rate limit.
 
 -- =============================================
 -- get_nearby_bars — bars within radius_km of a point, with summary + distance
@@ -311,14 +316,18 @@ CREATE INDEX idx_bookmarks_user_id ON public.bookmarks(user_id);
 
 ALTER TABLE public.bookmarks ENABLE ROW LEVEL SECURITY;
 
--- A user may read/create/delete only their own bookmarks (backend uses the
--- service-role key and bypasses these).
+-- Un utente LEGGE solo i propri salvati. Le scritture passano dal backend con la
+-- service-role key, come per ratings e profiles: vedi fix_rls_hardening.sql.
 CREATE POLICY "bookmarks_select_own" ON public.bookmarks
   FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "bookmarks_insert_own" ON public.bookmarks
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "bookmarks_delete_own" ON public.bookmarks
-  FOR DELETE USING (auth.uid() = user_id);
+
+-- Difesa in profondità: senza policy nessuna scrittura passa, ma una policy
+-- futura scritta male riaprirebbe la porta da sola. Il REVOKE la chiude un
+-- livello più sotto — il privilegio di tabella manca e RLS non c'entra più.
+-- La service-role key è BYPASSRLS e non è toccata da questi REVOKE.
+REVOKE INSERT, UPDATE, DELETE ON public.profiles  FROM anon, authenticated;
+REVOKE INSERT, UPDATE, DELETE ON public.ratings   FROM anon, authenticated;
+REVOKE INSERT, UPDATE, DELETE ON public.bookmarks FROM anon, authenticated;
 
 -- =============================================
 -- app_settings — singleton (id = 1) global switches for the admin panel

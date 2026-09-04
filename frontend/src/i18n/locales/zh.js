@@ -267,6 +267,9 @@ export default {
   'settings.deleteTitle': '删除账户',
   'settings.deleteWarning': '永久删除你的账户及所有关联数据（评分、投票、收藏的酒吧）。此操作不可撤销。',
   'settings.deleteFailed': '删除失败',
+  'settings.exportTitle': '导出我的数据',
+  'settings.exportHint': '以 JSON 文件下载 rabar 保存的关于你的全部内容：个人资料、评价、投票、收藏、通知。',
+  'settings.exportFailed': '导出失败',
   'settings.sure': '确定吗？无法撤销。',
   'settings.confirmDelete': '确认删除',
   'settings.deleting': '删除中…',
@@ -510,4 +513,10 @@ export default {
   'plus.themesLocked': '— rabar+ 解锁全部主题',
   'plus.portalTitle': '\u5728 Stripe \u7ba1\u7406',
   'plus.portalBody': '\u53d6\u6d88\u8ba2\u9605\u3001\u66f4\u6539\u5957\u9910\u6216\u4e0b\u8f7d\u53d1\u7968\uff0c\u4f7f\u7528\u8ba2\u9605\u90ae\u7bb1\u767b\u5f55\u3002',
+
+  // 法律（撤回权、评价）
+  'legal.withdrawalPlus': '我要求 rabar+ 立即生效，并知悉服务一经提供，我即丧失 14 天的撤回权。',
+  'legal.withdrawalBoost': '我要求推广立即开始，并知悉服务一经提供，我即丧失 14 天的撤回权。',
+  'legal.withdrawalRequired': '需要勾选此项才能继续付款。',
+  'legal.reviewsNote': '评价由用户撰写。我们不核实评价者是否真的到过该店：每个账号对同一家酒吧只能评价一次，我们在发布后进行审核。',
 };

@@ -18,6 +18,9 @@ export default function BoostModal({ target, label, onClose }) {
   const [radius, setRadius] = useState(15);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  // Consenso all'esecuzione immediata + presa d'atto della perdita del recesso
+  // (Cod. Cons. art. 59 c.1 lett. o). Mai pre-spuntata.
+  const [withdrawalOk, setWithdrawalOk] = useState(false);
 
   useEffect(() => {
     boostsApi
@@ -39,6 +42,12 @@ export default function BoostModal({ target, label, onClose }) {
   const total = (selected?.amount_cents ?? 0) + surcharge;
 
   async function checkout() {
+    // Il boost parte appena Stripe incassa: senza la presa d'atto il recesso
+    // resterebbe esercitabile per 12 mesi e 14 giorni (art. 53).
+    if (!withdrawalOk) {
+      setError(t('legal.withdrawalRequired'));
+      return;
+    }
     setBusy(true);
     setError('');
     try {
@@ -138,13 +147,23 @@ export default function BoostModal({ target, label, onClose }) {
           </div>
         )}
 
+        <label className="mt-4 flex items-start gap-2 text-sm text-ember-muted">
+          <input
+            type="checkbox"
+            checked={withdrawalOk}
+            onChange={(e) => setWithdrawalOk(e.target.checked)}
+            className="mt-0.5 accent-ember-primary"
+          />
+          <span>{t('legal.withdrawalBoost')}</span>
+        </label>
+
         {error && <p className="mt-3 text-sm text-ember-danger">{error}</p>}
 
         <button
           type="button"
           onClick={checkout}
-          disabled={busy || tiers.length === 0}
-          className="btn-primary mt-4 w-full py-3"
+          disabled={busy || tiers.length === 0 || !withdrawalOk}
+          className="btn-primary mt-4 w-full py-3 disabled:opacity-50"
         >
           <Icon name={busy ? 'reload' : 'euro'} size={18} className={busy ? 'animate-spin' : ''} />
           {busy ? t('auth.redirecting') : t('boost.pay')}

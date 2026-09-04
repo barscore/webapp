@@ -299,6 +299,10 @@ export default function BarDetail() {
             {t('bar.reviews')}
           </h2>
 
+          {/* Cod. Cons. art. 22-bis (dir. Omnibus): chi mostra recensioni di
+              consumatori deve dire se e come verifica che vengano da chi ha usato
+              davvero il servizio. Qui non le verifichiamo, e si dice. */}
+          <p className="mb-3 text-xs leading-relaxed text-ember-muted">{t('legal.reviewsNote')}</p>
           {ratings.length === 0 ? (
             <EmptyState
               title={t('bar.beFirst')}

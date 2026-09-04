@@ -2,7 +2,12 @@
 <html lang="it">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <!-- Niente maximum-scale/user-scalable: bloccare lo zoom viola WCAG 1.4.4, e
+         dal 28/06/2025 l'European Accessibility Act (D.Lgs. 82/2022) copre i
+         servizi di e-commerce verso i consumatori — rabar vende abbonamenti.
+         Le sheet reggono lo zoom: usano dvh e un ResizeObserver (Map.jsx,
+         useSheetDrag.js), non altezze calcolate una volta al mount. -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#E07B1A" />
 
     <!-- Apply the saved theme before first paint to avoid a flash of the

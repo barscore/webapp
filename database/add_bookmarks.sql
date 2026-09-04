@@ -16,9 +16,11 @@ DROP POLICY IF EXISTS "bookmarks_select_own" ON public.bookmarks;
 DROP POLICY IF EXISTS "bookmarks_insert_own" ON public.bookmarks;
 DROP POLICY IF EXISTS "bookmarks_delete_own" ON public.bookmarks;
 
+-- Solo lettura. Le policy di INSERT e DELETE stavano qui e sono state tolte da
+-- fix_rls_hardening.sql: le scritture passano tutte dal backend con la
+-- service-role key, e lasciarle qui significherebbe riaprire il buco a ogni
+-- riesecuzione di questo file. Vedi fix_rls_hardening.sql per il perché.
 CREATE POLICY "bookmarks_select_own" ON public.bookmarks
   FOR SELECT USING (auth.uid() = user_id);
-CREATE POLICY "bookmarks_insert_own" ON public.bookmarks
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "bookmarks_delete_own" ON public.bookmarks
-  FOR DELETE USING (auth.uid() = user_id);
+
+REVOKE INSERT, UPDATE, DELETE ON public.bookmarks FROM anon, authenticated;

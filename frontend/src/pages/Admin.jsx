@@ -380,8 +380,9 @@ function SuggestionsTab({ notify }) {
   }, [load]);
 
   async function setState(id, next, okMsg) {
+    const admin_note = window.prompt('Nota per l’utente (opzionale):') || undefined;
     try {
-      await suggestionsApi.setStatus(id, next);
+      await suggestionsApi.setStatus(id, next, admin_note);
       notify(okMsg);
       load();
     } catch {
@@ -539,8 +540,9 @@ function ReportsTab({ notify }) {
   }, [load]);
 
   async function setState(id, next, okMsg) {
+    const admin_note = window.prompt('Nota per l’utente (opzionale):') || undefined;
     try {
-      await reportsApi.setStatus(id, next);
+      await reportsApi.setStatus(id, next, admin_note);
       notify(okMsg);
       load();
     } catch {
@@ -680,8 +682,9 @@ function DrinkSuggestionsTab({ notify }) {
   }, [load]);
 
   async function setState(id, next, okMsg) {
+    const admin_note = window.prompt('Nota per l’utente (opzionale):') || undefined;
     try {
-      await drinksApi.setSuggestionStatus(id, next);
+      await drinksApi.setSuggestionStatus(id, next, admin_note);
       notify(okMsg);
       load();
     } catch {
@@ -1084,9 +1087,11 @@ function OrganizersTab({ notify }) {
 
   async function review(kind, id, action) {
     const admin_note =
-      action === 'reject'
-        ? window.prompt('Nota per l’utente (opzionale):') || undefined
-        : undefined;
+      window.prompt(
+        action === 'reject'
+          ? 'Motivo del rifiuto per l’utente (opzionale):'
+          : 'Nota per l’utente (opzionale):',
+      ) || undefined;
     try {
       if (kind === 'request') await organizerAdminApi.reviewRequest(id, action, admin_note);
       else await organizerAdminApi.reviewClaim(id, action, admin_note);

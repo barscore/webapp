@@ -268,6 +268,9 @@ export default {
   'settings.deleteTitle': 'Eliminar cuenta',
   'settings.deleteWarning': 'Borra definitivamente tu cuenta y todos los datos vinculados (valoraciones, votos, bares guardados). Operación irreversible.',
   'settings.deleteFailed': 'Eliminación fallida',
+  'settings.exportTitle': 'Exportar mis datos',
+  'settings.exportHint': 'Descarga en un archivo JSON todo lo que rabar tiene sobre ti: perfil, valoraciones, votos, guardados, notificaciones.',
+  'settings.exportFailed': 'Error al exportar',
   'settings.sure': '¿Estás seguro? No se puede deshacer.',
   'settings.confirmDelete': 'Confirmar eliminación',
   'settings.deleting': 'Eliminando…',
@@ -511,4 +514,10 @@ export default {
   'plus.themesLocked': '— todos los temas con rabar+',
   'plus.portalTitle': 'Gestionar en Stripe',
   'plus.portalBody': 'Cancela, cambia de plan o descarga facturas. Entra con el correo de la suscripci\u00f3n.',
+
+  // Legal (desistimiento, valoraciones)
+  'legal.withdrawalPlus': 'Solicito que rabar+ se active de inmediato y reconozco que, una vez prestado el servicio, pierdo mi derecho de desistimiento de 14 días.',
+  'legal.withdrawalBoost': 'Solicito que el boost empiece de inmediato y reconozco que, una vez prestado el servicio, pierdo mi derecho de desistimiento de 14 días.',
+  'legal.withdrawalRequired': 'Debes aceptarlo para continuar con el pago.',
+  'legal.reviewsNote': 'Las valoraciones las escriben los usuarios. No verificamos que quien escribe haya estado realmente en el local: cada cuenta puede valorar un bar una sola vez, y moderamos después de la publicación.',
 };

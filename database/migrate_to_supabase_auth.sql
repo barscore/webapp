@@ -66,17 +66,28 @@ AFTER INSERT ON auth.users
 FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- 4. RLS policies for direct frontend access.
+--
+-- ATTENZIONE — questa sezione è stata SVUOTATA, non dimenticata. Com'era, una
+-- riesecuzione di questo file riapriva due buchi già chiusi altrove:
+--   * `profiles_select_all` con USING (TRUE) lasciava leggere l'email di OGNI
+--     utente a chiunque avesse la anon key, che è pubblica (→ fix_security.sql);
+--   * `profiles_update_own` lasciava a un utente loggato l'UPDATE su qualunque
+--     colonna della propria riga, `role` compresa: escalation ad admin con una
+--     riga di JavaScript (→ fix_rls_hardening.sql). Stesso discorso per le tre
+--     policy di scrittura su `ratings`, che aggiravano ban, kill switch e rate
+--     limit andando dritte a PostgREST.
+-- Lo stato corretto delle policy vive in schema.sql (installazioni nuove) e
+-- nelle due migrazioni citate qui sopra (deploy esistenti). Qui non si ricrea
+-- più niente: i DROP restano perché rendono il file sicuro da rieseguire.
 DROP POLICY IF EXISTS "profiles_select_all" ON public.profiles;
-CREATE POLICY "profiles_select_all" ON public.profiles FOR SELECT USING (TRUE);
 DROP POLICY IF EXISTS "profiles_update_own" ON public.profiles;
-CREATE POLICY "profiles_update_own" ON public.profiles FOR UPDATE USING (auth.uid() = id);
+DROP POLICY IF EXISTS "ratings_insert_own"  ON public.ratings;
+DROP POLICY IF EXISTS "ratings_update_own"  ON public.ratings;
+DROP POLICY IF EXISTS "ratings_delete_own"  ON public.ratings;
 
-DROP POLICY IF EXISTS "ratings_insert_own" ON public.ratings;
-CREATE POLICY "ratings_insert_own" ON public.ratings FOR INSERT WITH CHECK (auth.uid() = user_id);
-DROP POLICY IF EXISTS "ratings_update_own" ON public.ratings;
-CREATE POLICY "ratings_update_own" ON public.ratings FOR UPDATE USING (auth.uid() = user_id);
-DROP POLICY IF EXISTS "ratings_delete_own" ON public.ratings;
-CREATE POLICY "ratings_delete_own" ON public.ratings FOR DELETE USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS "profiles_select_own" ON public.profiles;
+CREATE POLICY "profiles_select_own" ON public.profiles
+  FOR SELECT USING (auth.uid() = id);
 
 -- 5. Backfill profiles for any auth.users that signed up before the trigger
 --    existed. Without this, those users hit a foreign-key violation

@@ -1,12 +1,32 @@
 import { useState } from 'react';
-import { Scanner } from '@yudiel/react-qr-scanner';
+import { Scanner, setZXingModuleOverrides } from '@yudiel/react-qr-scanner';
 import Icon from './Icon.jsx';
 import { useNavigate } from 'react-router-dom';
 import Toast from './Toast.jsx';
 
+// Forza il caricamento del WASM da unpkg nel caso in cui jsdelivr sia bloccato.
+setZXingModuleOverrides({
+  locateFile: (path, prefix) => {
+    if (path.endsWith('.wasm')) {
+      return `https://unpkg.com/zxing-wasm@3.1.3/dist/reader/${path}`;
+    }
+    return prefix + path;
+  },
+});
+
 export default function QrScannerModal({ onClose }) {
   const navigate = useNavigate();
   const [toast, setToast] = useState(null);
+
+  // Example tracker function to draw a green box around detected barcodes
+  const tracker = (detectedCodes, ctx) => {
+    detectedCodes.forEach((detectedCode) => {
+      const { boundingBox } = detectedCode;
+      ctx.strokeStyle = '#00FF00';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(boundingBox.x, boundingBox.y, boundingBox.width, boundingBox.height);
+    });
+  };
 
   return (
     <div className="fixed inset-0 z-[1500] flex items-end justify-center bg-black/80 sm:items-center">
@@ -42,7 +62,11 @@ export default function QrScannerModal({ onClose }) {
                 }
               }
             }}
-            formats={['qr_code']}
+            onError={(err) => {
+              console.error(err);
+              setToast({ msg: `Errore lettore: ${err.message || err}`, icon: 'info' });
+            }}
+            components={{ tracker }}
             allowMultiple={true}
             scanDelay={2000}
           />

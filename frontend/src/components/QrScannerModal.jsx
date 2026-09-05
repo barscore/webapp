@@ -20,7 +20,7 @@ export default function QrScannerModal({ onClose }) {
         let text = decodedText;
         try { text = decodeURIComponent(text); } catch(e) {}
         
-        if (text.includes('/redeem?token=')) {
+        if (text.includes('/redeem?token=') || text.includes('/party-entry?user_id=')) {
           isScanning = false;
           html5QrCode.stop().then(() => {
             onClose();
@@ -35,7 +35,7 @@ export default function QrScannerModal({ onClose }) {
             navigate(text);
           });
         } else {
-          setToast({ msg: 'QR code non valido per il Free Drink.', icon: 'info' });
+          setToast({ msg: 'QR code non riconosciuto.', icon: 'info' });
         }
       },
       (errorMessage) => {
@@ -62,7 +62,7 @@ export default function QrScannerModal({ onClose }) {
           <div>
             <h2 className="font-display text-2xl font-bold text-ember-cream">Scansiona Drink</h2>
             <p className="mt-1 text-sm text-ember-muted">
-              Inquadra il QR code del cliente per convalidare il Free Drink.
+              Inquadra il QR code del cliente per convalidare un Free Drink o l'ingresso a un evento.
             </p>
           </div>
           <button onClick={onClose} className="rounded-full bg-ember-bg p-2 text-ember-muted hover:text-ember-cream">

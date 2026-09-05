@@ -29,6 +29,7 @@ const Maintenance = lazy(() => import('./pages/Maintenance.jsx'));
 const BoostResult = lazy(() => import('./pages/BoostResult.jsx'));
 const Plus = lazy(() => import('./pages/Plus.jsx'));
 const Redeem = lazy(() => import('./pages/Redeem.jsx'));
+const PartyEntry = lazy(() => import('./pages/PartyEntry.jsx'));
 
 // Blank dark screen while a lazy page chunk downloads (matches the app bg, so
 // no white flash).
@@ -179,6 +180,7 @@ export default function App() {
         <Route path="/boost/esito" element={<BoostResult />} />
         <Route path="/plus" element={<Plus />} />
         <Route path="/redeem" element={<Redeem />} />
+        <Route path="/party-entry" element={<PartyEntry />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/tos" element={<Tos />} />
         <Route path="/riconoscimenti" element={<Credits />} />

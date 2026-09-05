@@ -282,6 +282,7 @@ export const organizerApi = {
   claimBar: (barId, payload) =>
     api.post(`/bars/${barId}/claim`, payload).then((r) => r.data.claim),
   redeemDrink: (token) => api.post('/bars/redeem-drink', { token }).then((r) => r.data),
+  verifyPartyEntry: (user_id) => api.post('/events/verify-entry', { user_id }).then((r) => r.data),
 };
 
 // Follow di eventi/organizzatori. PUT/DELETE idempotenti (toggle ottimistico).

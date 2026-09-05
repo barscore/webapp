@@ -16,6 +16,7 @@ import SuggestModal from '../components/SuggestModal.jsx';
 import ReportModal from '../components/ReportModal.jsx';
 import QrScannerModal from '../components/QrScannerModal.jsx';
 import FreeDrinkModal from '../components/FreeDrinkModal.jsx';
+import UserQrModal from '../components/UserQrModal.jsx';
 import ProposeDrinkModal from '../components/ProposeDrinkModal.jsx';
 import { LanguageMenuRow } from '../components/LanguagePicker.jsx';
 import { useI18n } from '../i18n/index.js';
@@ -414,6 +415,7 @@ export default function Home() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
   const [freeDrinkOpen, setFreeDrinkOpen] = useState(false);
+  const [userQrOpen, setUserQrOpen] = useState(false);
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const {
@@ -756,6 +758,9 @@ export default function Home() {
                 <div className="flex items-center gap-2 text-sm font-semibold text-ember-cream">
                   <Icon name="user" size={16} className="text-ember-ink" />@{user.username}
                   <PlusBadge plus={isPlus} /> <ExplorerBadge explorer={user?.is_explorer} />
+                  <button onClick={() => { setMenuOpen(false); setUserQrOpen(true); }} className="ml-auto flex items-center justify-center w-7 h-7 bg-ember-primary/20 text-ember-primary rounded-md hover:bg-ember-primary/30 transition-colors" title="Mostra il tuo QR">
+                    <span className="font-display font-bold text-[11px]">QR</span>
+                  </button>
                 </div>
                 {profile?.email && (
                   <div className="mt-1 truncate text-xs text-ember-muted">{profile.email}</div>
@@ -970,6 +975,7 @@ export default function Home() {
 
       {scannerOpen && <QrScannerModal onClose={() => setScannerOpen(false)} />}
       {freeDrinkOpen && <FreeDrinkModal token={user?.free_drink_token} onClose={() => setFreeDrinkOpen(false)} />}
+      {userQrOpen && <UserQrModal userId={user?.id} onClose={() => setUserQrOpen(false)} />}
 
       {proposeDrinkOpen && (
         <ProposeDrinkModal

@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import Icon from './Icon.jsx';
 import { useNavigate } from 'react-router-dom';
+import Toast from './Toast.jsx';
 
 export default function QrScannerModal({ onClose }) {
   const navigate = useNavigate();
+  const [toast, setToast] = useState(null);
 
   return (
     <div className="fixed inset-0 z-[1500] flex items-end justify-center bg-black/80 sm:items-center">
@@ -25,23 +27,28 @@ export default function QrScannerModal({ onClose }) {
           <Scanner 
             onScan={(result) => {
               if (result && result.length > 0) {
-                const text = result[0].rawValue;
+                let text = result[0].rawValue;
+                try { text = decodeURIComponent(text); } catch(e) {}
                 if (text.includes('/redeem?token=')) {
                   onClose();
                   try {
                     const url = new URL(text);
                     navigate(url.pathname + url.search);
                   } catch(e) {
-                    // if relative path
                     navigate(text);
                   }
+                } else {
+                  setToast({ msg: 'QR code non valido per il Free Drink.', icon: 'info' });
                 }
               }
             }}
             formats={['qr_code']}
+            allowMultiple={true}
+            scanDelay={2000}
           />
         </div>
       </div>
+      <Toast message={toast?.msg} icon={toast?.icon} onDone={() => setToast(null)} />
     </div>
   );
 }

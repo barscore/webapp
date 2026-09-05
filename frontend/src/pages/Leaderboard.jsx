@@ -6,6 +6,7 @@ import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import ProfileModal from '../components/ProfileModal.jsx';
 import PlusBadge from '../components/PlusBadge.jsx';
+import ExplorerBadge from '../components/ExplorerBadge.jsx';
 import { SkeletonRows } from '../components/Skeleton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { useI18n } from '../i18n/index.js';
@@ -59,7 +60,7 @@ function PodiumSpot({ u, rank, me, onOpen }) {
       </span>
       <span className="mt-1 flex w-full items-center justify-center gap-1 truncate text-sm font-semibold text-ember-cream">
         <span className="truncate">@{u.username}</span>
-        <PlusBadge plus={u.plus} />
+        <PlusBadge plus={u.plus} /> <ExplorerBadge explorer={u.is_explorer} />
         {me && <span className="ml-1 text-[10px] text-ember-ink">{t('board.you')}</span>}
       </span>
       <span className="flex items-center gap-1 font-display text-sm font-bold tabular-nums text-ember-cream">
@@ -170,7 +171,7 @@ export default function Leaderboard() {
                     <Avatar user={u} className="h-8 w-8" />
                     <span className="flex min-w-0 flex-1 items-center gap-1 truncate text-ember-cream">
                       <span className="truncate">@{u.username}</span>
-                      <PlusBadge plus={u.plus} />
+                      <PlusBadge plus={u.plus} /> <ExplorerBadge explorer={u.is_explorer} />
                       {me && <span className="ml-1 text-xs text-ember-ink">{t('board.you')}</span>}
                     </span>
                     <span className="flex items-center gap-1 font-display font-bold tabular-nums text-ember-cream">

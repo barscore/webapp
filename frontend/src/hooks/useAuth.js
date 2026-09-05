@@ -25,6 +25,8 @@ export function AuthProvider({ children }) {
   const [role, setRole] = useState(null);
   // rabar+ expiry, from the same profile row as the role. Plus = in the future.
   const [plusUntil, setPlusUntil] = useState(null);
+  const [isExplorer, setIsExplorer] = useState(false);
+  const [freeDrinkToken, setFreeDrinkToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -51,28 +53,21 @@ export function AuthProvider({ children }) {
     if (!user) {
       setRole(null);
       setPlusUntil(null);
+      setIsExplorer(false);
+      setFreeDrinkToken(null);
       return;
     }
     let active = true;
     supabase
       .from('profiles')
-      .select('role, plus_until')
+      .select('role, plus_until, is_explorer, free_drink_token')
       .eq('id', user.id)
       .maybeSingle()
       .then(({ data, error }) => {
         if (!active) return;
-        // Una lettura FALLITA non vuol dire "utente semplice". Trattarla come
-        // tale declassava chiunque a `user`: con profiles.plus_until ancora
-        // assente dal DB (PostgREST 42703) un admin si vedeva la schermata
-        // "attendi l'approvazione di un moderatore" sulla propria app. Qui il
-        // ruolo resta indeciso — `role === null` e' il segnale che i gate
-        // aspettano, e nessuno agisce su una supposizione.
+        // Una lettura FALLITA non vuol dire "utente semplice".
         if (error) {
           console.error('[rabar] lettura del profilo fallita', error);
-          // Il ruolo e' l'autorizzazione, `plus_until` un extra a pagamento:
-          // non devono cadere insieme. Con add_plus.sql non ancora girato la
-          // select intera falliva (PostgREST 42703) e un admin restava senza
-          // pannello sulla propria app. Qui si riprova col solo `role`.
           supabase
             .from('profiles')
             .select('role')
@@ -85,6 +80,8 @@ export function AuthProvider({ children }) {
         }
         setRole(data?.role ?? 'user');
         setPlusUntil(data?.plus_until ?? null);
+        setIsExplorer(data?.is_explorer ?? false);
+        setFreeDrinkToken(data?.free_drink_token ?? null);
       });
     // `role !== null` is the "profile row has landed" signal used by the
     // callers that must not act on a half-loaded session (theme lock, ads).
@@ -114,9 +111,11 @@ export function AuthProvider({ children }) {
 
   // Google OAuth — redirects to Google, returns to the app.
   async function loginWithGoogle() {
+    const params = new URLSearchParams(window.location.search);
+    const redirectTo = params.get('redirectTo') || '/';
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: window.location.origin + redirectTo },
     });
     if (error) throw error;
   }
@@ -133,13 +132,15 @@ export function AuthProvider({ children }) {
   const isPlus = !!plusUntil && new Date(plusUntil) > new Date();
 
   const value = {
-    user: user ? { ...user, role, plus: isPlus } : null,
+    user: user ? { ...user, role, plus: isPlus, is_explorer: isExplorer, free_drink_token: freeDrinkToken } : null,
     role,
     loading,
     isAuthenticated: !!user,
     isAdmin: role === 'admin',
     isPlus,
     plusUntil,
+    isExplorer,
+    freeDrinkToken,
     refreshPlus,
     login,
     register,

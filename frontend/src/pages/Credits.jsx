@@ -4,6 +4,7 @@ import { usersApi } from '../services/api.js';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import PlusBadge from '../components/PlusBadge.jsx';
+import ExplorerBadge from '../components/ExplorerBadge.jsx';
 import ProfileModal from '../components/ProfileModal.jsx';
 import { SkeletonRows } from '../components/Skeleton.jsx';
 import { useI18n } from '../i18n/index.js';
@@ -28,7 +29,7 @@ function PersonRow({ u, onOpen }) {
       <Avatar user={u} className="h-9 w-9" />
       <span className="flex min-w-0 flex-1 items-center gap-1.5 truncate text-sm font-semibold text-ember-cream">
         <span className="truncate">@{u.username}</span>
-        <PlusBadge plus={u.plus} />
+        <PlusBadge plus={u.plus} /> <ExplorerBadge explorer={u.is_explorer} />
       </span>
       <Icon name="arrow-right" size={14} className="shrink-0 text-ember-muted" />
     </button>
@@ -90,7 +91,7 @@ export default function Credits() {
                 <span className="min-w-0">
                   <span className="flex items-center gap-1.5 truncate font-display text-lg font-bold text-ember-cream">
                     <span className="truncate">@{data.founder.username}</span>
-                    <PlusBadge plus={data.founder.plus} size="md" />
+                    <PlusBadge plus={data.founder.plus} size="md" /> <ExplorerBadge explorer={data.founder.is_explorer} size="md" />
                   </span>
                   <span className="mt-0.5 block text-xs font-bold uppercase tracking-[0.1em] text-ember-ink">
                     {t('credits.founder')}

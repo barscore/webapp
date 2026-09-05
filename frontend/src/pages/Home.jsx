@@ -14,6 +14,8 @@ import { SkeletonRows } from '../components/Skeleton.jsx';
 import Toast from '../components/Toast.jsx';
 import SuggestModal from '../components/SuggestModal.jsx';
 import ReportModal from '../components/ReportModal.jsx';
+import QrScannerModal from '../components/QrScannerModal.jsx';
+import FreeDrinkModal from '../components/FreeDrinkModal.jsx';
 import ProposeDrinkModal from '../components/ProposeDrinkModal.jsx';
 import { LanguageMenuRow } from '../components/LanguagePicker.jsx';
 import { useI18n } from '../i18n/index.js';
@@ -27,6 +29,7 @@ import { barKey } from '../utils/score.js';
 import { openUntil23 } from '../utils/hours.js';
 import { useAuth } from '../hooks/useAuth.js';
 import PlusBadge from '../components/PlusBadge.jsx';
+import ExplorerBadge from '../components/ExplorerBadge.jsx';
 import { useBookmarks } from '../hooks/useBookmarks.js';
 import { useSheetDrag, useIsMobile } from '../hooks/useSheetDrag.js';
 
@@ -372,7 +375,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
 export default function Home() {
   const navigate = useNavigate();
   const { t, dateLocale } = useI18n();
-  const { isAuthenticated, isAdmin, user, logout, isPlus } = useAuth();
+  const { isAuthenticated, isAdmin, user, role, logout, isPlus } = useAuth();
   const { has, count, savedBars } = useBookmarks();
   const isMobile = useIsMobile();
 
@@ -409,6 +412,8 @@ export default function Home() {
     return ['eventi', 'drinks'].includes(wanted) ? wanted : 'vicini';
   });
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [freeDrinkOpen, setFreeDrinkOpen] = useState(false);
   const [suggestOpen, setSuggestOpen] = useState(false);
   const [reportOpen, setReportOpen] = useState(false);
   const {
@@ -750,7 +755,7 @@ export default function Home() {
               <div className="border-b border-ember-line/5 px-3 py-3">
                 <div className="flex items-center gap-2 text-sm font-semibold text-ember-cream">
                   <Icon name="user" size={16} className="text-ember-ink" />@{user.username}
-                  <PlusBadge plus={isPlus} />
+                  <PlusBadge plus={isPlus} /> <ExplorerBadge explorer={user?.is_explorer} />
                 </div>
                 {profile?.email && (
                   <div className="mt-1 truncate text-xs text-ember-muted">{profile.email}</div>
@@ -764,6 +769,26 @@ export default function Home() {
                     <span>{t('menu.since', { date: new Date(profile.created_at).toLocaleDateString(dateLocale) })}</span>
                   )}
                 </div>
+              {user?.free_drink_token && (
+                <div className="border-b border-ember-line/5 p-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setMenuOpen(false);
+                      setFreeDrinkOpen(true);
+                    }}
+                    className="w-full flex items-center justify-between p-3 rounded-lg bg-ember-primary/10 border border-ember-primary hover:bg-ember-primary/20 transition-colors"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Icon name="star" size={20} className="text-ember-primary" />
+                      <div className="text-left">
+                        <div className="font-display font-bold text-ember-cream text-[15px] leading-tight">GET 1 FREE DRINK</div>
+                        <div className="text-[10px] text-ember-primary leading-tight">Tocca per il QR code</div>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              )}
                 {/* Ice cubes → tap to open the leaderboard. */}
                 <button
                   type="button"
@@ -781,6 +806,18 @@ export default function Home() {
                   <Icon name="arrow-left" size={13} className="ml-auto rotate-180 text-ember-muted" />
                 </button>
               </div>
+              {(role === 'organizer' || isAdmin) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    setScannerOpen(true);
+                  }}
+                  className="flex w-full items-center gap-2 border-b border-ember-line/5 px-3 py-2.5 text-left text-sm font-semibold text-ember-primary hover:bg-ember-line/5"
+                >
+                  <Icon name="camera" size={16} className="text-ember-primary" /> Scansiona Drink
+                </button>
+              )}
               {isAdmin && (
                 <Link
                   to="/admin"
@@ -930,6 +967,9 @@ export default function Home() {
           onSent={() => setToast({ msg: t('home.suggestionSent'), icon: 'check' })}
         />
       )}
+
+      {scannerOpen && <QrScannerModal onClose={() => setScannerOpen(false)} />}
+      {freeDrinkOpen && <FreeDrinkModal token={user?.free_drink_token} onClose={() => setFreeDrinkOpen(false)} />}
 
       {proposeDrinkOpen && (
         <ProposeDrinkModal

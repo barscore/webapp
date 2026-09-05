@@ -28,15 +28,49 @@ const Credits = lazy(() => import('./pages/Credits.jsx'));
 const Maintenance = lazy(() => import('./pages/Maintenance.jsx'));
 const BoostResult = lazy(() => import('./pages/BoostResult.jsx'));
 const Plus = lazy(() => import('./pages/Plus.jsx'));
+const Redeem = lazy(() => import('./pages/Redeem.jsx'));
 
 // Blank dark screen while a lazy page chunk downloads (matches the app bg, so
 // no white flash).
 const Fallback = <div className="h-[100dvh] w-full bg-ember-bg" />;
 
 export default function App() {
-  const { isAdmin, role, isAuthenticated, loading, isPlus } = useAuth();
+  const { isAdmin, role, isAuthenticated, loading, isPlus, user } = useAuth();
   const location = useLocation();
-  const [maint, setMaint] = useState(null); // { maintenance_mode, maintenance_reason, maintenance_eta, beta_mode }
+  const [maint, setMaint] = useState(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const promo = params.get('promo');
+    if (promo) {
+      localStorage.setItem('rabar_promo', promo);
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (user && role !== null) {
+      const stored = localStorage.getItem('rabar_promo');
+      if (stored) {
+        // Delay: the DB trigger that creates the profile row after signUp may
+        // not have finished yet. Without this the POST /me/promo query finds
+        // no row and silently does nothing.
+        const timer = setTimeout(() => {
+          import('./services/api.js').then(({ meApi }) => {
+            meApi.applyPromo(stored).then(() => {
+              console.log('[rabar] promo applicata con successo');
+              localStorage.removeItem('rabar_promo');
+              window.location.reload();
+            }).catch((err) => {
+              console.error('[rabar] errore applicazione promo:', err);
+              // Don't clear — let it retry on next load.
+            });
+          });
+        }, 2000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [user, role]);
 
   // The profile row (role + rabar+) lands after the session; act on it only
   // once it's actually there, or a subscriber would get one frame of ads and a
@@ -144,6 +178,7 @@ export default function App() {
         <Route path="/admin" element={<Admin />} />
         <Route path="/boost/esito" element={<BoostResult />} />
         <Route path="/plus" element={<Plus />} />
+        <Route path="/redeem" element={<Redeem />} />
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/tos" element={<Tos />} />
         <Route path="/riconoscimenti" element={<Credits />} />

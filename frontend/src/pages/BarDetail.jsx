@@ -9,6 +9,7 @@ import BarDrinksSection from '../components/BarDrinksSection.jsx';
 import DirectionsButton from '../components/DirectionsButton.jsx';
 import Icon from '../components/Icon.jsx';
 import PlusBadge from '../components/PlusBadge.jsx';
+import ExplorerBadge from '../components/ExplorerBadge.jsx';
 import Toast from '../components/Toast.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import BarOwnerActions from '../components/BarOwnerActions.jsx';
@@ -319,7 +320,7 @@ export default function BarDetail() {
                       <span className="flex items-center gap-1.5 font-medium text-ember-cream">
                         <Icon name="user" size={14} className="text-ember-muted" />
                         @{r.profiles?.username || t('common.user')}
-                        <PlusBadge plus={r.profiles?.plus} />
+                        <PlusBadge plus={r.profiles?.plus} /> <ExplorerBadge explorer={r.profiles?.is_explorer} />
                       </span>
                       <span className="flex items-center gap-2 text-xs text-ember-ink">
                         <span className="flex items-center gap-0.5">

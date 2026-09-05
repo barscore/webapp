@@ -491,6 +491,8 @@ export default {
   'plus.perkThemes': '全部主题',
   'plus.perkThemesBody': '解锁所有配色，包括以后新增的。',
   'plus.perkNoAds': '没有广告',
+  'plus.perkDrink': '1 杯免费饮料',
+  'plus.perkDrinkBody': '在酒吧出示二维码即可获得免费饮料。',
   'plus.perkNoAdsBody': '任何页面都不会出现广告。',
   'plus.plan.week': '每周',
   'plus.plan.month': '每月',

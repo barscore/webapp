@@ -491,6 +491,8 @@ export default {
   'plus.perkThemes': 'Все темы',
   'plus.perkThemesBody': 'Все палитры открыты, включая будущие.',
   'plus.perkNoAds': 'Без рекламы',
+  'plus.perkDrink': '1 Бесплатный напиток',
+  'plus.perkDrinkBody': 'Покажите QR-код в баре, чтобы получить бесплатный напиток.',
   'plus.perkNoAdsBody': 'Никаких объявлений ни на одном экране.',
   'plus.plan.week': 'Неделя',
   'plus.plan.month': 'Месяц',

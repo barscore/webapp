@@ -23,7 +23,9 @@ export default function Login() {
     setError('');
     try {
       await login(email, password);
-      navigate('/');
+      const params = new URLSearchParams(window.location.search);
+      const redirectTo = params.get('redirectTo') || '/';
+      navigate(redirectTo);
     } catch (err) {
       setError(err.response?.data?.error || t('auth.loginFailed'));
     } finally {

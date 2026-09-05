@@ -238,6 +238,13 @@ textarea,
   user-select: text;
 }
 
+/* Impedisce lo zoom di iOS Safari quando si clicca su un input con font-size < 16px (es. text-sm). */
+@supports (-webkit-touch-callout: none) {
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
 /* Leaflet must have an explicit height to render. */
 .leaflet-container {
   height: 100%;

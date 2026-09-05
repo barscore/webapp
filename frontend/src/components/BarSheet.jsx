@@ -9,6 +9,7 @@ import BarDrinksSection from './BarDrinksSection.jsx';
 import DirectionsButton from './DirectionsButton.jsx';
 import Icon from './Icon.jsx';
 import PlusBadge from './PlusBadge.jsx';
+import ExplorerBadge from './ExplorerBadge.jsx';
 import Toast from './Toast.jsx';
 import EmptyState from './EmptyState.jsx';
 import BarOwnerActions from './BarOwnerActions.jsx';
@@ -315,7 +316,7 @@ export default function BarSheet({ seed, onClose, onChanged }) {
                           <span className="flex items-center gap-1.5 font-medium text-ember-cream">
                             <Icon name="user" size={14} className="text-ember-muted" />
                             @{r.profiles?.username || t('common.user')}
-                            <PlusBadge plus={r.profiles?.plus} />
+                            <PlusBadge plus={r.profiles?.plus} /> <ExplorerBadge explorer={r.profiles?.is_explorer} />
                           </span>
                           <span className="flex items-center gap-2 text-xs text-ember-ink">
                             <span className="flex items-center gap-0.5"><Icon name="euro" size={12} />{r.prezzo}</span>

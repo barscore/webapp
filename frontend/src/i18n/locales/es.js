@@ -492,6 +492,8 @@ export default {
   'plus.perkThemes': 'Todos los temas',
   'plus.perkThemesBody': 'Todas las paletas desbloqueadas, también las futuras.',
   'plus.perkNoAds': 'Sin publicidad',
+  'plus.perkDrink': '1 Bebida Gratis',
+  'plus.perkDrinkBody': 'Muestra el código QR en el bar para recibir una bebida gratis.',
   'plus.perkNoAdsBody': 'Ningún anuncio, en ninguna pantalla.',
   'plus.plan.week': 'Semana',
   'plus.plan.month': 'Mes',

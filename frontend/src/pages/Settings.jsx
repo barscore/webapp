@@ -178,6 +178,8 @@ export default function Settings() {
             />
           </dl>
         </section>
+        
+        
 
         {/* ---- Preferenze ---- */}
         <GroupLabel icon="filters">{t('settings.groupPrefs')}</GroupLabel>

@@ -148,6 +148,25 @@ function UsersTab({ notify, onChange }) {
 
   return (
     <section className="space-y-3">
+      <div className="card p-4 mb-4">
+        <h3 className="font-display font-bold text-ember-cream">Link Esploratore (Acquisizione)</h3>
+        <p className="mt-1 text-sm text-ember-muted">
+          Chi si registra tramite questo link ottiene il badge Esploratore e un free drink.
+        </p>
+        <div className="mt-3 flex items-center gap-2">
+          <input readOnly value="https://rabar.it/register?promo=explorer" className="field flex-1 text-sm" />
+          <button
+            onClick={() => {
+              import('../utils/share.js').then((m) => m.copyText('https://rabar.it/register?promo=explorer'));
+              notify('Link copiato');
+            }}
+            className="btn-primary px-3 py-1.5 text-sm"
+          >
+            Copia
+          </button>
+        </div>
+      </div>
+
       <SearchBar value={q} onChange={setQ} placeholder="Cerca username o email…" />
 
       {/* Role filter */}
@@ -1102,22 +1121,48 @@ function OrganizersTab({ notify }) {
     }
   }
 
-  const Actions = ({ kind, id }) => (
-    <div className="mt-2 flex gap-2">
-      <button
-        onClick={() => review(kind, id, 'approve')}
-        className="rounded-lg bg-ember-primary px-3 py-1 text-xs font-semibold text-ember-on-primary"
-      >
-        Approva
-      </button>
-      <button
-        onClick={() => review(kind, id, 'reject')}
-        className="rounded-lg border border-ember-danger px-3 py-1 text-xs font-semibold text-ember-danger"
-      >
-        Rifiuta
-      </button>
-    </div>
-  );
+  async function revokeClaim(id) {
+    if (!window.confirm('Vuoi revocare la proprietà di questo bar all\'utente?')) return;
+    try {
+      await organizerAdminApi.revokeClaim(id);
+      notify('Proprietà revocata');
+      load();
+    } catch(err) {
+      notify(err?.response?.data?.error || 'Operazione fallita', 'info');
+    }
+  }
+
+  const Actions = ({ kind, id, itemStatus }) => {
+    if (itemStatus === 'approved' && kind === 'claim') {
+      return (
+        <div className="mt-2 flex gap-2">
+          <button
+            onClick={() => revokeClaim(id)}
+            className="rounded-lg border border-ember-danger px-3 py-1 text-xs font-semibold text-ember-danger transition hover:bg-ember-danger/10"
+          >
+            Revoca Proprietà
+          </button>
+        </div>
+      );
+    }
+    if (itemStatus !== 'pending') return null;
+    return (
+      <div className="mt-2 flex gap-2">
+        <button
+          onClick={() => review(kind, id, 'approve')}
+          className="rounded-lg bg-ember-primary px-3 py-1 text-xs font-semibold text-ember-on-primary transition hover:bg-ember-primary/80"
+        >
+          Approva
+        </button>
+        <button
+          onClick={() => review(kind, id, 'reject')}
+          className="rounded-lg border border-ember-danger px-3 py-1 text-xs font-semibold text-ember-danger transition hover:bg-ember-danger/10"
+        >
+          Rifiuta
+        </button>
+      </div>
+    );
+  };
 
   return (
     <section className="space-y-3">
@@ -1186,7 +1231,7 @@ function OrganizersTab({ notify }) {
             {r.admin_note && (
               <p className="mt-1 text-xs text-ember-muted">Nota: {r.admin_note}</p>
             )}
-            {r.status === 'pending' && <Actions kind="request" id={r.id} />}
+            <Actions kind="request" id={r.id} itemStatus={r.status} />
           </div>
         ))}
       </div>
@@ -1228,7 +1273,7 @@ function OrganizersTab({ notify }) {
             {cl.admin_note && (
               <p className="mt-1 text-xs text-ember-muted">Nota: {cl.admin_note}</p>
             )}
-            {cl.status === 'pending' && <Actions kind="claim" id={cl.id} />}
+            <Actions kind="claim" id={cl.id} itemStatus={cl.status} />
           </div>
         ))}
       </div>

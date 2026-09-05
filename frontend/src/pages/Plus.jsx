@@ -18,7 +18,7 @@ const PER_YEAR = { week: 52, month: 12, year: 1 };
 // stato non arriva mai dal query param, ma dal backend (webhook firmato).
 export default function Plus() {
   const { t, dateLocale } = useI18n();
-  const { isAuthenticated, isPlus, refreshPlus } = useAuth();
+  const { isAuthenticated, isPlus, user, refreshPlus } = useAuth();
 
   const [plans, setPlans] = useState([]);
   const [plan, setPlan] = useState('month');
@@ -98,6 +98,7 @@ export default function Plus() {
   const PERKS = [
     { icon: 'plus', title: t('plus.perkBadge'), body: t('plus.perkBadgeBody') },
     { icon: 'star', title: t('plus.perkThemes'), body: t('plus.perkThemesBody') },
+    { icon: 'star', title: t('plus.perkDrink'), body: t('plus.perkDrinkBody') },
     { icon: 'check', title: t('plus.perkNoAds'), body: t('plus.perkNoAdsBody') },
   ];
 

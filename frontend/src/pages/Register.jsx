@@ -42,7 +42,9 @@ export default function Register() {
     setError('');
     try {
       await register(email, password, username);
-      navigate('/');
+      const params = new URLSearchParams(window.location.search);
+      const redirectTo = params.get('redirectTo') || '/';
+      navigate(redirectTo);
     } catch (err) {
       setError(err.response?.data?.error || t('auth.registerFailed'));
     } finally {

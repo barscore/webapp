@@ -107,6 +107,7 @@ export const bookmarksApi = {
 // Account-scoped self data. Requires an authenticated session.
 export const meApi = {
   profile: () => api.get('/me').then((r) => r.data.profile),
+  applyPromo: (promo) => api.post('/me/promo', { promo }).then((r) => r.data),
   ratings: () => api.get('/me/ratings').then((r) => expectArray(r.data.ratings, 'meRatings')),
   deleteAccount: () => api.delete('/me').then((r) => r.data),
   // Portabilità (art. 20 GDPR). Il backend manda un Content-Disposition, ma
@@ -280,6 +281,7 @@ export const organizerApi = {
   myEvents: () => api.get('/me/events').then((r) => expectArray(r.data.events, 'myEvents')),
   claimBar: (barId, payload) =>
     api.post(`/bars/${barId}/claim`, payload).then((r) => r.data.claim),
+  redeemDrink: (token) => api.post('/bars/redeem-drink', { token }).then((r) => r.data),
 };
 
 // Follow di eventi/organizzatori. PUT/DELETE idempotenti (toggle ottimistico).
@@ -337,6 +339,8 @@ export const organizerAdminApi = {
     ),
   reviewClaim: (id, action, admin_note) =>
     api.post(`/admin/organizers/claims/${id}/${action}`, { admin_note }).then((r) => r.data),
+  revokeClaim: (id) =>
+    api.post(`/admin/organizers/claims/${id}/revoke`).then((r) => r.data),
 };
 
 export const ratingsApi = {

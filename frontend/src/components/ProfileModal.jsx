@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { usersApi } from '../services/api.js';
 import Icon from './Icon.jsx';
 import PlusBadge from './PlusBadge.jsx';
+import ExplorerBadge from './ExplorerBadge.jsx';
 import { useI18n } from '../i18n/index.js';
 
 // Ruoli → badge label/i18n. Founder is derived server-side (is_founder), not a
@@ -89,6 +90,7 @@ export default function ProfileModal({ userId, onClose }) {
             <h3 className="mt-3 flex items-center justify-center gap-1.5 truncate font-display text-xl font-bold text-ember-cream">
               <span className="truncate">@{profile.username}</span>
               <PlusBadge plus={profile.plus} size="md" />
+              <ExplorerBadge explorer={profile.is_explorer} size="md" />
             </h3>
 
             {(profile.is_founder || badge) && (

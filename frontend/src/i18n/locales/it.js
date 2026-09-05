@@ -517,6 +517,8 @@ export default {
   'plus.perkThemes': 'Tutti i temi',
   'plus.perkThemesBody': 'Ogni palette sbloccata, anche quelle future.',
   'plus.perkNoAds': 'Niente pubblicità',
+  'plus.perkDrink': '1 Free Drink',
+  'plus.perkDrinkBody': 'Mostra il QR code in cassa e ricevi un drink omaggio.',
   'plus.perkNoAdsBody': 'Nessun annuncio, su nessuna schermata.',
   'plus.plan.week': 'Settimana',
   'plus.plan.month': 'Mese',

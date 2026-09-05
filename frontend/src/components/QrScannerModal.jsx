@@ -1,32 +1,59 @@
-import { useState } from 'react';
-import { Scanner, setZXingModuleOverrides } from '@yudiel/react-qr-scanner';
+import { useEffect, useState } from 'react';
+import { Html5Qrcode } from 'html5-qrcode';
 import Icon from './Icon.jsx';
 import { useNavigate } from 'react-router-dom';
 import Toast from './Toast.jsx';
-
-// Forza il caricamento del WASM da unpkg nel caso in cui jsdelivr sia bloccato.
-setZXingModuleOverrides({
-  locateFile: (path, prefix) => {
-    if (path.endsWith('.wasm')) {
-      return `https://unpkg.com/zxing-wasm@3.1.3/dist/reader/${path}`;
-    }
-    return prefix + path;
-  },
-});
 
 export default function QrScannerModal({ onClose }) {
   const navigate = useNavigate();
   const [toast, setToast] = useState(null);
 
-  // Example tracker function to draw a green box around detected barcodes
-  const tracker = (detectedCodes, ctx) => {
-    detectedCodes.forEach((detectedCode) => {
-      const { boundingBox } = detectedCode;
-      ctx.strokeStyle = '#00FF00';
-      ctx.lineWidth = 4;
-      ctx.strokeRect(boundingBox.x, boundingBox.y, boundingBox.width, boundingBox.height);
+  useEffect(() => {
+    const html5QrCode = new Html5Qrcode("qr-reader");
+    let isScanning = false;
+
+    html5QrCode.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 250, height: 250 } },
+      (decodedText) => {
+        if (!isScanning) return;
+        let text = decodedText;
+        try { text = decodeURIComponent(text); } catch(e) {}
+        
+        if (text.includes('/redeem?token=')) {
+          isScanning = false;
+          html5QrCode.stop().then(() => {
+            onClose();
+            try {
+              const url = new URL(text);
+              navigate(url.pathname + url.search);
+            } catch(e) {
+              navigate(text);
+            }
+          }).catch(() => {
+            onClose();
+            navigate(text);
+          });
+        } else {
+          setToast({ msg: 'QR code non valido per il Free Drink.', icon: 'info' });
+        }
+      },
+      (errorMessage) => {
+        // frame decoding errors are expected continuously while finding a QR
+      }
+    ).then(() => {
+      isScanning = true;
+    }).catch((err) => {
+      setToast({ msg: `Impossibile avviare la fotocamera: ${err?.message || err}`, icon: 'info' });
     });
-  };
+
+    return () => {
+      isScanning = false;
+      try {
+        html5QrCode.stop().catch(() => {});
+      } catch (e) {}
+    };
+  }, [navigate, onClose]);
 
   return (
     <div className="fixed inset-0 z-[1500] flex items-end justify-center bg-black/80 sm:items-center">
@@ -44,32 +71,7 @@ export default function QrScannerModal({ onClose }) {
         </div>
         
         <div className="overflow-hidden rounded-xl bg-black">
-          <Scanner 
-            onScan={(result) => {
-              if (result && result.length > 0) {
-                let text = result[0].rawValue;
-                try { text = decodeURIComponent(text); } catch(e) {}
-                if (text.includes('/redeem?token=')) {
-                  onClose();
-                  try {
-                    const url = new URL(text);
-                    navigate(url.pathname + url.search);
-                  } catch(e) {
-                    navigate(text);
-                  }
-                } else {
-                  setToast({ msg: 'QR code non valido per il Free Drink.', icon: 'info' });
-                }
-              }
-            }}
-            onError={(err) => {
-              console.error(err);
-              setToast({ msg: `Errore lettore: ${err.message || err}`, icon: 'info' });
-            }}
-            components={{ tracker }}
-            allowMultiple={true}
-            scanDelay={2000}
-          />
+          <div id="qr-reader" className="w-full"></div>
         </div>
       </div>
       <Toast message={toast?.msg} icon={toast?.icon} onDone={() => setToast(null)} />

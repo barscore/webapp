@@ -759,7 +759,7 @@ export default function Home() {
                   <Icon name="user" size={16} className="text-ember-ink" />@{user.username}
                   <PlusBadge plus={isPlus} /> <ExplorerBadge explorer={user?.is_explorer} />
                   <button onClick={() => { setMenuOpen(false); setUserQrOpen(true); }} className="ml-auto flex items-center justify-center w-7 h-7 bg-ember-primary/20 text-ember-primary rounded-md hover:bg-ember-primary/30 transition-colors" title="Mostra il tuo QR">
-                    <span className="font-display font-bold text-[11px]">QR</span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="6" y="6" width="1" height="1"></rect><rect x="17" y="6" width="1" height="1"></rect><rect x="17" y="17" width="1" height="1"></rect><rect x="6" y="17" width="1" height="1"></rect></svg>
                   </button>
                 </div>
                 {profile?.email && (
@@ -820,7 +820,7 @@ export default function Home() {
                   }}
                   className="flex w-full items-center gap-2 border-b border-ember-line/5 px-3 py-2.5 text-left text-sm font-semibold text-ember-primary hover:bg-ember-line/5"
                 >
-                  <Icon name="camera" size={16} className="text-ember-primary" /> Scansiona Drink
+                  <Icon name="camera" size={16} className="text-ember-primary" /> Scanner (Drink e Pass)
                 </button>
               )}
               {isAdmin && (

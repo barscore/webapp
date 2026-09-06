@@ -25,6 +25,9 @@ export default function EventComposer({ event = null, bars = [], center, onClose
   const [place, setPlace] = useState(null); // { lat, lng, label } scelto dai risultati
   const [startsAt, setStartsAt] = useState(toLocalInput(event?.starts_at));
   const [endsAt, setEndsAt] = useState(toLocalInput(event?.ends_at));
+  const [hasPresales, setHasPresales] = useState(event?.has_presales ?? false);
+  const [photoUrl, setPhotoUrl] = useState(event?.photo_url ?? '');
+  const [freeDrink, setFreeDrink] = useState(event?.free_drink ?? false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const editing = !!event;
@@ -61,6 +64,9 @@ export default function EventComposer({ event = null, bars = [], center, onClose
       description: description.trim() || undefined,
       starts_at: new Date(startsAt).toISOString(),
       ends_at: endsAt ? new Date(endsAt).toISOString() : undefined,
+      has_presales: hasPresales,
+      photo_url: photoUrl.trim() || null,
+      free_drink: freeDrink,
     };
     try {
       if (editing) {
@@ -222,6 +228,36 @@ export default function EventComposer({ event = null, bars = [], center, onClose
               className="field mt-1 py-2 text-sm"
             />
           </div>
+        </div>
+
+        <label className="mt-3 block text-xs text-ember-muted">URL Foto Evento</label>
+        <input
+          value={photoUrl}
+          onChange={(e) => setPhotoUrl(e.target.value)}
+          maxLength={1000}
+          placeholder="https://..."
+          className="field mt-1 py-2 text-sm"
+        />
+
+        <div className="mt-4 flex flex-col gap-2">
+          <label className="flex items-center gap-2 text-sm text-ember-cream cursor-pointer">
+            <input
+              type="checkbox"
+              checked={hasPresales}
+              onChange={(e) => setHasPresales(e.target.checked)}
+              className="h-4 w-4 rounded border-ember-line/20 bg-ember-ink text-ember-primary focus:ring-ember-primary focus:ring-offset-ember-card"
+            />
+            Attiva Prevendite
+          </label>
+          <label className="flex items-center gap-2 text-sm text-ember-cream cursor-pointer">
+            <input
+              type="checkbox"
+              checked={freeDrink}
+              onChange={(e) => setFreeDrink(e.target.checked)}
+              className="h-4 w-4 rounded border-ember-line/20 bg-ember-ink text-ember-primary focus:ring-ember-primary focus:ring-offset-ember-card"
+            />
+            Free Drink
+          </label>
         </div>
 
         {error && <p className="mt-3 text-sm text-ember-danger">{error}</p>}

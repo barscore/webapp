@@ -10,8 +10,14 @@ import { useI18n } from '../i18n/index.js';
 // metadata; the DB trigger `handle_new_user` turns it into a profiles row.
 export default function Register() {
   const { t } = useI18n();
-  const { register } = useAuth();
+  const { register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,6 +42,10 @@ export default function Register() {
     e.preventDefault();
     if (!accepted) {
       setError(t('auth.mustAccept'));
+      return;
+    }
+    if (username.length < 3) {
+      setError(t('auth.usernameMin', 'Lo username deve avere almeno 3 caratteri'));
       return;
     }
     setBusy(true);

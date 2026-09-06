@@ -73,6 +73,8 @@ export const barsApi = {
   // Find-or-create the DB bar backing an OpenStreetMap place, so ratings can
   // attach to it. Returns the full bar (with real uuid + summary).
   resolve: (payload) => api.post('/bars/resolve', payload).then((r) => r.data.bar),
+  updateFreeDrinks: (id, payload) => api.patch(`/bars/${id}/free-drinks`, payload).then((r) => r.data),
+  freeDrinks: (params) => api.get('/bars/free-drinks', { params }).then((r) => expectArray(r.data.bars, 'bars')),
 };
 
 // Free OSM-backed discovery (Overpass + Nominatim, proxied by the backend).
@@ -87,10 +89,14 @@ export const placesApi = {
 
 // Zone events, added by hand for venues. Read is public; writes are admin/mod.
 export const eventsApi = {
-  nearby: (params) => api.get('/events', { params }).then((r) => expectArray(r.data.events, 'events')),
+  nearby: (params) => api.get('/events', { params }).then((r) => r.data.events),
+  get: (id) => api.get(`/events/${id}`).then((r) => r.data.event),
   create: (payload) => api.post('/events', payload).then((r) => r.data.event),
   update: (id, payload) => api.put(`/events/${id}`, payload).then((r) => r.data.event),
   remove: (id) => api.delete(`/events/${id}`).then((r) => r.data),
+  prs: (id) => api.get(`/events/${id}/prs`).then((r) => r.data.prs),
+  join: (id) => api.post(`/events/${id}/join`).then((r) => r.data),
+  leave: (id) => api.delete(`/events/${id}/join`).then((r) => r.data),
 };
 
 // Account-scoped saved bars. Requires an authenticated session.
@@ -107,6 +113,7 @@ export const bookmarksApi = {
 // Account-scoped self data. Requires an authenticated session.
 export const meApi = {
   profile: () => api.get('/me').then((r) => r.data.profile),
+  updateProfile: (data) => api.patch('/me', data).then((r) => r.data.profile),
   applyPromo: (promo) => api.post('/me/promo', { promo }).then((r) => r.data),
   ratings: () => api.get('/me/ratings').then((r) => expectArray(r.data.ratings, 'meRatings')),
   deleteAccount: () => api.delete('/me').then((r) => r.data),

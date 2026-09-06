@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
 import Logo from '../components/Logo.jsx';
@@ -10,8 +10,14 @@ import { useI18n } from '../i18n/index.js';
 // custom backend endpoint) — see hooks/useAuth.js.
 export default function Login() {
   const { t } = useI18n();
-  const { login } = useAuth();
+  const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
+  
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -36,7 +42,7 @@ export default function Login() {
   return (
     <AuthShell title={t('auth.loginTitle')}>
       <form onSubmit={handleSubmit} className="space-y-4">
-        <Field label={t('auth.email')} type="email" value={email} onChange={setEmail} />
+        <Field label={t('auth.email') + ' / ' + t('auth.username')} type="text" value={email} onChange={setEmail} />
         <Field label={t('auth.password')} type="password" value={password} onChange={setPassword} />
         {error && <p className="text-sm text-ember-danger">{error}</p>}
         <button

@@ -11,11 +11,14 @@ import { loadAdsense, adsenseLoaded } from './services/adsense.js';
 import { consentGranted, onConsentChange } from './services/consent.js';
 import { enforcePlusTheme } from './hooks/useTheme.js';
 
+import ExplorerPromoModal from './components/ExplorerPromoModal.jsx';
+
 // Route-level code splitting: only Home (the landing map) ships in the initial
 // bundle; every other page loads on first navigation. Keeps heavy deps out of
 // the critical path.
 const BarDetail = lazy(() => import('./pages/BarDetail.jsx'));
 const DrinkDetail = lazy(() => import('./pages/DrinkDetail.jsx'));
+const EventDetail = lazy(() => import('./pages/EventDetail.jsx'));
 const Login = lazy(() => import('./pages/Login.jsx'));
 const Register = lazy(() => import('./pages/Register.jsx'));
 const Settings = lazy(() => import('./pages/Settings.jsx'));
@@ -58,13 +61,16 @@ export default function App() {
         // no row and silently does nothing.
         const timer = setTimeout(() => {
           import('./services/api.js').then(({ meApi }) => {
-            meApi.applyPromo(stored).then(() => {
+            meApi.applyPromo(stored).then((res) => {
               console.log('[rabar] promo applicata con successo');
               localStorage.removeItem('rabar_promo');
+              if (res.is_new && !res.has_token) {
+                localStorage.setItem('show_explorer_promo', '1');
+              }
               window.location.reload();
             }).catch((err) => {
               console.error('[rabar] errore applicazione promo:', err);
-              // Don't clear — let it retry on next load.
+              // Retry on next load
             });
           });
         }, 2000);
@@ -164,6 +170,7 @@ export default function App() {
     <>
       <BanBanner />
       <TutorialSplash />
+      <ExplorerPromoModal />
       <InstallHint />
       <CookieBanner />
       <Suspense fallback={Fallback}>
@@ -171,6 +178,7 @@ export default function App() {
         <Route path="/" element={<Home />} />
         <Route path="/bar/:id" element={<BarDetail />} />
         <Route path="/drink/:id" element={<DrinkDetail />} />
+        <Route path="/event/:id" element={<EventDetail />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/impostazioni" element={<Settings />} />

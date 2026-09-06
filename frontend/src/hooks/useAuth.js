@@ -1,5 +1,6 @@
 import { createContext, createElement, useContext, useEffect, useState } from 'react';
 import { supabase } from '../services/supabase.js';
+import { api } from '../services/api.js';
 
 const AuthContext = createContext(null);
 
@@ -90,11 +91,19 @@ export function AuthProvider({ children }) {
     };
   }, [user, plusTick]);
 
-  // Email/password sign-in.
-  async function login(email, password) {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) throw error;
-    return toUser(data.user);
+  // Email/username password sign-in.
+  async function login(loginStr, password) {
+    if (loginStr.includes('@')) {
+      const { data, error } = await supabase.auth.signInWithPassword({ email: loginStr, password });
+      if (error) throw error;
+      return toUser(data.user);
+    } else {
+      const res = await api.post('/auth/login', { login: loginStr, password });
+      const { session } = res.data;
+      const { data, error } = await supabase.auth.setSession(session);
+      if (error) throw error;
+      return toUser(data.user);
+    }
   }
 
   // Email/password sign-up. username is stored in user metadata; the DB trigger
@@ -128,7 +137,8 @@ export function AuthProvider({ children }) {
   // Re-read the profile row — used after a rabar+ checkout comes back, so the
   // badge and the unlocked themes appear without a reload.
   const refreshPlus = () => setPlusTick((n) => n + 1);
-
+  if (typeof window !== 'undefined') window.__refreshAuth = refreshPlus;
+  
   const isPlus = !!plusUntil && new Date(plusUntil) > new Date();
 
   const value = {

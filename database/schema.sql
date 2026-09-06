@@ -87,6 +87,8 @@ CREATE TABLE public.bars (
   opening_hours     JSONB,
   cover_image_url   TEXT,
   is_active         BOOLEAN NOT NULL DEFAULT TRUE,
+  accepts_free_drinks BOOLEAN NOT NULL DEFAULT FALSE,
+  free_drinks_hours TEXT,
   created_by        UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
   created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
@@ -192,7 +194,7 @@ BEGIN
 
   RETURN NULL;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 CREATE TRIGGER trigger_update_ratings_summary
 AFTER INSERT OR UPDATE OR DELETE ON public.ratings
@@ -261,6 +263,7 @@ RETURNS TABLE (
   id UUID, name TEXT, address TEXT, city TEXT,
   lat DOUBLE PRECISION, lng DOUBLE PRECISION,
   avg_overall NUMERIC, total_ratings INTEGER,
+  accepts_free_drinks BOOLEAN, free_drinks_hours TEXT,
   distance_km DOUBLE PRECISION
 ) AS $$
 BEGIN
@@ -269,6 +272,8 @@ BEGIN
     b.id, b.name, b.address, b.city, b.lat, b.lng,
     COALESCE(s.avg_overall, 0),
     COALESCE(s.total_ratings, 0),
+    b.accepts_free_drinks,
+    b.free_drinks_hours,
     ROUND((ST_Distance(
       ST_SetSRID(ST_MakePoint(b.lng, b.lat), 4326)::geography,
       ST_SetSRID(ST_MakePoint(user_lng, user_lat), 4326)::geography

@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
 import { organizerApi, eventsApi } from '../services/api.js';
 import Icon from './Icon.jsx';
@@ -106,9 +107,9 @@ export default function OrganizerTools({ center, bars = [], onChanged }) {
             <p className="p-3 text-sm text-ember-muted">{t('ot.noneYet')}</p>
           )}
           {mine.map((ev) => (
-            <div key={ev.id} className="flex items-center gap-2 p-3">
-              <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-semibold text-ember-cream">
+            <div key={ev.id} className="flex items-center gap-2 p-3 hover:bg-ember-line/5 transition">
+              <Link to={`/event/${ev.id}`} className="min-w-0 flex-1 block group">
+                <p className="truncate text-sm font-semibold text-ember-cream group-hover:text-ember-primary transition">
                   {ev.title}
                   {ev.sponsored && (
                     <span className="ml-2 rounded-full bg-ember-primary/15 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ember-ink">
@@ -124,7 +125,7 @@ export default function OrganizerTools({ center, bars = [], onChanged }) {
                 <p className="mt-0.5 truncate text-[11px] uppercase tracking-[0.07em] text-ember-muted">
                   {[FMT.format(new Date(ev.starts_at)), ev.bar_name].filter(Boolean).join(' · ')}
                 </p>
-              </div>
+              </Link>
               {!ev.cancelled_at && (
                 <>
                   {isOrganizer && (

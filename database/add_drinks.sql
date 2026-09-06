@@ -118,7 +118,7 @@ BEGIN
 
   RETURN NULL;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
 
 DROP TRIGGER IF EXISTS trigger_update_drink_bar_summary ON public.drink_ratings;
 CREATE TRIGGER trigger_update_drink_bar_summary

@@ -44,6 +44,7 @@ export default function MyRatings() {
     if (!confirm(t('my.deleteConfirm'))) return;
     try {
       await ratingsApi.remove(r.bar_id, r.id);
+      if (window.__refreshAuth) window.__refreshAuth();
       setRatings((list) => list.filter((x) => x.id !== r.id));
       setToast({ msg: t('bar.ratingDeleted'), icon: 'trash' });
     } catch {

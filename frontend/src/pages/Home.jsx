@@ -774,24 +774,64 @@ export default function Home() {
                     <span>{t('menu.since', { date: new Date(profile.created_at).toLocaleDateString(dateLocale) })}</span>
                   )}
                 </div>
-              {user?.free_drink_token && (
+              {user?.is_explorer && (
                 <div className="border-b border-ember-line/5 p-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      setFreeDrinkOpen(true);
-                    }}
-                    className="w-full flex items-center justify-between p-3 rounded-lg bg-ember-primary/10 border border-ember-primary hover:bg-ember-primary/20 transition-colors"
-                  >
-                    <div className="flex items-center gap-2">
-                      <Icon name="star" size={20} className="text-ember-primary" />
-                      <div className="text-left">
-                        <div className="font-display font-bold text-ember-cream text-[15px] leading-tight">GET 1 FREE DRINK</div>
-                        <div className="text-[10px] text-ember-primary leading-tight">Tocca per il QR code</div>
+                  {user.free_drink_token ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        setFreeDrinkOpen(true);
+                      }}
+                      className="w-full flex items-center justify-between p-3 rounded-lg bg-ember-primary/10 border border-ember-primary hover:bg-ember-primary/20 transition-colors"
+                    >
+                      <div className="flex items-center gap-2">
+                        <Icon name="star" size={20} className="text-ember-primary" />
+                        <div className="text-left">
+                          <div className="font-display font-bold text-ember-cream text-[15px] leading-tight">GET 1 FREE DRINK</div>
+                          <div className="text-[10px] text-ember-primary leading-tight">Tocca per il QR code</div>
+                        </div>
                       </div>
+                    </button>
+                  ) : (
+                    <div className="p-3 rounded-lg bg-ember-card border border-ember-line/10">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Icon name="cocktail" size={18} className="text-ember-primary" />
+                        <div className="text-left">
+                          <div className="font-display font-bold text-ember-cream text-sm leading-tight">Promo Explorer</div>
+                        </div>
+                      </div>
+                      
+                      {profile?.ratings_count >= 5 ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            import('../services/api.js').then(({ meApi }) => {
+                              meApi.applyPromo('explorer').then(() => {
+                                window.location.reload();
+                              });
+                            });
+                          }}
+                          className="btn-primary w-full py-2 text-sm"
+                        >
+                          Riscatta Free Drink!
+                        </button>
+                      ) : (
+                        <div>
+                          <div className="flex justify-between text-xs text-ember-muted mb-1">
+                            <span>Recensioni per il Free Drink</span>
+                            <span className="font-bold text-ember-cream">{profile?.ratings_count ?? 0} / 5</span>
+                          </div>
+                          <div className="h-1.5 w-full bg-ember-line/10 rounded-full overflow-hidden">
+                            <div 
+                              className="h-full bg-ember-primary transition-all duration-500" 
+                              style={{ width: `${Math.min(100, ((profile?.ratings_count ?? 0) / 5) * 100)}%` }} 
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  </button>
+                  )}
                 </div>
               )}
                 {/* Ice cubes → tap to open the leaderboard. */}
@@ -952,7 +992,14 @@ export default function Home() {
           <BarSheet
             seed={selected}
             onClose={closeSheet}
-            onChanged={() => setReloadKey((k) => k + 1)}
+            onChanged={() => {
+              setReloadKey((k) => k + 1);
+              if (isAuthenticated) {
+                import('../services/api.js').then(({ meApi }) => meApi.profile().then(setProfile));
+              }
+              // Refresh useAuth to pick up free_drink_token changes
+              if (window.__refreshAuth) window.__refreshAuth();
+            }}
           />
         </Suspense>
       )}
@@ -974,7 +1021,7 @@ export default function Home() {
       )}
 
       {scannerOpen && <QrScannerModal onClose={() => setScannerOpen(false)} />}
-      {freeDrinkOpen && <FreeDrinkModal token={user?.free_drink_token} onClose={() => setFreeDrinkOpen(false)} />}
+      {freeDrinkOpen && <FreeDrinkModal token={user?.free_drink_token} center={center} onClose={() => setFreeDrinkOpen(false)} />}
       {userQrOpen && <UserQrModal userId={user?.id} onClose={() => setUserQrOpen(false)} />}
 
       {proposeDrinkOpen && (

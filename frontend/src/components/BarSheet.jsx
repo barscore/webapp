@@ -20,6 +20,7 @@ import { useSheetDrag, useIsMobile } from '../hooks/useSheetDrag.js';
 import { shareBar } from '../utils/share.js';
 import { barKey, parseOsmToken } from '../utils/score.js';
 import { useI18n } from '../i18n/index.js';
+import FreeDrinkModal from './FreeDrinkModal.jsx';
 
 const PAGE_SIZE = 10;
 
@@ -46,6 +47,7 @@ export default function BarSheet({ seed, onClose, onChanged }) {
   const [showForm, setShowForm] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [toast, setToast] = useState(null);
+  const [freeDrinkOpen, setFreeDrinkOpen] = useState(false);
 
   const key = barKey(seed);
 
@@ -187,6 +189,26 @@ export default function BarSheet({ seed, onClose, onChanged }) {
                 </div>
                 <ScoreBadge bar={bar} size="lg" />
               </div>
+
+              {bar.accepts_free_drinks && user?.free_drink_token && (
+                <div className="rounded-xl border border-ember-primary bg-ember-primary/10 p-4">
+                  <h3 className="flex items-center gap-2 font-display text-lg font-bold text-ember-cream">
+                    <Icon name="star" size={20} className="text-ember-primary" />
+                    Questo locale accetta il Free Drink!
+                  </h3>
+                  {bar.free_drinks_hours && (
+                    <p className="mt-1 text-sm text-ember-muted">
+                      Valido in queste fasce orarie: <span className="font-semibold text-ember-cream">{bar.free_drinks_hours}</span>
+                    </p>
+                  )}
+                  <button
+                    onClick={() => setFreeDrinkOpen(true)}
+                    className="mt-3 flex w-full items-center justify-center gap-2 rounded-lg bg-ember-primary/20 py-3 font-bold text-ember-primary hover:bg-ember-primary/30"
+                  >
+                    <Icon name="star" size={18} /> Apri QR Code
+                  </button>
+                </div>
+              )}
 
               {/* Contact / info actions — pills, not slabs. */}
               <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
@@ -362,6 +384,7 @@ export default function BarSheet({ seed, onClose, onChanged }) {
 
         <Toast message={toast?.msg} icon={toast?.icon} onDone={() => setToast(null)} />
       </section>
+      {freeDrinkOpen && <FreeDrinkModal token={user.free_drink_token} center={[bar.lat, bar.lng]} onClose={() => setFreeDrinkOpen(false)} />}
     </>
   );
 }

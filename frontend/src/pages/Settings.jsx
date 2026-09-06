@@ -15,6 +15,7 @@ import { pushSupported, getPushSubscription, enablePush, disablePush } from '../
 import { getConsent, resetConsent, onConsentChange } from '../services/consent.js';
 import { isAndroid, getProvider, setProvider } from '../utils/directions.js';
 import { useI18n } from '../i18n/index.js';
+import PrContactSettings from '../components/PrContactSettings.jsx';
 
 // Group label — same typographic voice as the Home sheet section headers, so
 // Impostazioni reads as part of the same system.
@@ -50,7 +51,7 @@ function OptionTile({ active, onClick, children, className = '' }) {
 // password) via supabase-js. Credential updates never go through the backend.
 export default function Settings() {
   const { t, dateLocale } = useI18n();
-  const { isAuthenticated, loading } = useAuth();
+  const { user, isAuthenticated, loading } = useAuth();
   const navigate = useNavigate();
 
   const [profile, setProfile] = useState(null);
@@ -59,6 +60,10 @@ export default function Settings() {
   const [email, setEmail] = useState('');
   const [emailBusy, setEmailBusy] = useState(false);
   const [emailErr, setEmailErr] = useState('');
+
+  const [username, setUsername] = useState('');
+  const [usernameBusy, setUsernameBusy] = useState(false);
+  const [usernameErr, setUsernameErr] = useState('');
 
   const [password, setPassword] = useState('');
   const [password2, setPassword2] = useState('');
@@ -82,6 +87,7 @@ export default function Settings() {
       .then((p) => {
         setProfile(p);
         setEmail(p.email || '');
+        setUsername(p.username || '');
       })
       .catch(() => setToast({ msg: t('settings.errLoad'), icon: 'info' }));
   }, [isAuthenticated]);
@@ -98,6 +104,24 @@ export default function Settings() {
       setEmailErr(err.message || t('settings.updateErr'));
     } finally {
       setEmailBusy(false);
+    }
+  }
+
+  async function changeUsername(e) {
+    e.preventDefault();
+    if (username.length < 3) return setUsernameErr(t('auth.usernameMin', 'Lo username deve avere almeno 3 caratteri'));
+    setUsernameBusy(true);
+    setUsernameErr('');
+    try {
+      const { error: authErr } = await supabase.auth.updateUser({ data: { username } });
+      if (authErr) throw authErr;
+      const p = await meApi.updateProfile({ username });
+      setProfile(p);
+      setToast({ msg: 'Username aggiornato', icon: 'check' });
+    } catch (err) {
+      setUsernameErr(err.message || err.response?.data?.error || t('settings.updateErr'));
+    } finally {
+      setUsernameBusy(false);
     }
   }
 
@@ -195,6 +219,10 @@ export default function Settings() {
         {/* ---- Organizzatore ---- */}
         <GroupLabel icon="event">{t('settings.groupOrganizer')}</GroupLabel>
         <OrganizerSection />
+        
+        {user?.role === 'organizer' && (
+          <PrContactSettings profile={profile} onUpdate={setProfile} />
+        )}
 
         {/* ---- Privacy ---- */}
         <GroupLabel icon="info">{t('settings.groupPrivacy')}</GroupLabel>
@@ -210,6 +238,16 @@ export default function Settings() {
 
         {/* ---- Sicurezza ---- */}
         <GroupLabel icon="check">{t('settings.groupSecurity')}</GroupLabel>
+
+        <form onSubmit={changeUsername} className="card space-y-3 p-4">
+          <h3 className="font-display font-bold text-ember-cream">Cambia username</h3>
+          <SettingsField label={t('settings.username')} type="text" value={username} onChange={setUsername} />
+          {usernameErr && <p className="text-sm text-ember-danger">{usernameErr}</p>}
+          <button type="submit" disabled={usernameBusy} className="btn-primary w-full py-2">
+            {usernameBusy ? t('common.saving') : 'Aggiorna username'}
+          </button>
+        </form>
+
         <form onSubmit={changeEmail} className="card space-y-3 p-4">
           <h3 className="font-display font-bold text-ember-cream">{t('settings.changeEmail')}</h3>
           <SettingsField label={t('settings.newEmail')} type="email" value={email} onChange={setEmail} />

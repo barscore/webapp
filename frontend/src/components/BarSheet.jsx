@@ -8,6 +8,7 @@ import RatingForm from './RatingForm.jsx';
 import BarDrinksSection from './BarDrinksSection.jsx';
 import DirectionsButton from './DirectionsButton.jsx';
 import Icon from './Icon.jsx';
+import OwnerReply from './OwnerReply.jsx';
 import PlusBadge from './PlusBadge.jsx';
 import ExplorerBadge from './ExplorerBadge.jsx';
 import Toast from './Toast.jsx';
@@ -32,7 +33,7 @@ const BAR_STOPS = [88, 100];
 // OSM-only place); it's resolved to a persisted row so ratings can attach.
 export default function BarSheet({ seed, onClose, onChanged }) {
   const { t } = useI18n();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, isAdmin, user } = useAuth();
   const { has, toggle } = useBookmarks();
   const isMobile = useIsMobile();
   const { height, dragging, sheetRef, grabberProps, contentProps } = useSheetDrag(BAR_STOPS, BAR_STOPS[0]);
@@ -99,6 +100,20 @@ export default function BarSheet({ seed, onClose, onChanged }) {
     await load();
     onChanged?.();
     setToast({ msg: t('bar.ratingDeleted'), icon: 'trash' });
+  }
+
+  // Esito dei controlli in OwnerReply: la scheda rilegge le recensioni.
+  async function onReplyChanged(kind) {
+    if (kind === 'error') {
+      setToast({ msg: t('bar.replyError'), icon: 'info' });
+      return;
+    }
+    await load();
+    setToast(
+      kind === 'deleted'
+        ? { msg: t('bar.replyDeleted'), icon: 'trash' }
+        : { msg: t('bar.replySaved'), icon: 'check' },
+    );
   }
 
   async function onShare() {
@@ -353,6 +368,13 @@ export default function BarSheet({ seed, onClose, onChanged }) {
                           </span>
                         </div>
                         {r.commento && <p className="mt-1 text-ember-muted">{r.commento}</p>}
+                        <OwnerReply
+                          rating={r}
+                          barId={bar.id}
+                          isOwner={!!user && bar.owner_id === user.id}
+                          isAdmin={isAdmin}
+                          onChanged={onReplyChanged}
+                        />
                       </div>
                     ))}
 

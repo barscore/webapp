@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth.js';
 import { meApi, ratingsApi } from '../services/api.js';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
+import OwnerReply from '../components/OwnerReply.jsx';
 import { SkeletonRows } from '../components/Skeleton.jsx';
 import Toast from '../components/Toast.jsx';
 import EmptyState from '../components/EmptyState.jsx';
@@ -127,6 +128,7 @@ export default function MyRatings() {
                   </span>
                 </div>
                 {r.commento && <p className="mt-1 text-ember-muted">{r.commento}</p>}
+                <OwnerReply rating={r} />
                 <div className="mt-2 flex items-center gap-2">
                   <Link
                     to={`/bar/${r.bar_id}`}

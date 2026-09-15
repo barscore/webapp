@@ -13,6 +13,7 @@ import ExplorerBadge from '../components/ExplorerBadge.jsx';
 import Toast from '../components/Toast.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import BarOwnerActions from '../components/BarOwnerActions.jsx';
+import OwnerReply from '../components/OwnerReply.jsx';
 import { barsApi, ratingsApi } from '../services/api.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { useBookmarks } from '../hooks/useBookmarks.js';
@@ -104,6 +105,20 @@ export default function BarDetail() {
     }
   }
 
+  // Esito dei controlli in OwnerReply: la lista la rilegge la pagina.
+  async function onReplyChanged(kind) {
+    if (kind === 'error') {
+      setToast({ msg: t('bar.replyError'), icon: 'info' });
+      return;
+    }
+    await load();
+    setToast(
+      kind === 'deleted'
+        ? { msg: t('bar.replyDeleted'), icon: 'trash' }
+        : { msg: t('bar.replySaved'), icon: 'check' },
+    );
+  }
+
   function voteHelpful(rid, dir) {
     setHelpful((h) => ({ ...h, [rid]: h[rid] === dir ? null : dir }));
   }
@@ -131,6 +146,7 @@ export default function BarDetail() {
     );
 
   const summary = bar.bar_ratings_summary;
+  const isOwner = !!user && bar.owner_id === user.id;
   const cover = bar.cover_image_url || bar.bar_images?.[0]?.url;
   const overall = Number(summary?.avg_overall) || 0;
   const tags = bar.tags || [];
@@ -374,6 +390,15 @@ export default function BarDetail() {
                       </span>
                     </div>
                     {r.commento && <p className="mt-1 text-ember-muted">{r.commento}</p>}
+
+                    <OwnerReply
+                      rating={r}
+                      barId={bar.id}
+                      isOwner={isOwner}
+                      isAdmin={isAdmin}
+                      onChanged={onReplyChanged}
+                    />
+
                     <div className="mt-2 flex items-center gap-3 text-xs text-ember-muted">
                       <span>{t('bar.helpful')}</span>
                       <button

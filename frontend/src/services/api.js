@@ -360,4 +360,9 @@ export const ratingsApi = {
     api.put(`/bars/${barId}/ratings/${rid}`, payload).then((r) => r.data.rating),
   remove: (barId, rid) =>
     api.delete(`/bars/${barId}/ratings/${rid}`).then((r) => r.data),
+  // Risposta del proprietario: una sola per recensione, quindi PUT (upsert).
+  reply: (barId, rid, risposta) =>
+    api.put(`/bars/${barId}/ratings/${rid}/reply`, { risposta }).then((r) => r.data.rating),
+  removeReply: (barId, rid) =>
+    api.delete(`/bars/${barId}/ratings/${rid}/reply`).then((r) => r.data),
 };

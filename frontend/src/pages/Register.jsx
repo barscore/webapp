@@ -5,6 +5,7 @@ import { supabase } from '../services/supabase.js';
 import { AuthShell, Field } from './Login.jsx';
 import GoogleButton from '../components/GoogleButton.jsx';
 import { useI18n } from '../i18n/index.js';
+import { useAuthReturn } from '../hooks/useAuthReturn.js';
 
 // Account sign-up (email/password or Google). The username lands in user
 // metadata; the DB trigger `handle_new_user` turns it into a profiles row.
@@ -12,12 +13,13 @@ export default function Register() {
   const { t } = useI18n();
   const { register, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  
+  const returnTo = useAuthReturn();
+
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/', { replace: true });
+      navigate(returnTo, { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, returnTo]);
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -52,9 +54,7 @@ export default function Register() {
     setError('');
     try {
       await register(email, password, username);
-      const params = new URLSearchParams(window.location.search);
-      const redirectTo = params.get('redirectTo') || '/';
-      navigate(redirectTo);
+      navigate(returnTo, { replace: true });
     } catch (err) {
       setError(err.response?.data?.error || t('auth.registerFailed'));
     } finally {
@@ -106,7 +106,7 @@ export default function Register() {
           {busy ? t('auth.creating') : t('auth.register')}
         </button>
       </form>
-      <GoogleButton label={t('auth.googleRegister')} disabled={!accepted} />
+      <GoogleButton label={t('auth.googleRegister')} disabled={!accepted} returnTo={returnTo} />
       <p className="mt-4 text-center text-sm text-ember-muted">
         {t('auth.haveAccount')}{' '}
         <Link to="/login" className="text-ember-ink underline">

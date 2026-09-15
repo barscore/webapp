@@ -18,7 +18,7 @@ export default function Redeem() {
   useEffect(() => {
     if (!loading && !isAuthenticated) {
       // Must be logged in to redeem
-      navigate('/login?redirectTo=/redeem?token=' + token);
+      navigate('/login');
     }
   }, [loading, isAuthenticated, navigate, token]);
 

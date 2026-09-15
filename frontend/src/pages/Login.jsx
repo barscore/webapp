@@ -5,6 +5,7 @@ import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import GoogleButton from '../components/GoogleButton.jsx';
 import { useI18n } from '../i18n/index.js';
+import { useAuthReturn } from '../hooks/useAuthReturn.js';
 
 // Email/password sign-in + Google OAuth. Auth is Supabase end to end (no
 // custom backend endpoint) — see hooks/useAuth.js.
@@ -12,12 +13,13 @@ export default function Login() {
   const { t } = useI18n();
   const { login, isAuthenticated } = useAuth();
   const navigate = useNavigate();
-  
+  const returnTo = useAuthReturn();
+
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/', { replace: true });
+      navigate(returnTo, { replace: true });
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, returnTo]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -29,9 +31,7 @@ export default function Login() {
     setError('');
     try {
       await login(email, password);
-      const params = new URLSearchParams(window.location.search);
-      const redirectTo = params.get('redirectTo') || '/';
-      navigate(redirectTo);
+      navigate(returnTo, { replace: true });
     } catch (err) {
       setError(err.response?.data?.error || t('auth.loginFailed'));
     } finally {
@@ -53,7 +53,7 @@ export default function Login() {
           {busy ? t('auth.signingIn') : t('common.login')}
         </button>
       </form>
-      <GoogleButton />
+      <GoogleButton returnTo={returnTo} />
       <p className="mt-4 text-center text-sm text-ember-muted">
         {t('auth.noAccount')}{' '}
         <Link to="/register" className="text-ember-ink underline">

@@ -119,12 +119,11 @@ export function AuthProvider({ children }) {
   }
 
   // Google OAuth — redirects to Google, returns to the app.
-  async function loginWithGoogle() {
-    const params = new URLSearchParams(window.location.search);
-    const redirectTo = params.get('redirectTo') || '/';
+  // `returnTo` è già normalizzato da useAuthReturn (solo path interni).
+  async function loginWithGoogle(returnTo = '/') {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin + redirectTo },
+      options: { redirectTo: window.location.origin + returnTo },
     });
     if (error) throw error;
   }

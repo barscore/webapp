@@ -3,7 +3,7 @@ import { useAuth } from '../hooks/useAuth.js';
 import { useI18n } from '../i18n/index.js';
 
 // "Continua con Google" — triggers Supabase OAuth redirect.
-export default function GoogleButton({ label, disabled = false }) {
+export default function GoogleButton({ label, disabled = false, returnTo = '/' }) {
   const { t } = useI18n();
   const { loginWithGoogle } = useAuth();
   const [busy, setBusy] = useState(false);
@@ -13,7 +13,7 @@ export default function GoogleButton({ label, disabled = false }) {
     setBusy(true);
     setError('');
     try {
-      await loginWithGoogle();
+      await loginWithGoogle(returnTo);
     } catch (e) {
       setError(e.message || t('auth.googleError'));
       setBusy(false);

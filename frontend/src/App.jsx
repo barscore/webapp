@@ -10,6 +10,7 @@ import CookieBanner from './components/CookieBanner.jsx';
 import { loadAdsense, adsenseLoaded } from './services/adsense.js';
 import { consentGranted, onConsentChange } from './services/consent.js';
 import { enforcePlusTheme } from './hooks/useTheme.js';
+import { rememberAuthReturn } from './hooks/useAuthReturn.js';
 
 import ExplorerPromoModal from './components/ExplorerPromoModal.jsx';
 
@@ -42,6 +43,12 @@ export default function App() {
   const { isAdmin, role, isAuthenticated, loading, isPlus, user } = useAuth();
   const location = useLocation();
   const [maint, setMaint] = useState(null);
+
+  // Da dove si arriva a /login e /register: serve per riportarci l'utente a
+  // login fatto. Le due pagine di auth non si memorizzano da sole.
+  useEffect(() => {
+    rememberAuthReturn(location.pathname + location.search);
+  }, [location.pathname, location.search]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

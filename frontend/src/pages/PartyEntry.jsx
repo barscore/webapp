@@ -18,7 +18,7 @@ export default function PartyEntry() {
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
-      navigate('/login?redirectTo=/party-entry?user_id=' + userId);
+      navigate('/login');
     }
   }, [loading, isAuthenticated, navigate, userId]);
 

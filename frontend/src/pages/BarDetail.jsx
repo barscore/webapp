@@ -23,6 +23,9 @@ import { shareBar } from '../utils/share.js';
 import { parseOsmToken } from '../utils/score.js';
 import { useI18n } from '../i18n/index.js';
 import AdSlot from '../components/AdSlot.jsx';
+import SiteLinks from '../components/SiteLinks.jsx';
+import { usePageMeta } from '../hooks/usePageMeta.js';
+import { barIndexable, barPlace } from '../utils/seo.js';
 
 const PAGE_SIZE = 10;
 import FreeDrinkModal from '../components/FreeDrinkModal.jsx';
@@ -127,6 +130,23 @@ export default function BarDetail() {
     const res = await shareBar(bar);
     if (res === 'copied') setToast({ msg: t('bar.linkCopied'), icon: 'link' });
   }
+
+  const place = bar ? barPlace(bar) : '';
+  const nRatings = Number(bar?.bar_ratings_summary?.total_ratings) || 0;
+  usePageMeta(
+    bar
+      ? {
+          title: place,
+          description: nRatings
+            ? t('bar.metaDesc', { place, n: nRatings, score: (Number(bar.bar_ratings_summary.avg_overall) * 2).toFixed(1) })
+            : t('bar.metaDescNone', { place }),
+          noindex: !barIndexable(bar),
+        }
+      : { noindex: !!error },
+  );
+  // An ad needs publisher content next to it: a bar with no written review is
+  // just a name and an empty chart (AdSense "low value content").
+  const hasReviewText = ratings.some((r) => r.commento?.trim());
 
   if (loading && !bar)
     return (
@@ -455,7 +475,8 @@ export default function BarDetail() {
           )}
         </section>
 
-        <AdSlot name="bar" className="rounded-card overflow-hidden" />
+        {hasReviewText && <AdSlot name="bar" className="rounded-card overflow-hidden" />}
+        <SiteLinks className="pt-2" />
       </div>
       {showInfo && <InfoModal onClose={() => setShowInfo(false)} />}
       {freeDrinkOpen && <FreeDrinkModal token={user.free_drink_token} center={[bar.lat, bar.lng]} onClose={() => setFreeDrinkOpen(false)} />}

@@ -25,7 +25,7 @@ CREATE OR REPLACE FUNCTION public.add_rewarded_view(p_user UUID)
 RETURNS SMALLINT
 LANGUAGE sql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, pg_temp
 AS $$
   UPDATE public.profiles
      SET rewarded_count = LEAST(rewarded_count + 1, 10)

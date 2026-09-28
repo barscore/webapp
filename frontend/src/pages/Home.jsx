@@ -21,6 +21,7 @@ import ProposeDrinkModal from '../components/ProposeDrinkModal.jsx';
 import { LanguageMenuRow } from '../components/LanguagePicker.jsx';
 import { useI18n } from '../i18n/index.js';
 import AdSlot from '../components/AdSlot.jsx';
+import SiteLinks from '../components/SiteLinks.jsx';
 import { LIST_AD_EVERY } from '../services/adsense.js';
 
 // Lazy: loading BarSheet on first bar tap keeps the landing bundle small.
@@ -376,7 +377,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
 export default function Home() {
   const navigate = useNavigate();
   const { t, dateLocale } = useI18n();
-  const { isAuthenticated, isAdmin, user, role, logout, isPlus } = useAuth();
+  const { isAuthenticated, isAdmin, isStaff, user, role, logout, isPlus } = useAuth();
   const { has, count, savedBars } = useBookmarks();
   const isMobile = useIsMobile();
 
@@ -863,7 +864,7 @@ export default function Home() {
                   <Icon name="camera" size={16} className="text-ember-primary" /> Scanner (Drink e Pass)
                 </button>
               )}
-              {isAdmin && (
+              {isStaff && (
                 <Link
                   to="/admin"
                   onClick={() => setMenuOpen(false)}
@@ -946,6 +947,7 @@ export default function Home() {
         <div className="glass pointer-events-auto flex min-h-0 flex-1 flex-col overflow-hidden rounded-sheet">
           <div className="no-scrollbar flex-1 overflow-y-auto px-4 py-4">
             <SheetBody {...sheetProps} />
+            <SiteLinks className="mt-6 pb-2" />
           </div>
         </div>
       </div>
@@ -981,6 +983,7 @@ export default function Home() {
         </div>
         <div {...contentProps} className="no-scrollbar flex-1 touch-none overflow-y-auto px-4 pb-2">
           <SheetBody {...sheetProps} />
+          <SiteLinks className="mt-6 pb-2" />
         </div>
         <div className="border-t border-ember-line/5 px-3 pb-3 pt-2">
           <NavTabs variant="bar" tab={tab} onTab={onTab} savedCount={count} />

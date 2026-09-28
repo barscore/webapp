@@ -118,7 +118,7 @@ BEGIN
 
   RETURN NULL;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions, pg_temp;
 
 DROP TRIGGER IF EXISTS trigger_update_drink_bar_summary ON public.drink_ratings;
 CREATE TRIGGER trigger_update_drink_bar_summary

@@ -62,7 +62,30 @@ export default function EventDetail() {
 
   const isPr = user?.role === 'organizer';
   const isCreator = user?.id === event?.organizer_id;
-  const amIJoined = prs.some(pr => pr.id === user?.id);
+  const myPr = prs.find(pr => pr.id === user?.id);
+  const amIJoined = !!myPr;
+  const approvedPrs = prs.filter(pr => !pr.pending);
+
+  // Il join crea una candidatura: in pubblico si compare solo dopo
+  // l'approvazione del creatore dell'evento.
+  const addMe = (profile, res) => {
+    setPrs([...prs, { ...profile, id: user.id, pending: !!res?.pending }]);
+    setToast(res?.pending ? 'Richiesta inviata: il creatore dell\'evento deve approvarti.' : 'Ti sei unito come PR!');
+  };
+
+  const decidePr = async (pr, approve) => {
+    try {
+      if (approve) {
+        await eventsApi.approvePr(id, pr.id);
+        setPrs(prs.map(p => (p.id === pr.id ? { ...p, pending: false } : p)));
+      } else {
+        await eventsApi.removePr(id, pr.id);
+        setPrs(prs.filter(p => p.id !== pr.id));
+      }
+    } catch (e) {
+      setToast(e.response?.data?.error || 'Errore durante l\'operazione');
+    }
+  };
 
   const togglePrJoin = async () => {
     if (!isAuthenticated) return setToast('Devi accedere per unirti.');
@@ -72,7 +95,7 @@ export default function EventDetail() {
       if (amIJoined) {
         await eventsApi.leave(id);
         setPrs(prs.filter(pr => pr.id !== user.id));
-        setToast('Ti sei rimosso dai PR di questo evento.');
+        setToast(myPr.pending ? 'Richiesta annullata.' : 'Ti sei rimosso dai PR di questo evento.');
       } else {
         const myProfile = await meApi.profile();
         if (!myProfile.instagram_username && !myProfile.whatsapp_number) {
@@ -81,12 +104,10 @@ export default function EventDetail() {
           return;
         }
 
-        await eventsApi.join(id);
-        setPrs([...prs, myProfile]);
-        setToast('Ti sei unito come PR!');
+        addMe(myProfile, await eventsApi.join(id));
       }
     } catch (e) {
-      setToast('Errore durante l\'operazione');
+      setToast(e.response?.data?.error || 'Errore durante l\'operazione');
     } finally {
       setBusyJoin(false);
     }
@@ -102,11 +123,9 @@ export default function EventDetail() {
       setShowContactModal(false);
       
       // Attempt join again
-      await eventsApi.join(id);
-      setPrs([...prs, updatedProfile]);
-      setToast('Ti sei unito come PR!');
+      addMe(updatedProfile, await eventsApi.join(id));
     } catch (e) {
-      setToast('Errore durante l\'operazione');
+      setToast(e.response?.data?.error || 'Errore durante l\'operazione');
     }
   };
 
@@ -138,9 +157,9 @@ export default function EventDetail() {
     if (pr.instagram_username && pr.whatsapp_number) {
       setSelectedPrForContact(pr);
     } else if (pr.instagram_username) {
-      window.open(`https://instagram.com/${pr.instagram_username}`, '_blank');
+      window.open(`https://instagram.com/${encodeURIComponent(pr.instagram_username)}`, '_blank', 'noopener,noreferrer');
     } else if (pr.whatsapp_number) {
-      window.open(`https://wa.me/${pr.whatsapp_number.replace(/\D/g, '')}`, '_blank');
+      window.open(`https://wa.me/${pr.whatsapp_number.replace(/\D/g, '')}`, '_blank', 'noopener,noreferrer');
     } else {
       setToast('Questo PR non ha impostato un metodo di contatto.');
     }
@@ -234,7 +253,7 @@ export default function EventDetail() {
               disabled={busyJoin}
               className={`w-full py-3 ${amIJoined ? 'btn-ghost' : 'btn-primary'}`}
             >
-              {busyJoin ? 'Caricamento...' : amIJoined ? 'Esci dall\'evento' : 'Unisciti come PR'}
+              {busyJoin ? 'Caricamento...' : myPr?.pending ? 'Annulla richiesta (in attesa)' : amIJoined ? 'Esci dall\'evento' : 'Unisciti come PR'}
             </button>
           </div>
         )}
@@ -242,6 +261,25 @@ export default function EventDetail() {
         {isCreator && (
           <div className="mt-8 rounded-card border border-ember-line/10 bg-ember-line/5 p-4">
             <h3 className="mb-4 text-sm font-bold text-ember-muted uppercase tracking-wider text-center">Gestione Evento</h3>
+            {prs.length > 0 && (
+              <div className="mb-4 flex flex-col gap-2">
+                <p className="text-xs font-bold uppercase tracking-wider text-ember-muted">PR dell'evento</p>
+                {prs.map((pr) => (
+                  <div key={pr.id} className="flex items-center gap-2 rounded-card bg-ember-ink p-2.5">
+                    <span className="truncate text-sm font-semibold text-ember-cream">{pr.username}</span>
+                    {pr.pending && <span className="text-xs text-ember-muted">in attesa</span>}
+                    <div className="ml-auto flex gap-1.5">
+                      {pr.pending && (
+                        <button onClick={() => decidePr(pr, true)} className="btn-primary px-3 py-1 text-xs">Approva</button>
+                      )}
+                      <button onClick={() => decidePr(pr, false)} className="btn-ghost px-3 py-1 text-xs">
+                        {pr.pending ? 'Rifiuta' : 'Rimuovi'}
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
             <div className="flex flex-col gap-2">
               <button onClick={() => setShowEdit(true)} className="btn-ghost w-full py-2.5">
                 Modifica evento
@@ -297,7 +335,7 @@ export default function EventDetail() {
       
       {showPrs && event.has_presales && (
         <PrListModal 
-          prs={prs} 
+          prs={approvedPrs} 
           onClose={() => setShowPrs(false)} 
           onContact={handleContactPr} 
         />
@@ -383,7 +421,7 @@ function ContactChoiceModal({ pr, onClose }) {
         
         <button
           onClick={() => {
-            window.open(`https://instagram.com/${pr.instagram_username}`, '_blank');
+            window.open(`https://instagram.com/${encodeURIComponent(pr.instagram_username)}`, '_blank', 'noopener,noreferrer');
             onClose();
           }}
           className="flex items-center justify-center gap-2 rounded-lg bg-pink-500/10 py-3 text-[15px] font-bold text-pink-500 border border-pink-500/20 hover:bg-pink-500/20 transition"
@@ -393,7 +431,7 @@ function ContactChoiceModal({ pr, onClose }) {
         
         <button
           onClick={() => {
-            window.open(`https://wa.me/${pr.whatsapp_number.replace(/\D/g, '')}`, '_blank');
+            window.open(`https://wa.me/${pr.whatsapp_number.replace(/\D/g, '')}`, '_blank', 'noopener,noreferrer');
             onClose();
           }}
           className="flex items-center justify-center gap-2 rounded-lg bg-green-500/10 py-3 text-[15px] font-bold text-green-500 border border-green-500/20 hover:bg-green-500/20 transition"

@@ -48,7 +48,7 @@ CREATE OR REPLACE FUNCTION public.hit_rate_limit(
 RETURNS TABLE (allowed BOOLEAN, remaining INTEGER, reset_at TIMESTAMPTZ)
 LANGUAGE plpgsql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, pg_temp
 AS $$
 #variable_conflict use_column
 -- `reset_at` è insieme colonna e parametro di uscita: senza la direttiva qui
@@ -81,7 +81,7 @@ CREATE OR REPLACE FUNCTION public.prune_rate_limits()
 RETURNS BIGINT
 LANGUAGE sql
 SECURITY DEFINER
-SET search_path = public
+SET search_path = public, pg_temp
 AS $$
   WITH gone AS (
     DELETE FROM public.rate_limits

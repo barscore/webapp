@@ -68,4 +68,4 @@ BEGIN
   ORDER BY sponsored DESC, e.starts_at ASC
   LIMIT 500;
 END;
-$$ LANGUAGE plpgsql STABLE SECURITY DEFINER;
+$$ LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = public, extensions, pg_temp;

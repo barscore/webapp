@@ -58,7 +58,7 @@ BEGIN
   VALUES (NEW.id, NEW.email, final_username, NEW.raw_user_meta_data->>'avatar_url');
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions, pg_temp;
 
 DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
 CREATE TRIGGER on_auth_user_created

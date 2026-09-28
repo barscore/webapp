@@ -23,11 +23,11 @@ export const DA_COMPILARE = '[DA COMPILARE]';
 
 export const entity = {
   /** Denominazione o nome e cognome del titolare. */
-  denominazione: DA_COMPILARE,
+  denominazione: 'Rabar',
   /** Via e numero civico. */
-  indirizzo: DA_COMPILARE,
+  indirizzo: 'Via Ergisto Bezzi',
   /** CAP, città e provincia. */
-  citta: DA_COMPILARE,
+  citta: '38068 Rovereto (TN)',
   paese: 'Italia',
   /** Partita IVA — obbligatoria se l'attività di vendita è in regime d'impresa. */
   partitaIva: DA_COMPILARE,
@@ -36,13 +36,11 @@ export const entity = {
   /** Numero REA, se iscritto al Registro delle Imprese. */
   rea: DA_COMPILARE,
 
-  // Le tre caselle esistono già nel codice: privacy@ e abuse@ sono usate dalle
-  // pagine legali, martino.parisi@ è il mittente VAPID delle notifiche push
-  // (backend/src/lib/notify.js) e il contatto dello User-Agent verso
-  // OpenStreetMap (backend/src/lib/osm.js).
+  // privacy@ e abuse@ sono usate dalle pagine legali, info@ è il contatto
+  // generale (FAQ, Contatti, Termini).
   emailPrivacy: 'privacy@rabar.it',
   emailAbuse: 'abuse@rabar.it',
-  emailGenerale: 'martino.parisi@rabar.it',
+  emailGenerale: 'info@rabar.it',
   /** PEC, se attiva. Facoltativa. */
   pec: DA_COMPILARE,
 };
@@ -50,6 +48,21 @@ export const entity = {
 /** true se un campo è ancora da compilare — le pagine lo usano per evidenziarlo. */
 export const mancante = (v) => v === DA_COMPILARE;
 
+/**
+ * Identificativi fiscali compilati, su una riga: «P. IVA … · C.F. … · REA …».
+ * Quelli ancora DA_COMPILARE sono omessi (per ora nascosti, non evidenziati):
+ * restano un buco di conformità finché non vengono compilati qui.
+ */
+export const identificativi = () =>
+  [
+    ['P. IVA', entity.partitaIva],
+    ['C.F.', entity.codiceFiscale],
+    ['REA', entity.rea],
+  ]
+    .filter(([, v]) => !mancante(v))
+    .map(([k, v]) => `${k} ${v}`)
+    .join(' · ');
+
 /** Sede su una riga sola, come va scritta nell'informativa. */
 export const sedeCompleta = () =>
-  [entity.indirizzo, entity.citta, entity.paese].filter(Boolean).join(', ');
+  [entity.indirizzo, entity.citta, entity.paese].filter((v) => v && !mancante(v)).join(', ');

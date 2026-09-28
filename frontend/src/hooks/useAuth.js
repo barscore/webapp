@@ -146,6 +146,8 @@ export function AuthProvider({ children }) {
     loading,
     isAuthenticated: !!user,
     isAdmin: role === 'admin',
+    // Staff = chi entra nel pannello: i moderatori vedono solo i tab di moderazione.
+    isStaff: role === 'admin' || role === 'moderator',
     isPlus,
     plusUntil,
     isExplorer,

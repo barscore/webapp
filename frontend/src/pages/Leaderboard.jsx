@@ -11,6 +11,8 @@ import { SkeletonRows } from '../components/Skeleton.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { useI18n } from '../i18n/index.js';
 import AdSlot from '../components/AdSlot.jsx';
+import SiteLinks from '../components/SiteLinks.jsx';
+import { usePageMeta } from '../hooks/usePageMeta.js';
 
 // Ice-cube icon (colored png, not a sprite mask).
 function IceCube({ size = 16 }) {
@@ -89,6 +91,7 @@ export default function Leaderboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [openUser, setOpenUser] = useState(null);
+  usePageMeta({ title: t('board.title') });
 
   useEffect(() => {
     let cancelled = false;
@@ -148,7 +151,8 @@ export default function Leaderboard() {
           </div>
         )}
 
-        {!loading && podium.length > 0 && <AdSlot name="board" className="rounded-card overflow-hidden" />}
+        {/* A handful of usernames is no content to put an ad next to. */}
+        {!loading && rows.length >= 10 && <AdSlot name="board" className="rounded-card overflow-hidden" />}
 
         {!loading && rest.length > 0 && (
           <ol className="stagger space-y-2">
@@ -183,6 +187,7 @@ export default function Leaderboard() {
             })}
           </ol>
         )}
+        <SiteLinks className="pt-2" />
       </div>
 
       {openUser && <ProfileModal userId={openUser.id} onClose={() => setOpenUser(null)} />}

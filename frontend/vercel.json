@@ -1,7 +1,29 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "cleanUrls": true,
   "rewrites": [
-    { "source": "/(.*)", "destination": "/index.html" }
+    { "source": "/bar/:id", "destination": "/app.html" },
+    { "source": "/drink/:id", "destination": "/app.html" },
+    { "source": "/event/:id", "destination": "/app.html" },
+    { "source": "/citta/:slug", "destination": "/app.html" },
+    { "source": "/impostazioni", "destination": "/app.html" },
+    { "source": "/le-tue-valutazioni", "destination": "/app.html" },
+    { "source": "/admin", "destination": "/app.html" },
+    { "source": "/boost/esito", "destination": "/app.html" },
+    { "source": "/plus", "destination": "/app.html" },
+    { "source": "/redeem", "destination": "/app.html" },
+    { "source": "/party-entry", "destination": "/app.html" },
+    { "source": "/come-funziona", "destination": "/app.html" },
+    { "source": "/faq", "destination": "/app.html" },
+    { "source": "/chi-siamo", "destination": "/app.html" },
+    { "source": "/contatti", "destination": "/app.html" },
+    { "source": "/citta", "destination": "/app.html" },
+    { "source": "/classifica", "destination": "/app.html" },
+    { "source": "/privacy", "destination": "/app.html" },
+    { "source": "/tos", "destination": "/app.html" },
+    { "source": "/riconoscimenti", "destination": "/app.html" },
+    { "source": "/login", "destination": "/app.html" },
+    { "source": "/register", "destination": "/app.html" }
   ],
   "headers": [
     {

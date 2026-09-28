@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./index.html', './src/**/*.{js,jsx}'],
+  content: ['./index.html', './src/**/*.{js,jsx}', './scripts/**/*.mjs'],
   theme: {
     extend: {
       // Theme palettes live in src/index.css as CSS variables (RGB triplets)

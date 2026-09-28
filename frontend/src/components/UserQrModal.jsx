@@ -1,7 +1,7 @@
 import Icon from './Icon.jsx';
+import QrCode from './QrCode.jsx';
 
 export default function UserQrModal({ userId, onClose }) {
-  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(`https://rabar.it/party-entry?user_id=${userId}`)}`;
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-end justify-center bg-black/80 sm:items-center">
@@ -19,7 +19,7 @@ export default function UserQrModal({ userId, onClose }) {
         </div>
         
         <div className="mb-6 flex justify-center bg-white p-4 rounded-xl">
-          <img src={qrUrl} alt="User QR Code" className="w-64 h-64 object-contain" />
+          <QrCode value={`https://rabar.it/party-entry?user_id=${userId}`} alt="User QR Code" className="w-64 h-64 object-contain" />
         </div>
         
         <p className="text-center text-xs text-ember-muted">

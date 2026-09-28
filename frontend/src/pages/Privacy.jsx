@@ -1,6 +1,6 @@
 import LegalLayout, { Section } from '../components/LegalLayout.jsx';
 import { useI18n } from '../i18n/index.js';
-import { entity, mancante, sedeCompleta } from '../legal/entity.js';
+import { entity, identificativi, mancante, sedeCompleta } from '../legal/entity.js';
 
 // Informativa privacy (GDPR + CCPA/CPRA). I dati del titolare vivono in
 // src/legal/entity.js: compilarli lì, non qui. L'italiano è la versione
@@ -10,26 +10,30 @@ export default function Privacy() {
   return lang === 'it' ? <PrivacyIt /> : <PrivacyEn />;
 }
 
-const UPDATED_IT = '3 settembre 2026';
-const UPDATED_EN = 'September 3, 2026';
+const UPDATED_IT = '28 settembre 2026';
+const UPDATED_EN = 'September 28, 2026';
+
+const linkClass = 'text-ember-ink hover:underline';
 
 const mailTo = (address) => (
-  <a href={`mailto:${address}`} className="text-ember-ink hover:underline">
+  <a href={`mailto:${address}`} className={linkClass}>
     {address}
+  </a>
+);
+
+const extLink = (href, label) => (
+  <a href={href} target="_blank" rel="noreferrer" className={linkClass}>
+    {label}
   </a>
 );
 
 const privacyMail = mailTo(entity.emailPrivacy);
 const abuseMail = mailTo(entity.emailAbuse);
 
-// Un segnaposto non compilato deve saltare all'occhio, non sparire: è il modo
-// in cui il buco resta visibile finché qualcuno non lo chiude.
+// Campi ancora DA_COMPILARE in legal/entity.js: nascosti per ora, non
+// evidenziati. Restano da compilare lì.
 function Campo({ value }) {
-  return mancante(value) ? (
-    <mark className="rounded bg-ember-danger/20 px-1 font-semibold text-ember-danger">{value}</mark>
-  ) : (
-    <>{value}</>
-  );
+  return mancante(value) ? null : <>{value}</>;
 }
 
 /** Blocco identificativo del titolare, uguale in entrambe le lingue. */
@@ -37,242 +41,266 @@ function Titolare() {
   return (
     <ul className="list-none space-y-0.5 pl-0">
       <li>
-        <Campo value={entity.denominazione} />
+        <strong>
+          <Campo value={entity.denominazione} />
+        </strong>
       </li>
-      <li>
-        <Campo value={entity.indirizzo} /> — <Campo value={entity.citta} />, {entity.paese}
-      </li>
-      <li>
-        P. IVA <Campo value={entity.partitaIva} /> · C.F. <Campo value={entity.codiceFiscale} /> ·
-        REA <Campo value={entity.rea} />
-      </li>
+      <li>{sedeCompleta()}</li>
+      {identificativi() && <li>{identificativi()}</li>}
     </ul>
   );
 }
 
+function List({ children }) {
+  return <ul className="list-disc space-y-1.5 pl-5">{children}</ul>;
+}
+
 function PrivacyIt() {
   return (
-    <LegalLayout title="Informativa sulla privacy" updated={UPDATED_IT}>
+    <LegalLayout title="Informativa sul trattamento dei dati personali" updated={UPDATED_IT}>
       <p>
-        Questa informativa descrive come rabar tratta i dati personali di chi usa il sito e le app,
-        ai sensi del Regolamento (UE) 2016/679 (“GDPR”) e, per i residenti negli Stati Uniti, delle
-        normative statali applicabili (tra cui il California Consumer Privacy Act).
+        La presente informativa, resa ai sensi degli artt. 13 e 14 del Regolamento (UE) 2016/679
+        (di seguito, «GDPR») e, per gli utenti residenti negli Stati Uniti, della normativa statale
+        applicabile (incluso il California Consumer Privacy Act, come modificato dal California
+        Privacy Rights Act), descrive le modalità con cui sono trattati i dati personali degli
+        utenti del sito web e delle applicazioni rabar (di seguito, il «Servizio»).
       </p>
 
-      <Section title="Titolare del trattamento">
+      <Section title="1. Titolare del trattamento e contatti">
         <Titolare />
         <p>
-          Per qualsiasi richiesta sui tuoi dati, incluso l’esercizio dei diritti descritti più
-          sotto, scrivi a {privacyMail}. Lo stesso indirizzo è il punto di contatto per gli utenti
-          ai sensi dell’art. 12 del regolamento sui servizi digitali (DSA); per le autorità e per le
-          segnalazioni di contenuti illeciti vale invece {abuseMail}.
+          Le richieste relative al trattamento dei dati personali, ivi compreso l’esercizio dei
+          diritti di cui alla sezione 9, possono essere inviate all’indirizzo {privacyMail}. Il
+          medesimo indirizzo costituisce il punto di contatto per i destinatari del Servizio ai sensi
+          dell’art. 12 del Regolamento (UE) 2022/2065 (di seguito, «DSA»). Le comunicazioni delle
+          autorità e le segnalazioni di contenuti illeciti vanno invece indirizzate a {abuseMail}.
         </p>
       </Section>
 
-      <Section title="Dati che trattiamo">
-        <ul className="list-disc space-y-1 pl-5">
+      <Section title="2. Categorie di dati trattati">
+        <List>
           <li>
-            <strong>Account:</strong> email e username, gestiti tramite Supabase Auth. Se accedi con
-            Google o con Apple riceviamo dal fornitore l’email e, quando disponibile, l’immagine del
-            profilo.
+            <strong>Dati dell’account:</strong> indirizzo email e nome utente, gestiti tramite il
+            servizio di autenticazione Supabase Auth. In caso di accesso con Google o Apple, il
+            fornitore trasmette l’indirizzo email e, ove disponibile, l’immagine del profilo.
           </li>
           <li>
-            <strong>Contenuti:</strong> valutazioni sui cinque assi (prezzo, qualità dei drinks,
-            socialità, varietà, orari), commenti, voti sui drink, bar salvati, segnalazioni,
-            eventi pubblicati se hai un account organizzatore.
+            <strong>Contenuti pubblicati:</strong> valutazioni sui cinque criteri (prezzo, qualità dei
+            drink, socialità, varietà, orari), commenti, voti sui drink, locali salvati, segnalazioni
+            e, per gli account organizzatore, gli eventi pubblicati.
           </li>
           <li>
-            <strong>Posizione:</strong> la geolocalizzazione resta sul dispositivo per centrare la
-            mappa. Le coordinate raggiungono i nostri server, e da lì i servizi di mappa, solo per
-            cercare i bar vicini: non le conserviamo. Restano invece registrate le coordinate che
-            invii volontariamente dentro una segnalazione.
+            <strong>Dati di posizione:</strong> la geolocalizzazione è elaborata sul dispositivo per
+            centrare la mappa. Le coordinate sono trasmesse ai nostri server, e da questi ai servizi
+            cartografici, al solo fine di individuare i locali nelle vicinanze, e non vengono
+            conservate. Sono invece registrate le coordinate che l’utente inserisce volontariamente
+            in una segnalazione.
           </li>
           <li>
-            <strong>Allegati di verifica:</strong> i file che carichi per rivendicare un bar o per
-            chiedere un account PR/organizzatore. Vedi la sezione dedicata.
+            <strong>Documentazione di verifica:</strong> i file caricati per rivendicare la gestione
+            di un locale o per richiedere un account PR od organizzatore (si veda la sezione 5).
           </li>
           <li>
-            <strong>Pagamenti:</strong> se sottoscrivi rabar+ o acquisti un boost, i dati della
-            carta li tratta esclusivamente Stripe — noi non li vediamo mai. Conserviamo l’esito, il
-            piano scelto, la scadenza e l’identificativo cliente Stripe che serve ad aprirti il
-            portale di gestione.
+            <strong>Dati di pagamento:</strong> in caso di sottoscrizione di rabar+ o di acquisto di
+            un boost, i dati della carta sono trattati esclusivamente da Stripe e non sono mai
+            accessibili al Titolare. Sono conservati l’esito della transazione, il piano scelto, la
+            data di scadenza e l’identificativo cliente Stripe necessario per l’accesso al portale di
+            gestione.
           </li>
           <li>
-            <strong>Dati tecnici:</strong> log di richiesta (indirizzo IP, user-agent) per
-            sicurezza, anti-abuso e limitazione delle richieste.
+            <strong>Dati tecnici:</strong> registri delle richieste (indirizzo IP, user agent)
+            utilizzati per finalità di sicurezza, prevenzione degli abusi e limitazione del numero di
+            richieste.
           </li>
-        </ul>
+        </List>
       </Section>
 
-      <Section title="Finalità e base giuridica">
-        <ul className="list-disc space-y-1 pl-5">
-          <li>Fornire il servizio, incluse le funzioni a pagamento — esecuzione del contratto.</li>
+      <Section title="3. Finalità e basi giuridiche del trattamento">
+        <List>
           <li>
-            Verificare chi rivendica un bar o chiede un account organizzatore — esecuzione del
-            contratto e legittimo interesse a impedire che qualcuno si spacci per un altro.
+            Erogazione del Servizio, incluse le funzionalità a pagamento: esecuzione del contratto
+            (art. 6, par. 1, lett. b GDPR).
           </li>
-          <li>Sicurezza, prevenzione di spam e abusi, moderazione — legittimo interesse.</li>
-          <li>Adempimenti fiscali e contabili sulle vendite — obbligo di legge.</li>
           <li>
-            Pubblicità tramite Google AdSense sul web e Google AdMob nelle app — solo previo tuo
-            consenso, che puoi revocare in ogni momento.
+            Verifica dell’identità di chi rivendica un locale o richiede un account organizzatore:
+            esecuzione del contratto e legittimo interesse a prevenire sostituzioni di persona (art.
+            6, par. 1, lett. b e f GDPR).
           </li>
-        </ul>
+          <li>
+            Sicurezza del Servizio, prevenzione di spam e abusi, moderazione dei contenuti:
+            legittimo interesse (art. 6, par. 1, lett. f GDPR).
+          </li>
+          <li>
+            Adempimenti fiscali e contabili connessi alle vendite: obbligo di legge (art. 6, par. 1,
+            lett. c GDPR).
+          </li>
+          <li>
+            Pubblicità tramite Google AdSense sul sito web e Google AdMob nelle applicazioni:
+            consenso dell’interessato (art. 6, par. 1, lett. a GDPR), revocabile in qualsiasi momento.
+          </li>
+        </List>
       </Section>
 
-      <Section title="Servizi di terze parti">
-        <p>Per far funzionare rabar ci appoggiamo a:</p>
-        <ul className="list-disc space-y-1 pl-5">
+      <Section title="4. Destinatari e fornitori di servizi">
+        <p>
+          Per l’erogazione del Servizio il Titolare si avvale dei seguenti fornitori, che operano in
+          qualità di responsabili del trattamento o di titolari autonomi:
+        </p>
+        <List>
           <li>
             <strong>Supabase</strong> — autenticazione, database e archiviazione dei file.
           </li>
           <li>
-            <strong>Vercel</strong> — hosting del sito e dell’API, e quindi i log di richiesta.
+            <strong>Vercel</strong> — hosting del sito web e dell’API, inclusi i registri delle
+            richieste.
           </li>
           <li>
-            <strong>Stripe</strong> — pagamenti di rabar+ e dei boost, fatturazione e portale di
-            gestione dell’abbonamento.
+            <strong>Stripe</strong> — elaborazione dei pagamenti di rabar+ e dei boost, fatturazione e
+            portale di gestione dell’abbonamento.
           </li>
           <li>
-            <strong>Apple</strong> — verifica degli acquisti effettuati dentro l’app iOS.
+            <strong>Apple</strong> — verifica degli acquisti effettuati nell’applicazione iOS.
           </li>
           <li>
-            <strong>OpenStreetMap</strong>, i mirror <strong>Overpass</strong>,{' '}
-            <strong>Nominatim</strong> e <strong>Photon (komoot)</strong> — mappe e ricerca dei
-            luoghi. Ricevono l’area attorno al punto che stai guardando, per restituire i bar che ci
-            stanno dentro.
+            <strong>OpenStreetMap</strong>, i server <strong>Overpass</strong>,{' '}
+            <strong>Nominatim</strong> e <strong>Photon (komoot)</strong> — cartografia e ricerca dei
+            luoghi. Tali servizi ricevono unicamente l’area geografica visualizzata, al fine di
+            restituire i locali in essa compresi.
           </li>
           <li>
-            <strong>Google AdSense</strong> e <strong>Google AdMob</strong> — pubblicità sul web e
-            nelle app, caricate solo dopo il tuo consenso. Su iOS l’identificativo pubblicitario
-            richiede anche il permesso di tracciamento del sistema.
+            <strong>Google AdSense</strong> e <strong>Google AdMob</strong> — pubblicità sul sito web
+            e nelle applicazioni, attivata soltanto previo consenso. Su iOS l’utilizzo
+            dell’identificativo pubblicitario richiede inoltre l’autorizzazione al tracciamento
+            prevista dal sistema operativo.
           </li>
           <li>
-            I <strong>servizi di notifica push</strong> del tuo browser o sistema operativo (Google,
-            Mozilla, Apple), se attivi le notifiche.
+            I <strong>servizi di notifica push</strong> del browser o del sistema operativo (Google,
+            Mozilla, Apple), qualora l’utente attivi le notifiche.
           </li>
-        </ul>
-        <p>Ciascun fornitore tratta i dati secondo la propria informativa.</p>
+        </List>
+        <p>Ciascun fornitore tratta i dati in conformità alla propria informativa.</p>
       </Section>
 
-      <Section title="Allegati di verifica">
+      <Section title="5. Documentazione di verifica">
         <p>
-          Per rivendicare un bar o per chiedere un account PR/organizzatore ti chiediamo da uno a
-          tre file (immagini o PDF, fino a 8 MB ciascuno) che provino quello che dichiari — una
-          visura, un documento, il materiale di una serata. La base giuridica è l’esecuzione del
-          contratto, insieme al nostro legittimo interesse a non consegnare il controllo di un
-          locale a chi non c’entra.
+          Per rivendicare la gestione di un locale o richiedere un account PR od organizzatore è
+          richiesto il caricamento da uno a tre file (immagini o PDF, di dimensione massima pari a 8
+          MB ciascuno) idonei a comprovare quanto dichiarato, quali una visura camerale, un documento
+          o materiale relativo a un evento. Il trattamento si fonda sull’esecuzione del contratto e
+          sul legittimo interesse del Titolare a non attribuire la gestione di un locale a soggetti
+          non legittimati.
         </p>
         <p>
-          I file finiscono in un archivio <strong>privato</strong>: non esiste un indirizzo pubblico
-          per raggiungerli, e il tuo dispositivo non ha le credenziali per scriverci direttamente —
-          gliele firmiamo noi, una alla volta, solo per la tua cartella. Li vede soltanto lo staff
-          che esamina la richiesta, tramite collegamenti che scadono da soli.
+          I file sono conservati in un archivio <strong>privato</strong>, privo di indirizzi
+          pubblici. Il dispositivo dell’utente non dispone di credenziali di scrittura permanenti:
+          ogni caricamento è autorizzato singolarmente dal server e limitato alla cartella
+          dell’utente. La consultazione è riservata al personale incaricato dell’esame della
+          richiesta, mediante collegamenti a scadenza automatica.
         </p>
         <p>
-          <strong>Conservazione:</strong> se la richiesta viene rifiutata gli allegati vengono
-          cancellati. Se viene approvata restano come prova della verifica, e vengono cancellati
-          quando elimini l’account.
-        </p>
-      </Section>
-
-      <Section title="Trasferimenti fuori dall’Unione europea">
-        <p>
-          Alcuni fornitori hanno sede o infrastrutture negli Stati Uniti: Google, Stripe, Vercel e
-          Apple. I trasferimenti avvengono sulla base della decisione di adeguatezza per il{' '}
-          <em>EU–US Data Privacy Framework</em> per i fornitori che vi aderiscono, e altrimenti
-          sulla base delle clausole contrattuali standard adottate dalla Commissione europea, con le
-          misure supplementari previste dal capo V del GDPR. Puoi chiederci copia delle garanzie
-          scrivendo a {privacyMail}.
+          <strong>Conservazione:</strong> in caso di rigetto della richiesta i file sono cancellati;
+          in caso di accoglimento sono conservati quale prova della verifica effettuata e cancellati
+          contestualmente all’eliminazione dell’account.
         </p>
       </Section>
 
-      <Section title="Conservazione">
+      <Section title="6. Trasferimenti di dati verso paesi terzi">
         <p>
-          I dati dell’account restano finché l’account esiste. Puoi eliminarlo da{' '}
-          <strong>Impostazioni</strong> o chiederne la cancellazione via email: i contenuti
-          collegati e gli allegati di verifica vengono rimossi di conseguenza. I dati delle vendite
-          li conserviamo per il tempo imposto dalla normativa fiscale (dieci anni).
-        </p>
-        <p>
-          I <strong>log di richiesta</strong> (indirizzo IP, user-agent) li conserva la piattaforma
-          di hosting per <strong>un’ora</strong>, che è la finestra prevista dal piano Vercel su cui
-          gira rabar. Passata quell’ora non sono più consultabili, da noi né da altri: non ne
-          teniamo copia e non li esportiamo da nessuna parte.
-        </p>
-        <p>
-          Per limitare le richieste automatiche teniamo un contatore per chiamante. Non contiene il
-          tuo indirizzo IP: contiene un suo codice derivato con una chiave segreta che resta sul
-          nostro server, dal quale l’indirizzo non è ricostruibile. Il contatore si azzera alla fine
-          della sua finestra (un minuto nella maggior parte dei casi) e la riga viene cancellata
-          entro l’ora successiva.
+          Alcuni fornitori (Google, Stripe, Vercel, Apple) hanno sede o infrastrutture negli Stati
+          Uniti. I trasferimenti avvengono sulla base della decisione di adeguatezza relativa all’
+          <em>EU–U.S. Data Privacy Framework</em> per i fornitori aderenti e, in mancanza, sulla base
+          delle clausole contrattuali standard adottate dalla Commissione europea, integrate dalle
+          misure supplementari previste dal capo V del GDPR. Copia delle garanzie adottate può essere
+          richiesta all’indirizzo {privacyMail}.
         </p>
       </Section>
 
-      <Section title="I tuoi diritti (GDPR)">
+      <Section title="7. Periodo di conservazione">
         <p>
-          Hai diritto di accesso, rettifica, cancellazione, limitazione, portabilità e opposizione.
-          Due li eserciti direttamente dall’app, senza aspettare nessuno: da{' '}
-          <strong>Impostazioni</strong> puoi <strong>esportare i tuoi dati</strong> in un file JSON
-          (art. 20) ed <strong>eliminare l’account</strong> (art. 17). Per tutto il resto scrivi a{' '}
-          {privacyMail}: rispondiamo entro un mese.
+          I dati dell’account sono conservati per tutta la durata dello stesso. L’utente può
+          eliminare l’account dalla sezione <strong>Impostazioni</strong> o richiederne la
+          cancellazione via email; i contenuti associati e la documentazione di verifica sono rimossi
+          di conseguenza. I dati relativi alle vendite sono conservati per il periodo prescritto dalla
+          normativa fiscale (dieci anni).
         </p>
         <p>
-          Se ritieni che il trattamento violi il GDPR puoi proporre reclamo al Garante per la
-          protezione dei dati personali (garanteprivacy.it) o all’autorità del tuo Stato di
-          residenza.
+          I <strong>registri delle richieste</strong> (indirizzo IP, user agent) sono conservati
+          dalla piattaforma di hosting per <strong>un’ora</strong>, conformemente al piano Vercel in
+          uso. Decorso tale termine non sono più consultabili; il Titolare non ne conserva copia né li
+          esporta.
         </p>
-      </Section>
-
-      <Section title="Minori">
         <p>
-          rabar riguarda locali che vendono alcolici: i Termini richiedono almeno 18 anni, e
-          all’iscrizione ti viene chiesto di dichiararlo. Non trattiamo consapevolmente dati di chi
-          non li ha. In Italia il consenso digitale del minore è comunque valido dai 14 anni
-          (D.Lgs. 101/2018, art. 2-quinquies). Se pensi che un minore ci abbia fornito i suoi dati,
-          scrivici a {privacyMail} e li cancelleremo.
+          Ai fini della limitazione delle richieste automatizzate è mantenuto un contatore per
+          ciascun chiamante, che non contiene l’indirizzo IP bensì un codice da esso derivato mediante
+          una chiave segreta custodita sul server, dal quale l’indirizzo non è ricostruibile. Il
+          contatore si azzera al termine della relativa finestra temporale (di norma un minuto) e il
+          record è eliminato entro l’ora successiva.
         </p>
       </Section>
 
-      <Section title="Cookie e consenso">
+      <Section title="8. Minori">
         <p>
-          Usiamo lo storage locale del browser solo per finalità tecniche (sessione, lingua, tema,
-          scelta sul consenso). La pubblicità di Google — e i relativi cookie — viene caricata{' '}
-          <strong>solo se acconsenti</strong> tramite il banner: se rifiuti o non scegli, lo script
-          pubblicitario non viene proprio eseguito, quindi non parte nessuna richiesta e non nasce
-          nessun cookie. Puoi cambiare idea in ogni momento da{' '}
-          <strong>Impostazioni → Preferenze cookie</strong> o da{' '}
-          <a
-            href="https://adssettings.google.com"
-            target="_blank"
-            rel="noreferrer"
-            className="text-ember-ink hover:underline"
-          >
-            Impostazioni annunci Google
-          </a>
-          . Chi ha rabar+ non vede pubblicità e lo script non viene caricato affatto.
+          Il Servizio riguarda locali che somministrano bevande alcoliche: i Termini di servizio
+          richiedono il compimento del diciottesimo anno di età, dichiarato in fase di registrazione.
+          Il Titolare non tratta consapevolmente dati di minori. Resta fermo che, in Italia, il
+          consenso del minore ai servizi della società dell’informazione è valido a partire dai
+          quattordici anni (art. 2-quinquies D.Lgs. 196/2003, introdotto dal D.Lgs. 101/2018).
+          Qualora si ritenga che un minore abbia fornito i propri dati, è possibile darne
+          comunicazione a {privacyMail}: i dati saranno cancellati.
         </p>
       </Section>
 
-      <Section title="Residenti negli Stati Uniti (CCPA/CPRA)">
+      <Section title="9. Diritti dell’interessato">
         <p>
-          Se risiedi in California o in un altro Stato USA con normativa analoga, hai diritto di
-          conoscere, correggere e cancellare i dati personali che ti riguardano, senza
-          discriminazioni per l’esercizio di questi diritti. Non “vendiamo” dati personali. La
-          pubblicità personalizzata può costituire “condivisione” (sharing) ai sensi del CPRA:
-          avviene <strong>solo con il tuo consenso</strong> e puoi revocarla in ogni momento da
-          Impostazioni → Preferenze cookie (equivale al “Do Not Sell or Share My Personal
-          Information”). Rispettiamo automaticamente il segnale{' '}
-          <a
-            href="https://globalprivacycontrol.org"
-            target="_blank"
-            rel="noreferrer"
-            className="text-ember-ink hover:underline"
-          >
-            Global Privacy Control
-          </a>
-          : se è attivo nel tuo browser, la pubblicità personalizzata resta disattivata. Per
-          esercitare i tuoi diritti scrivi a {privacyMail}.
+          L’interessato ha diritto di accesso, rettifica, cancellazione, limitazione del trattamento,
+          portabilità dei dati e opposizione (artt. 15-22 GDPR). Due di tali diritti possono essere
+          esercitati direttamente dalla sezione <strong>Impostazioni</strong>: l’
+          <strong>esportazione dei dati</strong> in formato JSON (art. 20) e l’
+          <strong>eliminazione dell’account</strong> (art. 17). Per ogni altra richiesta è possibile
+          scrivere a {privacyMail}; il Titolare fornisce riscontro entro un mese dal ricevimento.
+        </p>
+        <p>
+          L’interessato che ritenga il trattamento non conforme al GDPR ha diritto di proporre
+          reclamo al Garante per la protezione dei dati personali (
+          {extLink('https://www.garanteprivacy.it', 'www.garanteprivacy.it')}) o all’autorità di
+          controllo dello Stato membro di residenza.
+        </p>
+      </Section>
+
+      <Section title="10. Cookie e strumenti di tracciamento">
+        <p>
+          Il Servizio utilizza la memoria locale del browser esclusivamente per finalità tecniche
+          (sessione, lingua, tema grafico, preferenze sul consenso). La pubblicità di Google e i
+          relativi cookie sono attivati <strong>solo previo consenso</strong> espresso tramite
+          l’apposito banner: in caso di rifiuto o in assenza di scelta lo script pubblicitario non
+          viene eseguito, e pertanto non è effettuata alcuna richiesta né installato alcun cookie. Il
+          consenso può essere modificato in qualsiasi momento da{' '}
+          <strong>Impostazioni → Preferenze cookie</strong> oppure dalle{' '}
+          {extLink('https://adssettings.google.com', 'Impostazioni annunci di Google')}. Agli
+          abbonati rabar+ non è mostrata pubblicità e lo script non viene caricato.
+        </p>
+      </Section>
+
+      <Section title="11. Informazioni per i residenti negli Stati Uniti (CCPA/CPRA)">
+        <p>
+          Gli utenti residenti in California o in altri Stati con normativa analoga hanno diritto di
+          conoscere, correggere e cancellare i dati personali che li riguardano, senza subire
+          discriminazioni per l’esercizio di tali diritti. Il Titolare non «vende» dati personali. La
+          pubblicità personalizzata può configurare una «condivisione» (<em>sharing</em>) ai sensi
+          del CPRA: essa avviene <strong>esclusivamente previo consenso</strong>, revocabile in
+          qualsiasi momento da Impostazioni → Preferenze cookie, funzione che corrisponde al
+          meccanismo «Do Not Sell or Share My Personal Information». Il Servizio rispetta
+          automaticamente il segnale{' '}
+          {extLink('https://globalprivacycontrol.org', 'Global Privacy Control')}: se attivo nel
+          browser, la pubblicità personalizzata resta disattivata. Per l’esercizio dei diritti è
+          possibile scrivere a {privacyMail}.
+        </p>
+      </Section>
+
+      <Section title="12. Modifiche all’informativa">
+        <p>
+          La presente informativa può essere aggiornata; la versione vigente è pubblicata su questa
+          pagina con l’indicazione della data dell’ultimo aggiornamento.
         </p>
       </Section>
     </LegalLayout>
@@ -283,219 +311,231 @@ function PrivacyEn() {
   return (
     <LegalLayout title="Privacy Policy" updated={UPDATED_EN}>
       <p>
-        This notice describes how rabar processes the personal data of people who use the website
-        and the apps, under Regulation (EU) 2016/679 (“GDPR”) and, for US residents, applicable
-        state laws (including the California Consumer Privacy Act).
+        This notice, provided under Articles 13 and 14 of Regulation (EU) 2016/679 (the “GDPR”) and,
+        for users resident in the United States, under applicable state law (including the California
+        Consumer Privacy Act, as amended by the California Privacy Rights Act), describes how the
+        personal data of users of the rabar website and applications (the “Service”) are processed.
       </p>
 
-      <Section title="Data controller">
+      <Section title="1. Data controller and contact details">
         <Titolare />
         <p>
-          For any request about your data, including the rights described below, write to{' '}
-          {privacyMail}. That address is also the point of contact for users under Article 12 of the
-          Digital Services Act; for authorities and for reports of illegal content, use {abuseMail}.
+          Requests concerning the processing of personal data, including the exercise of the rights
+          described in section 9, may be sent to {privacyMail}. The same address is the point of
+          contact for recipients of the Service under Article 12 of Regulation (EU) 2022/2065 (the
+          “DSA”). Communications from authorities and reports of illegal content should be sent to{' '}
+          {abuseMail}.
         </p>
       </Section>
 
-      <Section title="Data we process">
-        <ul className="list-disc space-y-1 pl-5">
+      <Section title="2. Categories of data processed">
+        <List>
           <li>
-            <strong>Account:</strong> email and username, handled through Supabase Auth. If you sign
-            in with Google or Apple we receive your email from the provider and, where available,
-            your profile picture.
+            <strong>Account data:</strong> email address and username, managed through the Supabase
+            Auth authentication service. When signing in with Google or Apple, the provider shares
+            the email address and, where available, the profile picture.
           </li>
           <li>
-            <strong>Content:</strong> ratings on the five axes (price, drinks quality, vibe,
-            variety, opening hours), comments, drink votes, saved bars, reports, and events you
-            publish if you hold an organizer account.
+            <strong>Published content:</strong> ratings on the five criteria (price, drinks quality,
+            vibe, variety, opening hours), comments, drink votes, saved venues, reports and, for
+            organiser accounts, published events.
           </li>
           <li>
-            <strong>Location:</strong> geolocation stays on your device to centre the map. Your
-            coordinates reach our servers, and from there the map services, only to look for nearby
-            bars — we do not store them. Coordinates you deliberately attach to a report are stored.
+            <strong>Location data:</strong> geolocation is processed on the device to centre the map.
+            Coordinates are sent to our servers, and from there to mapping services, solely to find
+            nearby venues, and are not stored. Coordinates that users voluntarily include in a report
+            are recorded.
           </li>
           <li>
-            <strong>Verification attachments:</strong> the files you upload to claim a bar or to
-            request a PR/organizer account. See the dedicated section.
+            <strong>Verification documents:</strong> files uploaded to claim the management of a
+            venue or to request a PR or organiser account (see section 5).
           </li>
           <li>
-            <strong>Payments:</strong> if you subscribe to rabar+ or buy a boost, card details are
-            handled solely by Stripe — we never see them. We keep the outcome, the chosen plan, its
-            expiry and the Stripe customer id needed to open your billing portal.
+            <strong>Payment data:</strong> when subscribing to rabar+ or purchasing a boost, card
+            details are processed exclusively by Stripe and are never accessible to the Controller.
+            We retain the transaction outcome, the chosen plan, the expiry date and the Stripe
+            customer identifier needed to access the management portal.
           </li>
           <li>
-            <strong>Technical data:</strong> request logs (IP address, user agent) for security,
+            <strong>Technical data:</strong> request logs (IP address, user agent) used for security,
             abuse prevention and rate limiting.
           </li>
-        </ul>
+        </List>
       </Section>
 
-      <Section title="Purposes and legal bases">
-        <ul className="list-disc space-y-1 pl-5">
-          <li>Providing the service, paid features included — performance of the contract.</li>
+      <Section title="3. Purposes and legal bases">
+        <List>
           <li>
-            Verifying who claims a bar or requests an organizer account — performance of the
-            contract, and our legitimate interest in preventing impersonation.
+            Provision of the Service, including paid features: performance of a contract (Art.
+            6(1)(b) GDPR).
           </li>
-          <li>Security, spam and abuse prevention, moderation — legitimate interest.</li>
-          <li>Tax and accounting obligations on sales — legal obligation.</li>
           <li>
-            Advertising through Google AdSense on the web and Google AdMob in the apps — only with
-            your consent, which you can withdraw at any time.
+            Verification of those claiming a venue or requesting an organiser account: performance
+            of a contract and legitimate interest in preventing impersonation (Art. 6(1)(b) and (f)
+            GDPR).
           </li>
-        </ul>
+          <li>
+            Security of the Service, prevention of spam and abuse, content moderation: legitimate
+            interest (Art. 6(1)(f) GDPR).
+          </li>
+          <li>Tax and accounting obligations relating to sales: legal obligation (Art. 6(1)(c) GDPR).</li>
+          <li>
+            Advertising through Google AdSense on the website and Google AdMob in the applications:
+            consent (Art. 6(1)(a) GDPR), which may be withdrawn at any time.
+          </li>
+        </List>
       </Section>
 
-      <Section title="Third-party services">
-        <p>rabar relies on:</p>
-        <ul className="list-disc space-y-1 pl-5">
+      <Section title="4. Recipients and service providers">
+        <p>
+          To provide the Service the Controller relies on the following providers, acting as
+          processors or as independent controllers:
+        </p>
+        <List>
           <li>
             <strong>Supabase</strong> — authentication, database and file storage.
           </li>
           <li>
-            <strong>Vercel</strong> — hosting for the site and the API, and therefore request logs.
+            <strong>Vercel</strong> — hosting of the website and the API, including request logs.
           </li>
           <li>
-            <strong>Stripe</strong> — payments for rabar+ and boosts, invoicing and the subscription
-            management portal.
+            <strong>Stripe</strong> — payment processing for rabar+ and boosts, invoicing and the
+            subscription management portal.
           </li>
           <li>
-            <strong>Apple</strong> — verification of purchases made inside the iOS app.
+            <strong>Apple</strong> — verification of purchases made in the iOS application.
           </li>
           <li>
-            <strong>OpenStreetMap</strong>, the <strong>Overpass</strong> mirrors,{' '}
-            <strong>Nominatim</strong> and <strong>Photon (komoot)</strong> — maps and place search.
-            They receive the area around the point you are looking at, in order to return the bars
-            inside it.
+            <strong>OpenStreetMap</strong>, the <strong>Overpass</strong>, <strong>Nominatim</strong>{' '}
+            and <strong>Photon (komoot)</strong> servers — mapping and place search. These services
+            receive only the geographic area being viewed, in order to return the venues within it.
           </li>
           <li>
             <strong>Google AdSense</strong> and <strong>Google AdMob</strong> — advertising on the
-            web and in the apps, loaded only after your consent. On iOS the advertising identifier
-            also requires the system tracking permission.
+            website and in the applications, enabled only with consent. On iOS, use of the
+            advertising identifier also requires the tracking authorisation provided by the
+            operating system.
           </li>
           <li>
-            Your browser’s or operating system’s <strong>push notification services</strong>{' '}
-            (Google, Mozilla, Apple), if you turn notifications on.
+            The <strong>push notification services</strong> of the browser or operating system
+            (Google, Mozilla, Apple), if the user enables notifications.
           </li>
-        </ul>
-        <p>Each provider processes data under its own privacy policy.</p>
+        </List>
+        <p>Each provider processes data in accordance with its own privacy policy.</p>
       </Section>
 
-      <Section title="Verification attachments">
+      <Section title="5. Verification documents">
         <p>
-          To claim a bar or request a PR/organizer account we ask for one to three files (images or
-          PDFs, up to 8 MB each) backing up what you state — a company record, an ID, material from
-          an event you ran. The legal basis is performance of the contract, together with our
-          legitimate interest in not handing control of a venue to someone unrelated to it.
+          To claim the management of a venue or request a PR or organiser account, users are asked to
+          upload one to three files (images or PDF, up to 8 MB each) capable of substantiating their
+          statements, such as a business registry extract, an identity document or material relating
+          to an event. The processing is based on the performance of a contract and on the
+          Controller’s legitimate interest in not granting control of a venue to unauthorised
+          persons.
         </p>
         <p>
-          The files go into a <strong>private</strong> store: there is no public address that
-          reaches them, and your device holds no credentials to write there — we sign one upload URL
-          at a time, scoped to your own folder. Only the staff reviewing the request can see them,
-          through links that expire on their own.
+          Files are stored in a <strong>private</strong> repository with no public addresses. The
+          user’s device holds no permanent write credentials: each upload is individually authorised
+          by the server and restricted to the user’s own folder. Access is limited to the staff
+          reviewing the request, through links that expire automatically.
         </p>
         <p>
-          <strong>Retention:</strong> if the request is rejected the attachments are deleted. If it
-          is approved they remain as the record of the verification, and are deleted when you delete
-          your account.
-        </p>
-      </Section>
-
-      <Section title="Transfers outside the European Union">
-        <p>
-          Some providers are based or run infrastructure in the United States: Google, Stripe,
-          Vercel and Apple. Transfers rely on the adequacy decision for the{' '}
-          <em>EU–US Data Privacy Framework</em> for providers certified under it, and otherwise on
-          the standard contractual clauses adopted by the European Commission, with the supplementary
-          measures required by Chapter V GDPR. You can ask us for a copy of the safeguards at{' '}
-          {privacyMail}.
+          <strong>Retention:</strong> if the request is rejected the files are deleted; if it is
+          approved they are retained as evidence of the verification and deleted when the account is
+          deleted.
         </p>
       </Section>
 
-      <Section title="Retention">
+      <Section title="6. Transfers to third countries">
         <p>
-          Account data is kept for as long as the account exists. You can delete it from{' '}
-          <strong>Settings</strong>, or ask us to by email: linked content and verification
-          attachments are removed accordingly. Sales records are kept for the period required by tax
-          law (ten years).
-        </p>
-        <p>
-          <strong>Request logs</strong> (IP address, user agent) are kept by the hosting platform
-          for <strong>one hour</strong> — the window provided by the Vercel plan rabar runs on.
-          After that hour they can no longer be consulted, by us or anyone else: we keep no copy and
-          export them nowhere.
-        </p>
-        <p>
-          To limit automated requests we keep a per-caller counter. It does not hold your IP
-          address: it holds a code derived from it with a secret key that never leaves our server,
-          from which the address cannot be reconstructed. The counter resets at the end of its
-          window (one minute in most cases) and the row is deleted within the following hour.
+          Some providers (Google, Stripe, Vercel, Apple) are based in, or operate infrastructure in,
+          the United States. Transfers take place on the basis of the adequacy decision for the{' '}
+          <em>EU–U.S. Data Privacy Framework</em> for participating providers and, otherwise, on the
+          basis of the standard contractual clauses adopted by the European Commission, together with
+          the supplementary measures required by Chapter V of the GDPR. A copy of the safeguards may
+          be requested at {privacyMail}.
         </p>
       </Section>
 
-      <Section title="Your rights (GDPR)">
+      <Section title="7. Retention period">
         <p>
-          You have the right of access, rectification, erasure, restriction, portability and
-          objection. Two of them you exercise directly in the app, without waiting for anyone: from{' '}
-          <strong>Settings</strong> you can <strong>export your data</strong> as a JSON file
-          (Art. 20) and <strong>delete your account</strong> (Art. 17). For everything else write to{' '}
-          {privacyMail}: we reply within one month.
+          Account data are retained for as long as the account exists. Users may delete their account
+          from <strong>Settings</strong> or request its deletion by email; associated content and
+          verification documents are removed accordingly. Sales data are retained for the period
+          required by tax law (ten years).
         </p>
         <p>
-          If you believe the processing infringes the GDPR you may lodge a complaint with the
-          Italian Data Protection Authority (garanteprivacy.it) or with the authority of your country
-          of residence.
+          <strong>Request logs</strong> (IP address, user agent) are retained by the hosting platform
+          for <strong>one hour</strong>, in accordance with the Vercel plan in use. After that period
+          they can no longer be accessed; the Controller keeps no copy and does not export them.
         </p>
-      </Section>
-
-      <Section title="Minors">
         <p>
-          rabar is about venues that sell alcohol: the Terms require you to be at least 18, and you
-          are asked to declare it at sign-up. We do not knowingly process data of anyone younger. In
-          Italy a minor’s digital consent is in any case valid from age 14 (Legislative Decree
-          101/2018, Art. 2-quinquies). If you believe a minor has given us their data, write to{' '}
-          {privacyMail} and we will delete it.
+          For rate limiting of automated requests, a counter is kept for each caller. It does not
+          contain the IP address but a code derived from it using a secret key held on the server,
+          from which the address cannot be reconstructed. The counter resets at the end of its time
+          window (usually one minute) and the record is deleted within the following hour.
         </p>
       </Section>
 
-      <Section title="Cookies and consent">
+      <Section title="8. Minors">
         <p>
-          We use browser local storage for technical purposes only (session, language, theme,
-          consent choice). Google advertising — and its cookies — is loaded{' '}
-          <strong>only if you agree</strong> through the banner: if you decline or make no choice,
-          the ad script is never executed at all, so no request is made and no cookie is created.
-          You can change your mind at any time from <strong>Settings → Cookie preferences</strong>{' '}
-          or from{' '}
-          <a
-            href="https://adssettings.google.com"
-            target="_blank"
-            rel="noreferrer"
-            className="text-ember-ink hover:underline"
-          >
-            Google Ads Settings
-          </a>
-          . rabar+ subscribers see no advertising and the script is not loaded at all.
+          The Service concerns venues serving alcoholic beverages: the Terms of Service require users
+          to be at least eighteen years old, as declared at registration. The Controller does not
+          knowingly process data of minors. In Italy, a minor’s consent to information society
+          services is in any event valid from the age of fourteen (Art. 2-quinquies of Legislative
+          Decree 196/2003, as introduced by Legislative Decree 101/2018). If you believe a minor has
+          provided their data, please notify {privacyMail} and the data will be deleted.
         </p>
       </Section>
 
-      <Section title="US residents (CCPA/CPRA)">
+      <Section title="9. Data subject rights">
         <p>
-          If you live in California or another US state with comparable law, you have the right to
-          know, correct and delete personal data about you, without discrimination for exercising
-          these rights. We do not “sell” personal data. Personalised advertising may constitute
-          “sharing” under the CPRA: it happens <strong>only with your consent</strong> and you can
-          withdraw it at any time from Settings → Cookie preferences (this is our “Do Not Sell or
-          Share My Personal Information”). We automatically honour the{' '}
-          <a
-            href="https://globalprivacycontrol.org"
-            target="_blank"
-            rel="noreferrer"
-            className="text-ember-ink hover:underline"
-          >
-            Global Privacy Control
-          </a>{' '}
-          signal: if it is enabled in your browser, personalised advertising stays off. To exercise
-          your rights write to {privacyMail}.
+          Data subjects have the right of access, rectification, erasure, restriction of processing,
+          data portability and objection (Arts. 15-22 GDPR). Two of these rights can be exercised
+          directly from <strong>Settings</strong>: <strong>data export</strong> in JSON format (Art.
+          20) and <strong>account deletion</strong> (Art. 17). Any other request may be sent to{' '}
+          {privacyMail}; the Controller responds within one month of receipt.
+        </p>
+        <p>
+          Data subjects who consider that the processing infringes the GDPR have the right to lodge a
+          complaint with the Italian Data Protection Authority (
+          {extLink('https://www.garanteprivacy.it', 'www.garanteprivacy.it')}) or with the
+          supervisory authority of their Member State of residence.
+        </p>
+      </Section>
+
+      <Section title="10. Cookies and tracking technologies">
+        <p>
+          The Service uses the browser’s local storage for technical purposes only (session,
+          language, theme, consent preferences). Google advertising and the related cookies are
+          enabled <strong>only with prior consent</strong> given through the banner: if consent is
+          refused or no choice is made, the advertising script is not executed, so no request is made
+          and no cookie is set. Consent may be changed at any time from{' '}
+          <strong>Settings → Cookie preferences</strong> or from{' '}
+          {extLink('https://adssettings.google.com', 'Google Ads Settings')}. rabar+ subscribers are
+          shown no advertising and the script is not loaded.
+        </p>
+      </Section>
+
+      <Section title="11. Information for United States residents (CCPA/CPRA)">
+        <p>
+          Users resident in California or in other states with comparable legislation have the right
+          to know, correct and delete personal data concerning them, without discrimination for
+          exercising these rights. The Controller does not “sell” personal data. Personalised
+          advertising may constitute “sharing” under the CPRA: it takes place{' '}
+          <strong>only with prior consent</strong>, which may be withdrawn at any time from Settings
+          → Cookie preferences, a function that serves as the “Do Not Sell or Share My Personal
+          Information” mechanism. The Service automatically honours the{' '}
+          {extLink('https://globalprivacycontrol.org', 'Global Privacy Control')} signal: when it is
+          enabled in the browser, personalised advertising remains disabled. Requests to exercise
+          these rights may be sent to {privacyMail}.
+        </p>
+      </Section>
+
+      <Section title="12. Changes to this notice">
+        <p>
+          This notice may be updated; the current version is published on this page together with
+          the date of the latest update.
         </p>
       </Section>
     </LegalLayout>

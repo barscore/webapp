@@ -97,6 +97,8 @@ export const eventsApi = {
   prs: (id) => api.get(`/events/${id}/prs`).then((r) => r.data.prs),
   join: (id) => api.post(`/events/${id}/join`).then((r) => r.data),
   leave: (id) => api.delete(`/events/${id}/join`).then((r) => r.data),
+  approvePr: (id, prId) => api.post(`/events/${id}/prs/${prId}/approve`).then((r) => r.data),
+  removePr: (id, prId) => api.delete(`/events/${id}/prs/${prId}`).then((r) => r.data),
 };
 
 // Account-scoped saved bars. Requires an authenticated session.
@@ -115,6 +117,7 @@ export const meApi = {
   profile: () => api.get('/me').then((r) => r.data.profile),
   updateProfile: (data) => api.patch('/me', data).then((r) => r.data.profile),
   applyPromo: (promo) => api.post('/me/promo', { promo }).then((r) => r.data),
+  bars: () => api.get('/me/bars').then((r) => expectArray(r.data.bars, 'meBars')),
   ratings: () => api.get('/me/ratings').then((r) => expectArray(r.data.ratings, 'meRatings')),
   deleteAccount: () => api.delete('/me').then((r) => r.data),
   // Portabilità (art. 20 GDPR). Il backend manda un Content-Disposition, ma
@@ -208,6 +211,11 @@ export const reportsApi = {
 // Admin panel. Every call is admin-only (backend enforces requireRole('admin')).
 export const adminApi = {
   stats: () => api.get('/admin/stats').then((r) => r.data.stats),
+  audit: (params) =>
+    api.get('/admin/audit', { params }).then((r) => ({
+      ...r.data,
+      entries: expectArray(r.data.entries, 'adminAudit'),
+    })),
 
   // Users
   users: (params) =>
@@ -288,7 +296,8 @@ export const organizerApi = {
   myEvents: () => api.get('/me/events').then((r) => expectArray(r.data.events, 'myEvents')),
   claimBar: (barId, payload) =>
     api.post(`/bars/${barId}/claim`, payload).then((r) => r.data.claim),
-  redeemDrink: (token) => api.post('/bars/redeem-drink', { token }).then((r) => r.data),
+  redeemDrink: (token, barId) =>
+    api.post('/bars/redeem-drink', { token, bar_id: barId }).then((r) => r.data),
   verifyPartyEntry: (user_id) => api.post('/events/verify-entry', { user_id }).then((r) => r.data),
 };
 

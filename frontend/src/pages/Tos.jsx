@@ -1,6 +1,6 @@
 import LegalLayout, { Section } from '../components/LegalLayout.jsx';
 import { useI18n } from '../i18n/index.js';
-import { entity, mancante } from '../legal/entity.js';
+import { entity, identificativi, mancante, sedeCompleta } from '../legal/entity.js';
 
 // Termini di servizio. I dati del prestatore vivono in src/legal/entity.js.
 // L'italiano è la versione autorevole; ogni altra lingua della UI riceve la
@@ -10,8 +10,8 @@ export default function Tos() {
   return lang === 'it' ? <TosIt /> : <TosEn />;
 }
 
-const UPDATED_IT = '3 settembre 2026';
-const UPDATED_EN = 'September 3, 2026';
+const UPDATED_IT = '28 settembre 2026';
+const UPDATED_EN = 'September 28, 2026';
 
 const mailTo = (address) => (
   <a href={`mailto:${address}`} className="text-ember-ink hover:underline">
@@ -22,189 +22,208 @@ const mailTo = (address) => (
 const abuseMail = mailTo(entity.emailAbuse);
 const generalMail = mailTo(entity.emailGenerale);
 
+// Campi ancora DA_COMPILARE in legal/entity.js: nascosti per ora, non
+// evidenziati. Restano da compilare lì.
 function Campo({ value }) {
-  return mancante(value) ? (
-    <mark className="rounded bg-ember-danger/20 px-1 font-semibold text-ember-danger">{value}</mark>
-  ) : (
-    <>{value}</>
-  );
+  return mancante(value) ? null : <>{value}</>;
 }
 
 function Prestatore() {
   return (
     <ul className="list-none space-y-0.5 pl-0">
       <li>
-        <Campo value={entity.denominazione} />
+        <strong>
+          <Campo value={entity.denominazione} />
+        </strong>
       </li>
-      <li>
-        <Campo value={entity.indirizzo} /> — <Campo value={entity.citta} />, {entity.paese}
-      </li>
-      <li>
-        P. IVA <Campo value={entity.partitaIva} /> · C.F. <Campo value={entity.codiceFiscale} /> ·
-        REA <Campo value={entity.rea} />
-      </li>
+      <li>{sedeCompleta()}</li>
+      {identificativi() && <li>{identificativi()}</li>}
     </ul>
   );
 }
 
+function List({ children }) {
+  return <ul className="list-disc space-y-1.5 pl-5">{children}</ul>;
+}
+
 function TosIt() {
   return (
-    <LegalLayout title="Termini di servizio" updated={UPDATED_IT}>
+    <LegalLayout title="Termini e condizioni di servizio" updated={UPDATED_IT}>
       <p>
-        Questi termini regolano l’uso di rabar. Accedendo o usando il servizio dichiari di
-        accettarli. Se non li accetti, non usare il servizio.
+        I presenti termini e condizioni (di seguito, i «Termini») disciplinano l’accesso e l’utilizzo
+        del sito web e delle applicazioni rabar (di seguito, il «Servizio»). L’accesso al Servizio o
+        il suo utilizzo comportano l’accettazione dei Termini; chi non intende accettarli è tenuto a
+        non utilizzare il Servizio.
       </p>
 
-      <Section title="Chi eroga il servizio">
+      <Section title="1. Prestatore del servizio">
         <Prestatore />
         <p>
-          Contatto generale: {generalMail}. Per segnalare un abuso o un contenuto illecito:{' '}
-          {abuseMail} — è anche il punto di contatto per le autorità ai sensi degli artt. 11-12 del
-          regolamento sui servizi digitali (DSA).
+          Per comunicazioni di carattere generale è possibile scrivere a {generalMail}. Le
+          segnalazioni di abusi o di contenuti illeciti vanno inviate a {abuseMail}, indirizzo che
+          costituisce altresì il punto di contatto per le autorità ai sensi degli artt. 11 e 12 del
+          Regolamento (UE) 2022/2065 (di seguito, «DSA»).
         </p>
       </Section>
 
-      <Section title="Il servizio">
+      <Section title="2. Oggetto del servizio">
         <p>
-          rabar è una mappa di bar valutati dalla community su prezzo, qualità dei drinks,
-          socialità, varietà e orari. I dati dei locali provengono da OpenStreetMap; le valutazioni
-          sono contenuti generati dagli utenti e non riflettono opinioni del gestore.
+          rabar è una mappa di bar e locali valutati dalla comunità degli utenti secondo cinque
+          criteri: prezzo, qualità dei drink, socialità, varietà e orari. I dati relativi ai locali
+          provengono da OpenStreetMap; le valutazioni costituiscono contenuti generati dagli utenti e
+          non esprimono l’opinione del prestatore.
         </p>
       </Section>
 
-      <Section title="Account">
-        <ul className="list-disc space-y-1 pl-5">
+      <Section title="3. Registrazione e account">
+        <List>
           <li>
-            Devi avere almeno 18 anni (o la maggiore età prevista dove vivi): il servizio riguarda
-            locali che vendono alcolici.
+            L’utilizzo del Servizio è riservato a persone che abbiano compiuto diciotto anni, o l’età
+            maggiore prevista dall’ordinamento del paese di residenza, in quanto il Servizio riguarda
+            locali che somministrano bevande alcoliche.
           </li>
           <li>
-            Sei responsabile delle attività svolte dal tuo account e della riservatezza delle
-            credenziali.
+            L’utente è responsabile delle attività svolte tramite il proprio account e della
+            riservatezza delle proprie credenziali di accesso.
           </li>
-          <li>Un solo account per persona; è vietato impersonare altri.</li>
-        </ul>
+          <li>
+            È consentito un solo account per persona. È vietato utilizzare l’identità altrui o
+            fornire dati non veritieri.
+          </li>
+        </List>
       </Section>
 
-      <Section title="Servizi a pagamento">
+      <Section title="4. Servizi a pagamento">
         <p>
-          rabar è gratuito. Due cose si pagano, e sono facoltative.
+          L’utilizzo del Servizio è gratuito. Sono disponibili, in via facoltativa, i seguenti servizi
+          a pagamento:
         </p>
-        <ul className="list-disc space-y-1 pl-5">
+        <List>
           <li>
-            <strong>rabar+</strong> — abbonamento che dà il badge “+”, tutti i temi e nessuna
-            pubblicità. Costa <strong>1,99 € a settimana</strong>, <strong>3,99 € al mese</strong> o{' '}
+            <strong>rabar+</strong> — abbonamento che comprende il contrassegno «+» sul profilo,
+            l’accesso a tutti i temi grafici e l’assenza di pubblicità. Il prezzo è di{' '}
+            <strong>1,99 € a settimana</strong>, <strong>3,99 € al mese</strong> oppure{' '}
             <strong>29,99 € all’anno</strong>, IVA inclusa.
           </li>
           <li>
-            <strong>Boost</strong> — mette in evidenza un bar che hai rivendicato o un evento che
-            hai pubblicato. Costa <strong>3 € per 3 giorni</strong>, <strong>6 € per 7 giorni</strong>{' '}
-            o <strong>20 € per 30 giorni</strong>, IVA inclusa. Per i bar puoi scegliere anche un
-            raggio di visibilità da 1 a 50 km, con un sovrapprezzo di 1,5 centesimi per chilometro
-            al giorno. È un acquisto singolo, non si rinnova.
+            <strong>Boost</strong> — servizio di messa in evidenza di un locale rivendicato o di un
+            evento pubblicato dall’utente. Il prezzo è di <strong>3 € per 3 giorni</strong>,{' '}
+            <strong>6 € per 7 giorni</strong> oppure <strong>20 € per 30 giorni</strong>, IVA
+            inclusa. Per i locali è possibile definire un raggio di visibilità compreso tra 1 e 50
+            km, con un sovrapprezzo di 1,5 centesimi di euro per chilometro al giorno. Il boost è un
+            acquisto singolo e non prevede rinnovo automatico.
           </li>
-        </ul>
+        </List>
         <p>
-          <strong>Rinnovo e disdetta.</strong> rabar+ si rinnova automaticamente alla scadenza del
-          periodo scelto, finché non lo disdici. La disdetta e il cambio di piano si fanno dal
-          portale clienti Stripe, che apri da <strong>Impostazioni</strong>: hanno effetto dalla
-          scadenza del periodo già pagato, che resta tuo fino in fondo. Le ricevute si scaricano
-          dallo stesso portale.
+          <strong>Rinnovo e disdetta.</strong> L’abbonamento rabar+ si rinnova automaticamente alla
+          scadenza del periodo prescelto, salvo disdetta. La disdetta e il cambio di piano si
+          effettuano tramite il portale clienti Stripe, accessibile dalla sezione{' '}
+          <strong>Impostazioni</strong>, e producono effetto dalla scadenza del periodo già pagato,
+          che resta interamente fruibile. Le ricevute sono disponibili nel medesimo portale.
         </p>
         <p>
-          <strong>Diritto di recesso.</strong> Come consumatore hai quattordici giorni per
-          ripensarci, senza doverne dire il motivo (D.Lgs. 206/2005, artt. 52-59). Poiché rabar+ e i
-          boost sono contenuti digitali che iniziano a funzionare <em>subito</em>, al momento
-          dell’acquisto ti chiediamo di confermare due cose insieme: che vuoi che il servizio parta
-          immediatamente, e che sai che così facendo il diritto di recesso si esaurisce con
-          l’erogazione (art. 59, comma 1, lettera o). È una spunta esplicita: senza, il pagamento
-          non parte. Se non la dai, o se il servizio non è ancora partito, puoi recedere scrivendo a{' '}
-          {generalMail}: rimborsiamo entro quattordici giorni dalla richiesta, con lo stesso mezzo di
-          pagamento.
+          <strong>Diritto di recesso.</strong> Il consumatore dispone di un termine di quattordici
+          giorni per recedere dal contratto senza indicarne le ragioni (artt. 52-59 D.Lgs. 206/2005,
+          «Codice del consumo»). Poiché rabar+ e i boost consistono nella fornitura di contenuti
+          digitali la cui esecuzione ha inizio immediatamente, al momento dell’acquisto è richiesto
+          all’utente di confermare espressamente di voler ottenere l’esecuzione immediata del
+          servizio e di essere consapevole che, in tal caso, il diritto di recesso si estingue con
+          l’avvio dell’esecuzione (art. 59, comma 1, lett. o, Codice del consumo). In assenza di tale
+          conferma il pagamento non viene effettuato. Qualora la conferma non sia stata prestata, o
+          l’esecuzione non sia ancora iniziata, il recesso può essere esercitato scrivendo a{' '}
+          {generalMail}; il rimborso è effettuato entro quattordici giorni dalla richiesta, con il
+          medesimo mezzo di pagamento utilizzato.
         </p>
         <p>
-          <strong>Sull’App Store.</strong> Nell’app iOS i boost si comprano come acquisti in-app: i
-          rimborsi li gestisce Apple secondo le sue procedure, non noi. rabar+ non si vende dall’app
-          iOS: lì l’abbonamento si legge soltanto.
+          <strong>Acquisti tramite App Store.</strong> Nell’applicazione iOS i boost sono venduti come
+          acquisti in-app; le relative richieste di rimborso sono gestite da Apple secondo le proprie
+          procedure. L’abbonamento rabar+ non è acquistabile dall’applicazione iOS, nella quale è
+          soltanto riconosciuto se sottoscritto altrove.
         </p>
       </Section>
 
-      <Section title="Regole sui contenuti">
-        <p>Pubblicando valutazioni e commenti ti impegni a non inserire contenuti che siano:</p>
-        <ul className="list-disc space-y-1 pl-5">
+      <Section title="5. Contenuti pubblicati dagli utenti">
+        <p>Pubblicando valutazioni e commenti, l’utente si impegna a non inserire contenuti:</p>
+        <List>
           <li>illeciti, diffamatori, offensivi, discriminatori o molesti;</li>
-          <li>falsi, ingannevoli o volti a manipolare le medie di un locale;</li>
-          <li>spam, pubblicità non richiesta o dati personali di terzi.</li>
-        </ul>
+          <li>falsi, ingannevoli o finalizzati ad alterare la valutazione di un locale;</li>
+          <li>costituenti spam, pubblicità non richiesta o contenenti dati personali di terzi.</li>
+        </List>
         <p>
-          Concedi a rabar una licenza non esclusiva per mostrare i contenuti che pubblichi
-          all’interno del servizio.
+          L’utente concede al prestatore una licenza non esclusiva e gratuita per la visualizzazione,
+          all’interno del Servizio, dei contenuti pubblicati.
         </p>
       </Section>
 
-      <Section title="Come funzionano le valutazioni">
+      <Section title="6. Funzionamento delle valutazioni e ordinamento dei risultati">
         <p>
-          Le valutazioni le scrivono gli utenti. <strong>Non verifichiamo</strong> che chi scrive sia
-          stato davvero nel locale: non abbiamo modo di saperlo, e preferiamo dirlo piuttosto che
-          lasciarlo intendere. Quello che facciamo è limitare l’effetto di una singola persona —
-          ogni account può valutare un bar <strong>una volta sola</strong>, e la modifica sostituisce
-          il voto precedente invece di aggiungersi — e intervenire dopo la pubblicazione su
-          segnalazione o d’ufficio. Le medie che vedi sono ricalcolate dal database a ogni voto, non
-          scritte a mano.
+          Le valutazioni sono redatte dagli utenti. Il prestatore <strong>non verifica</strong> che
+          l’autore di una valutazione abbia effettivamente frequentato il locale. Per limitare
+          l’incidenza di singoli utenti, ciascun account può valutare un locale{' '}
+          <strong>una sola volta</strong> e l’eventuale modifica sostituisce la valutazione
+          precedente; i contenuti sono inoltre moderati successivamente alla pubblicazione, su
+          segnalazione o d’ufficio. I valori medi sono calcolati automaticamente dal sistema a ogni
+          nuova valutazione e non sono soggetti a interventi manuali.
         </p>
         <p>
-          <strong>Come ordiniamo i risultati.</strong> Nella mappa e negli elenchi vengono prima i
-          bar e gli eventi <strong>sponsorizzati</strong>, cioè quelli per cui il proprietario o
-          l’organizzatore ha pagato un boost; sono sempre contrassegnati dall’etichetta
-          “Sponsorizzato”. Dopo di quelli conta la distanza da te, e nelle classifiche dei drink la
-          media dei voti. Un bar sponsorizzato può comparirti anche se è fuori dal raggio che hai
-          impostato, fino alla distanza che il proprietario ha pagato. Nessun altro criterio
-          influenza l’ordine, e la posizione non è mai in vendita al di fuori dei boost.
-        </p>
-      </Section>
-
-      <Section title="Moderazione">
-        <p>
-          Le decisioni di moderazione le prendono <strong>persone</strong>: non usiamo sistemi
-          automatici per rimuovere contenuti o limitare account. Possiamo rimuovere un contenuto o
-          sospendere e bloccare un account che viola questi termini o la legge.
-        </p>
-        <p>
-          <strong>Se ti riguarda, te lo diciamo.</strong> Quando rimuoviamo una tua valutazione o
-          limitiamo il tuo account ricevi una notifica con il motivo e l’indirizzo a cui contestare
-          la decisione (art. 17 DSA). Scrivendo a {abuseMail} la decisione viene riesaminata da una
-          persona diversa da quella che l’ha presa.
-        </p>
-        <p>
-          <strong>Segnalare un contenuto illecito.</strong> Chiunque può farlo, anche senza account,
-          scrivendo a {abuseMail}, oppure dall’app con “Segnala” nel menu dell’account. Indica il
-          contenuto, dove si trova e perché lo ritieni illecito. Confermiamo la ricezione e ti
-          comunichiamo l’esito (art. 16 DSA).
+          <strong>Criteri di ordinamento.</strong> Nella mappa e negli elenchi sono presentati per
+          primi i locali e gli eventi <strong>sponsorizzati</strong>, ossia quelli per i quali il
+          gestore o l’organizzatore ha acquistato un boost, sempre contrassegnati dall’indicazione
+          «Sponsorizzato». Per i restanti risultati rilevano la distanza dall’utente e, nelle
+          classifiche dei drink, la media delle valutazioni. Un locale sponsorizzato può essere
+          mostrato anche oltre il raggio impostato dall’utente, entro la distanza acquistata dal
+          gestore. Nessun altro criterio incide sull’ordinamento e il posizionamento non è in alcun
+          modo acquistabile al di fuori dei boost.
         </p>
       </Section>
 
-      <Section title="Esclusioni di responsabilità">
+      <Section title="7. Moderazione">
         <p>
-          Il servizio è fornito “così com’è”, senza garanzie ulteriori rispetto a quelle che la legge
-          riconosce al consumatore. Le valutazioni sono soggettive; non garantiamo l’accuratezza dei
-          dati sui locali (orari, indirizzi, disponibilità), che arrivano da OpenStreetMap. L’uso di
-          alcolici è responsabilità dell’utente: bevi responsabilmente.
+          Le decisioni di moderazione sono assunte da <strong>persone fisiche</strong>: non sono
+          utilizzati sistemi automatizzati per la rimozione di contenuti o la limitazione degli
+          account. Il prestatore può rimuovere contenuti, nonché sospendere o disattivare account, in
+          caso di violazione dei presenti Termini o della normativa vigente.
+        </p>
+        <p>
+          <strong>Motivazione delle decisioni.</strong> In caso di rimozione di una valutazione o di
+          limitazione dell’account, l’utente riceve una comunicazione contenente i motivi della
+          decisione e le modalità per contestarla (art. 17 DSA). Il reclamo può essere presentato a{' '}
+          {abuseMail} ed è esaminato da una persona diversa da quella che ha assunto la decisione.
+        </p>
+        <p>
+          <strong>Segnalazione di contenuti illeciti.</strong> Chiunque, anche senza account, può
+          segnalare un contenuto ritenuto illecito scrivendo a {abuseMail} o, dall’applicazione,
+          tramite la funzione «Segnala» del menu account, indicando il contenuto, la sua collocazione
+          e le ragioni della segnalazione. Il prestatore conferma la ricezione e comunica l’esito
+          della valutazione (art. 16 DSA).
         </p>
       </Section>
 
-      <Section title="Legge applicabile e foro">
+      <Section title="8. Limitazione di responsabilità">
         <p>
-          Si applica la legge italiana. Se sei un consumatore, resta ferma la competenza del giudice
-          del luogo in cui risiedi o hai eletto domicilio (art. 66-bis del Codice del consumo), e
-          resta fermo il livello di tutela che la legge del tuo paese di residenza ti garantisce.
+          Il Servizio è fornito «così com’è», senza garanzie ulteriori rispetto a quelle riconosciute
+          al consumatore dalla legge. Le valutazioni hanno carattere soggettivo; il prestatore non
+          garantisce l’esattezza dei dati relativi ai locali (orari, indirizzi, disponibilità), che
+          provengono da OpenStreetMap. Il consumo di bevande alcoliche avviene sotto la
+          responsabilità dell’utente, che è invitato a farlo in modo responsabile.
         </p>
       </Section>
 
-      <Section title="Modifiche">
+      <Section title="9. Legge applicabile e foro competente">
         <p>
-          Possiamo aggiornare questi termini; la versione aggiornata sarà pubblicata su questa pagina
-          con la nuova data. Se una modifica incide sui servizi a pagamento a cui sei abbonato, te lo
-          comunichiamo in anticipo e puoi disdire prima che abbia effetto.
+          I presenti Termini sono regolati dalla legge italiana. Qualora l’utente rivesta la qualità
+          di consumatore, è competente in via inderogabile il giudice del luogo di residenza o di
+          domicilio elettivo dello stesso (art. 66-bis Codice del consumo), fermo restando il livello
+          di tutela garantito dalle norme imperative del paese di residenza.
+        </p>
+      </Section>
+
+      <Section title="10. Modifiche ai termini">
+        <p>
+          Il prestatore può aggiornare i presenti Termini; la versione aggiornata è pubblicata su
+          questa pagina con l’indicazione della data di aggiornamento. Le modifiche che incidono sui
+          servizi a pagamento sottoscritti sono comunicate con congruo preavviso, e l’utente può
+          esercitare la disdetta prima della loro entrata in vigore.
         </p>
       </Section>
     </LegalLayout>
@@ -213,156 +232,169 @@ function TosIt() {
 
 function TosEn() {
   return (
-    <LegalLayout title="Terms of Service" updated={UPDATED_EN}>
+    <LegalLayout title="Terms and Conditions of Service" updated={UPDATED_EN}>
       <p>
-        These terms govern the use of rabar. By accessing or using the service you agree to them. If
-        you do not agree, do not use the service.
+        These terms and conditions (the “Terms”) govern access to and use of the rabar website and
+        applications (the “Service”). Accessing or using the Service constitutes acceptance of the
+        Terms; anyone who does not accept them must not use the Service.
       </p>
 
-      <Section title="Who provides the service">
+      <Section title="1. Service provider">
         <Prestatore />
         <p>
-          General contact: {generalMail}. To report abuse or illegal content: {abuseMail} — this is
-          also the point of contact for authorities under Articles 11-12 of the Digital Services Act.
+          General enquiries may be sent to {generalMail}. Reports of abuse or illegal content should
+          be sent to {abuseMail}, which is also the point of contact for authorities under Articles
+          11 and 12 of Regulation (EU) 2022/2065 (the “DSA”).
         </p>
       </Section>
 
-      <Section title="The service">
+      <Section title="2. Purpose of the Service">
         <p>
-          rabar is a map of bars rated by the community on price, drinks quality, vibe, variety and
-          opening hours. Venue data comes from OpenStreetMap; ratings are user-generated content and
-          do not reflect the operator’s opinions.
+          rabar is a map of bars and venues rated by its community of users on five criteria: price,
+          drinks quality, vibe, variety and opening hours. Venue data are sourced from OpenStreetMap;
+          ratings are user-generated content and do not reflect the views of the provider.
         </p>
       </Section>
 
-      <Section title="Account">
-        <ul className="list-disc space-y-1 pl-5">
+      <Section title="3. Registration and accounts">
+        <List>
           <li>
-            You must be at least 18 (or the age of majority where you live): the service is about
-            venues that sell alcohol.
+            Use of the Service is restricted to persons aged eighteen or over, or the higher age of
+            majority provided for in their country of residence, as the Service concerns venues
+            serving alcoholic beverages.
           </li>
           <li>
-            You are responsible for your account’s activity and for keeping your credentials
-            confidential.
+            Users are responsible for all activity carried out through their account and for keeping
+            their login credentials confidential.
           </li>
-          <li>One account per person; impersonating others is forbidden.</li>
-        </ul>
+          <li>
+            Only one account per person is permitted. Impersonating others or providing false
+            information is prohibited.
+          </li>
+        </List>
       </Section>
 
-      <Section title="Paid services">
-        <p>rabar is free. Two things are paid for, and both are optional.</p>
-        <ul className="list-disc space-y-1 pl-5">
+      <Section title="4. Paid services">
+        <p>Use of the Service is free of charge. The following paid services are optionally available:</p>
+        <List>
           <li>
-            <strong>rabar+</strong> — a subscription giving the “+” badge, all themes and no
-            advertising. It costs <strong>€1.99 per week</strong>, <strong>€3.99 per month</strong>{' '}
-            or <strong>€29.99 per year</strong>, VAT included.
+            <strong>rabar+</strong> — a subscription including the “+” badge on the profile, access to
+            all colour themes and an ad-free experience. The price is <strong>€1.99 per week</strong>,{' '}
+            <strong>€3.99 per month</strong> or <strong>€29.99 per year</strong>, VAT included.
           </li>
           <li>
-            <strong>Boost</strong> — highlights a bar you have claimed or an event you published. It
-            costs <strong>€3 for 3 days</strong>, <strong>€6 for 7 days</strong> or{' '}
-            <strong>€20 for 30 days</strong>, VAT included. For bars you can also pick a visibility
-            radius from 1 to 50 km, at a surcharge of 1.5 cents per kilometre per day. It is a
-            one-off purchase and does not renew.
+            <strong>Boost</strong> — a service that highlights a venue claimed or an event published
+            by the user. The price is <strong>€3 for 3 days</strong>, <strong>€6 for 7 days</strong>{' '}
+            or <strong>€20 for 30 days</strong>, VAT included. For venues, a visibility radius of 1
+            to 50 km may be set, with a surcharge of €0.015 per kilometre per day. A boost is a
+            one-off purchase and does not renew automatically.
           </li>
-        </ul>
+        </List>
         <p>
-          <strong>Renewal and cancellation.</strong> rabar+ renews automatically at the end of each
-          period until you cancel. Cancelling and changing plan are done through the Stripe customer
-          portal, which you open from <strong>Settings</strong>: they take effect at the end of the
-          period you have already paid for, which stays yours in full. Receipts are downloaded from
-          the same portal.
+          <strong>Renewal and cancellation.</strong> The rabar+ subscription renews automatically at
+          the end of the chosen period unless cancelled. Cancellation and plan changes are made
+          through the Stripe customer portal, accessible from <strong>Settings</strong>, and take
+          effect at the end of the period already paid for, which remains fully available. Receipts
+          are available in the same portal.
         </p>
         <p>
-          <strong>Right of withdrawal.</strong> As a consumer you have fourteen days to change your
-          mind, without giving a reason (Legislative Decree 206/2005, Arts. 52-59, implementing
-          Directive 2011/83/EU). Because rabar+ and boosts are digital content that starts working{' '}
-          <em>immediately</em>, at the moment of purchase we ask you to confirm two things together:
-          that you want the service to start straight away, and that you understand the right of
-          withdrawal is therefore lost once it has been supplied (Art. 59(1)(o)). It is an explicit
-          tick box: without it the payment does not start. If you do not give it, or the service has
-          not started yet, you can withdraw by writing to {generalMail}: we refund within fourteen
-          days of the request, using the same payment method.
+          <strong>Right of withdrawal.</strong> Consumers have fourteen days to withdraw from the
+          contract without giving any reason (Arts. 52-59 of Italian Legislative Decree 206/2005, the
+          “Consumer Code”). Since rabar+ and boosts consist of the supply of digital content whose
+          performance begins immediately, at the time of purchase users are asked to expressly
+          confirm that they request immediate performance and acknowledge that, in that case, the
+          right of withdrawal is lost once performance has begun (Art. 59(1)(o) of the Consumer
+          Code). Without this confirmation no payment is taken. Where the confirmation has not been
+          given, or performance has not yet begun, the right of withdrawal may be exercised by
+          writing to {generalMail}; refunds are made within fourteen days of the request, using the
+          same means of payment.
         </p>
         <p>
-          <strong>On the App Store.</strong> In the iOS app, boosts are bought as in-app purchases:
-          refunds are handled by Apple under its own procedures, not by us. rabar+ is not sold from
-          the iOS app; there the subscription is only read.
+          <strong>App Store purchases.</strong> In the iOS application, boosts are sold as in-app
+          purchases; refund requests are handled by Apple under its own procedures. The rabar+
+          subscription cannot be purchased in the iOS application, where it is only recognised if
+          subscribed elsewhere.
         </p>
       </Section>
 
-      <Section title="Content rules">
-        <p>By posting ratings and comments you agree not to submit content that is:</p>
-        <ul className="list-disc space-y-1 pl-5">
+      <Section title="5. User content">
+        <p>By publishing ratings and comments, users undertake not to post content that is:</p>
+        <List>
           <li>unlawful, defamatory, offensive, discriminatory or harassing;</li>
-          <li>false, misleading or aimed at manipulating a venue’s averages;</li>
-          <li>spam, unsolicited advertising or third parties’ personal data.</li>
-        </ul>
+          <li>false, misleading or intended to distort a venue’s rating;</li>
+          <li>spam or unsolicited advertising, or that contains personal data of third parties.</li>
+        </List>
         <p>
-          You grant rabar a non-exclusive license to display the content you post within the service.
+          Users grant the provider a non-exclusive, royalty-free licence to display the content they
+          publish within the Service.
         </p>
       </Section>
 
-      <Section title="How ratings work">
+      <Section title="6. How ratings work and how results are ranked">
         <p>
-          Ratings are written by users. <strong>We do not verify</strong> that the author actually
-          visited the venue: we have no way of knowing, and we would rather say so than let you
-          assume otherwise. What we do is limit any one person’s effect — each account can rate a bar{' '}
-          <strong>only once</strong>, and editing replaces the previous vote instead of adding to it
-          — and act after publication, on report or on our own initiative. The averages you see are
-          recomputed by the database on every vote, never written by hand.
+          Ratings are written by users. The provider <strong>does not verify</strong> that the author
+          of a rating actually visited the venue. To limit the influence of individual users, each
+          account may rate a venue <strong>only once</strong>, and any edit replaces the previous
+          rating; content is also moderated after publication, following a report or on the
+          provider’s own initiative. Averages are calculated automatically by the system with every
+          new rating and are not subject to manual intervention.
         </p>
         <p>
-          <strong>How we rank results.</strong> On the map and in listings,{' '}
-          <strong>sponsored</strong> bars and events come first — those whose owner or organizer paid
-          for a boost; they always carry the “Sponsored” label. After those, distance from you
-          decides, and in drink rankings the average score. A sponsored bar may appear even when it
-          falls outside the radius you set, up to the distance its owner paid for. No other criterion
-          affects the order, and placement is never for sale outside boosts.
-        </p>
-      </Section>
-
-      <Section title="Moderation">
-        <p>
-          Moderation decisions are made by <strong>people</strong>: we do not use automated systems
-          to remove content or restrict accounts. We may remove content and suspend or ban an account
-          that breaches these terms or the law.
-        </p>
-        <p>
-          <strong>If it concerns you, we tell you.</strong> When we remove one of your ratings or
-          restrict your account you receive a notification with the reason and the address at which
-          to challenge the decision (Art. 17 DSA). Writing to {abuseMail} gets the decision reviewed
-          by someone other than whoever made it.
-        </p>
-        <p>
-          <strong>Reporting illegal content.</strong> Anyone can do it, with or without an account,
-          by writing to {abuseMail} or from the app via “Report” in the account menu. State the
-          content, where it is and why you believe it is unlawful. We confirm receipt and tell you
-          the outcome (Art. 16 DSA).
+          <strong>Ranking criteria.</strong> On the map and in lists, <strong>sponsored</strong>{' '}
+          venues and events — those for which the owner or organiser has purchased a boost — are
+          shown first and are always labelled “Sponsored”. For the remaining results, distance from
+          the user applies and, in drink rankings, the average rating. A sponsored venue may be shown
+          beyond the radius set by the user, up to the distance purchased by the owner. No other
+          criterion affects ranking, and placement cannot be purchased in any way other than through
+          boosts.
         </p>
       </Section>
 
-      <Section title="Disclaimers">
+      <Section title="7. Moderation">
         <p>
-          The service is provided “as is”, without warranties beyond those the law grants consumers.
-          Ratings are subjective; we do not guarantee the accuracy of venue data (hours, addresses,
-          availability), which comes from OpenStreetMap. Alcohol consumption is the user’s
-          responsibility: drink responsibly.
+          Moderation decisions are taken by <strong>human staff</strong>: no automated systems are
+          used to remove content or restrict accounts. The provider may remove content and suspend
+          or deactivate accounts in the event of a breach of these Terms or of applicable law.
+        </p>
+        <p>
+          <strong>Statement of reasons.</strong> Where a rating is removed or an account is
+          restricted, the user receives a notice setting out the reasons for the decision and how to
+          contest it (Art. 17 DSA). Complaints may be submitted to {abuseMail} and are reviewed by a
+          person other than the one who took the decision.
+        </p>
+        <p>
+          <strong>Reporting illegal content.</strong> Anyone, including those without an account,
+          may report content they consider illegal by writing to {abuseMail} or, within the
+          application, through the “Report” function in the account menu, stating the content, its
+          location and the reasons for the report. The provider acknowledges receipt and
+          communicates the outcome of its assessment (Art. 16 DSA).
         </p>
       </Section>
 
-      <Section title="Governing law and jurisdiction">
+      <Section title="8. Limitation of liability">
         <p>
-          Italian law applies. If you are a consumer, the courts of the place where you reside or
-          have elected domicile remain competent (Art. 66-bis of the Italian Consumer Code), and the
-          level of protection granted by the law of your country of residence is unaffected.
+          The Service is provided “as is”, without warranties beyond those granted to consumers by
+          law. Ratings are subjective; the provider does not guarantee the accuracy of venue data
+          (opening hours, addresses, availability), which are sourced from OpenStreetMap. The
+          consumption of alcoholic beverages is the sole responsibility of the user, who is
+          encouraged to drink responsibly.
         </p>
       </Section>
 
-      <Section title="Changes">
+      <Section title="9. Governing law and jurisdiction">
         <p>
-          We may update these terms; the updated version will be published on this page with the new
-          date. If a change affects paid services you subscribe to, we tell you in advance and you
-          can cancel before it takes effect.
+          These Terms are governed by Italian law. Where the user is a consumer, the courts of the
+          user’s place of residence or elected domicile have mandatory jurisdiction (Art. 66-bis of
+          the Consumer Code), without prejudice to the level of protection afforded by the mandatory
+          provisions of the country of residence.
+        </p>
+      </Section>
+
+      <Section title="10. Changes to the Terms">
+        <p>
+          The provider may update these Terms; the updated version is published on this page with the
+          date of the update. Changes affecting paid services to which the user has subscribed are
+          notified with reasonable advance notice, and the user may cancel before they take effect.
         </p>
       </Section>
     </LegalLayout>

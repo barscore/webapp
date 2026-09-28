@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
-import { organizerApi } from '../services/api.js';
+import { organizerApi, meApi } from '../services/api.js';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 
@@ -14,6 +14,22 @@ export default function Redeem() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(false);
+  // Il riscatto è sempre per un bar preciso: il backend verifica che sia tuo,
+  // attivo e aderente al free drink, e lo registra per la rendicontazione.
+  const [bars, setBars] = useState(null);
+  const [barId, setBarId] = useState('');
+
+  useEffect(() => {
+    if (loading || !isAuthenticated) return;
+    meApi
+      .bars()
+      .then((all) => {
+        const ok = all.filter((b) => b.is_active && b.accepts_free_drinks);
+        setBars(ok);
+        if (ok.length === 1) setBarId(ok[0].id);
+      })
+      .catch(() => setBars([]));
+  }, [loading, isAuthenticated]);
 
   useEffect(() => {
     if (!loading && !isAuthenticated) {
@@ -37,7 +53,7 @@ export default function Redeem() {
     setBusy(true);
     setError(null);
     try {
-      await organizerApi.redeemDrink(token);
+      await organizerApi.redeemDrink(token, barId);
       setSuccess(true);
     } catch (err) {
       setError(err.response?.data?.error || 'Errore durante il riscatto del drink.');
@@ -74,11 +90,31 @@ export default function Redeem() {
               Stai per convalidare un Free Drink Omaggio. Assicurati di essere il proprietario del locale per poterlo riscattare.
             </p>
             
+            {bars === null ? (
+              <p className="mt-4 text-sm text-ember-muted">Caricamento dei tuoi locali...</p>
+            ) : bars.length === 0 ? (
+              <p className="mt-4 text-sm font-semibold text-ember-danger">
+                Nessuno dei tuoi bar è attivo e aderisce al free drink.
+              </p>
+            ) : bars.length > 1 && (
+              <select
+                value={barId}
+                onChange={(e) => setBarId(e.target.value)}
+                className="mt-4 w-full rounded-lg bg-ember-bg p-2.5 text-sm text-ember-cream"
+                aria-label="Bar in cui servi il drink"
+              >
+                <option value="">Scegli il bar…</option>
+                {bars.map((b) => (
+                  <option key={b.id} value={b.id}>{b.name}{b.city ? ` — ${b.city}` : ''}</option>
+                ))}
+              </select>
+            )}
+
             {error && <p className="mt-4 text-sm font-semibold text-ember-danger">{error}</p>}
             
             <button 
               onClick={handleRedeem} 
-              disabled={busy}
+              disabled={busy || !barId}
               className="mt-6 btn-primary w-full py-3 text-lg font-bold"
             >
               {busy ? 'Convalida in corso...' : 'Convalida Ora'}

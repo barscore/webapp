@@ -17,21 +17,29 @@ const TABS = [
   { key: 'organizers', label: 'Organizzatori', icon: 'star' },
   { key: 'security', label: 'Sicurezza', icon: 'filters' },
   { key: 'emergency', label: 'Emergenza', icon: 'bell' },
+  { key: 'audit', label: 'Audit', icon: 'review' },
 ];
 
-// Admin control panel. Gated to role=admin (backend re-checks every call).
+// Tab aperti anche ai moderatori: gli stessi endpoint che il backend apre con
+// requireRole('admin', 'moderator'). Il resto è solo admin, lato server.
+const MOD_TABS = new Set(['suggestions', 'reports', 'drinks', 'organizers']);
+
+// Staff control panel: admin vede tutto, moderatore solo MOD_TABS (backend
+// re-checks every call).
 export default function Admin() {
-  const { isAdmin, loading } = useAuth();
+  const { isAdmin, isStaff, loading } = useAuth();
   const navigate = useNavigate();
-  const [tab, setTab] = useState('users');
+  const tabs = isAdmin ? TABS : TABS.filter((t) => MOD_TABS.has(t.key));
+  const [tab, setTab] = useState(null);
+  const current = tab ?? tabs[0]?.key;
   const [stats, setStats] = useState(null);
   const [toast, setToast] = useState(null);
 
   const notify = useCallback((msg, icon = 'check') => setToast({ msg, icon }), []);
 
   useEffect(() => {
-    if (!loading && !isAdmin) navigate('/');
-  }, [loading, isAdmin, navigate]);
+    if (!loading && !isStaff) navigate('/');
+  }, [loading, isStaff, navigate]);
 
   const loadStats = useCallback(() => {
     adminApi.stats().then(setStats).catch(() => {});
@@ -40,7 +48,7 @@ export default function Admin() {
     if (isAdmin) loadStats();
   }, [isAdmin, loadStats]);
 
-  if (loading || !isAdmin) return null;
+  if (loading || !isStaff) return null;
 
   return (
     <div className="min-h-full bg-ember-bg p-4">
@@ -53,27 +61,27 @@ export default function Admin() {
             <Logo size="sm" />
           </div>
           <h1 className="flex items-center gap-2 font-display text-2xl font-bold text-ember-cream">
-            <Icon name="filters" size={22} className="text-ember-ink" /> Pannello admin
+            <Icon name="filters" size={22} className="text-ember-ink" /> {isAdmin ? 'Pannello admin' : 'Pannello moderazione'}
           </h1>
         </div>
 
         {/* Stat cards */}
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
+        {isAdmin && <div className="grid grid-cols-2 gap-2 sm:grid-cols-5">
           <Stat label="Utenti" value={stats?.users} />
           <Stat label="Valutazioni" value={stats?.ratings} />
           <Stat label="Bar" value={stats?.bars} />
           <Stat label="Bannati" value={stats?.banned} accent />
           <Stat label="Sospesi" value={stats?.suspended} accent />
-        </div>
+        </div>}
 
         {/* Tabs */}
         <div className="card flex gap-1 overflow-x-auto p-1">
-          {TABS.map((t) => (
+          {tabs.map((t) => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
               className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                tab === t.key
+                current === t.key
                   ? 'bg-ember-primary text-ember-on-primary'
                   : 'text-ember-muted hover:text-ember-cream'
               }`}
@@ -83,14 +91,15 @@ export default function Admin() {
           ))}
         </div>
 
-        {tab === 'users' && <UsersTab notify={notify} onChange={loadStats} />}
-        {tab === 'ratings' && <RatingsTab notify={notify} onChange={loadStats} />}
-        {tab === 'suggestions' && <SuggestionsTab notify={notify} />}
-        {tab === 'reports' && <ReportsTab notify={notify} />}
-        {tab === 'drinks' && <DrinkSuggestionsTab notify={notify} />}
-        {tab === 'organizers' && <OrganizersTab notify={notify} />}
-        {tab === 'security' && <SecurityTab notify={notify} />}
-        {tab === 'emergency' && <EmergencyTab notify={notify} onChange={loadStats} />}
+        {current === 'users' && <UsersTab notify={notify} onChange={loadStats} />}
+        {current === 'ratings' && <RatingsTab notify={notify} onChange={loadStats} />}
+        {current === 'suggestions' && <SuggestionsTab notify={notify} />}
+        {current === 'reports' && <ReportsTab notify={notify} />}
+        {current === 'drinks' && <DrinkSuggestionsTab notify={notify} />}
+        {current === 'organizers' && <OrganizersTab notify={notify} />}
+        {current === 'security' && <SecurityTab notify={notify} />}
+        {current === 'emergency' && <EmergencyTab notify={notify} onChange={loadStats} />}
+        {current === 'audit' && <AuditTab notify={notify} />}
       </div>
 
       <Toast message={toast?.msg} icon={toast?.icon} onDone={() => setToast(null)} />
@@ -105,6 +114,63 @@ function Stat({ label, value, accent }) {
         {value ?? '…'}
       </div>
       <div className="text-xs text-ember-muted">{label}</div>
+    </div>
+  );
+}
+
+// =========================================================================
+// Audit — registro delle azioni di staff (admin_audit), sola lettura
+// =========================================================================
+function AuditTab({ notify }) {
+  const [action, setAction] = useState('');
+  const [page, setPage] = useState(1);
+  const [data, setData] = useState({ entries: [], total: 0, limit: 50 });
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      adminApi
+        .audit({ action: action || undefined, page })
+        .then(setData)
+        .catch(() => notify('Errore caricamento audit', 'info'));
+    }, 250);
+    return () => clearTimeout(t);
+  }, [action, page, notify]);
+
+  const pages = Math.max(1, Math.ceil(data.total / data.limit));
+  return (
+    <div className="space-y-3">
+      <input
+        value={action}
+        onChange={(e) => { setAction(e.target.value); setPage(1); }}
+        placeholder="Filtra per azione (es. user., claim.revoke)"
+        className="w-full rounded-lg bg-ember-card p-2.5 text-sm text-ember-cream"
+      />
+      {data.entries.length === 0 ? (
+        <p className="py-6 text-center text-sm text-ember-muted">Nessuna azione registrata.</p>
+      ) : (
+        data.entries.map((e) => (
+          <div key={e.id} className="card p-3 text-sm">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="font-mono font-semibold text-ember-cream">{e.action}</span>
+              <span className="text-ember-muted">da {e.actor_username ?? 'account eliminato'}</span>
+              <span className="ml-auto text-xs text-ember-muted">{new Date(e.created_at).toLocaleString('it-IT')}</span>
+            </div>
+            {(e.target_type || e.payload) && (
+              <pre className="mt-2 overflow-x-auto whitespace-pre-wrap break-all text-xs text-ember-muted">
+                {e.target_type ? `${e.target_type} ${e.target_id ?? ''}\n` : ''}
+                {e.payload ? JSON.stringify(e.payload, null, 1) : ''}
+              </pre>
+            )}
+          </div>
+        ))
+      )}
+      {pages > 1 && (
+        <div className="flex items-center justify-center gap-3 text-sm">
+          <button disabled={page <= 1} onClick={() => setPage(page - 1)} className="btn-ghost px-3 py-1">‹</button>
+          <span className="text-ember-muted">{page} / {pages}</span>
+          <button disabled={page >= pages} onClick={() => setPage(page + 1)} className="btn-ghost px-3 py-1">›</button>
+        </div>
+      )}
     </div>
   );
 }

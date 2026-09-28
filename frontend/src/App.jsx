@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth.js';
 import { supabase } from './services/supabase.js';
 import Home from './pages/Home.jsx';
@@ -34,6 +34,13 @@ const BoostResult = lazy(() => import('./pages/BoostResult.jsx'));
 const Plus = lazy(() => import('./pages/Plus.jsx'));
 const Redeem = lazy(() => import('./pages/Redeem.jsx'));
 const PartyEntry = lazy(() => import('./pages/PartyEntry.jsx'));
+const ContentPage = lazy(() => import('./pages/ContentPage.jsx'));
+const Cities = lazy(() => import('./pages/Cities.jsx'));
+const NotFound = lazy(() => import('./pages/NotFound.jsx'));
+
+// Same list as CONTENT_SLUGS in content/pages.js — not imported from there so
+// the page copy stays out of the initial bundle.
+const CONTENT_SLUGS = ['come-funziona', 'faq', 'chi-siamo', 'contatti'];
 
 // Blank dark screen while a lazy page chunk downloads (matches the app bg, so
 // no white flash).
@@ -148,7 +155,7 @@ export default function App() {
   // signed-in betatester would flash the lock screen on every load.
   const roleReady = !isAuthenticated || role !== null;
   const canBeta = isAdmin || role === 'moderator' || role === 'betatester';
-  const alwaysOpen = ['/login', '/privacy', '/tos'].includes(location.pathname);
+  const alwaysOpen = ['/login', '/privacy', '/tos', '/contatti'].includes(location.pathname);
   if (!loading && roleReady && !alwaysOpen) {
     // Maintenance: only admins pass (incl. /admin to flip it back off).
     if (maint?.maintenance_mode && !isAdmin) {
@@ -176,7 +183,9 @@ export default function App() {
   return (
     <>
       <BanBanner />
-      <TutorialSplash />
+      {/* Home only: a first-visit modal over a bar page, a city or the FAQ
+          hides the very content the visitor (or a reviewer) came for. */}
+      {location.pathname === '/' && <TutorialSplash />}
       <ExplorerPromoModal />
       <InstallHint />
       <CookieBanner />
@@ -199,7 +208,12 @@ export default function App() {
         <Route path="/privacy" element={<Privacy />} />
         <Route path="/tos" element={<Tos />} />
         <Route path="/riconoscimenti" element={<Credits />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
+        {CONTENT_SLUGS.map((slug) => (
+          <Route key={slug} path={`/${slug}`} element={<ContentPage slug={slug} />} />
+        ))}
+        <Route path="/citta" element={<Cities />} />
+        <Route path="/citta/:slug" element={<Cities />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
       </Suspense>
     </>

@@ -194,7 +194,7 @@ BEGIN
 
   RETURN NULL;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions, pg_temp;
 
 CREATE TRIGGER trigger_update_ratings_summary
 AFTER INSERT OR UPDATE OR DELETE ON public.ratings

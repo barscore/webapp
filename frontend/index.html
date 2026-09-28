@@ -55,19 +55,13 @@
       document.head.appendChild(fontLink);
     </script>
 
-    <!-- Primary SEO -->
+    <!-- Primary SEO. One tag per line: scripts/prerender.mjs rewrites these
+         per page at build time, and src/hooks/usePageMeta.js while navigating.
+         Defaults live in src/utils/seo.js. -->
     <title>rabar — mappa dei bar valutati dalla community</title>
-    <meta
-      name="description"
-      content="rabar è la mappa interattiva dei bar valutati dalla community su prezzo, qualità dell'alcol e socialità. Trova il bar giusto vicino a te."
-    />
-    <meta
-      name="keywords"
-      content="bar, mappa bar, migliori bar, valutazioni bar, prezzo bar, cocktail, aperitivo, locali, nightlife, rabar"
-    />
+    <meta name="description" content="rabar è la mappa dei bar valutati dalla community su cinque assi: prezzo, qualità dei drink, socialità, varietà e orari. Trova il bar giusto vicino a te." />
     <meta name="author" content="rabar" />
     <meta name="robots" content="index, follow" />
-    <!-- Set to your production URL before deploy. -->
     <link rel="canonical" href="https://www.rabar.it/" />
 
     <!-- Open Graph (Facebook, WhatsApp, Telegram…) -->
@@ -75,20 +69,14 @@
     <meta property="og:site_name" content="rabar" />
     <meta property="og:locale" content="it_IT" />
     <meta property="og:title" content="rabar — mappa dei bar valutati dalla community" />
-    <meta
-      property="og:description"
-      content="Trova il bar giusto: prezzo, qualità dell'alcol e socialità valutati dalla community, su una mappa interattiva."
-    />
+    <meta property="og:description" content="rabar è la mappa dei bar valutati dalla community su cinque assi: prezzo, qualità dei drink, socialità, varietà e orari. Trova il bar giusto vicino a te." />
     <meta property="og:url" content="https://www.rabar.it/" />
     <meta property="og:image" content="https://www.rabar.it/icons/icon-512.png" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="rabar — mappa dei bar valutati dalla community" />
-    <meta
-      name="twitter:description"
-      content="Trova il bar giusto: prezzo, qualità dell'alcol e socialità valutati dalla community."
-    />
+    <meta name="twitter:description" content="rabar è la mappa dei bar valutati dalla community su cinque assi: prezzo, qualità dei drink, socialità, varietà e orari. Trova il bar giusto vicino a te." />
     <meta name="twitter:image" content="https://www.rabar.it/icons/icon-512.png" />
 
     <link rel="manifest" href="/manifest.json" />
@@ -115,7 +103,7 @@
         "name": "rabar",
         "applicationCategory": "LifestyleApplication",
         "operatingSystem": "Web",
-        "description": "Mappa interattiva dei bar valutati dalla community su prezzo, qualità dell'alcol e socialità.",
+        "description": "Mappa dei bar valutati dalla community su prezzo, qualità dei drink, socialità, varietà e orari.",
         "url": "https://www.rabar.it/",
         "offers": { "@type": "Offer", "price": "0", "priceCurrency": "EUR" }
       }

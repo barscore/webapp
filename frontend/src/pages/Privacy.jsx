@@ -10,8 +10,8 @@ export default function Privacy() {
   return lang === 'it' ? <PrivacyIt /> : <PrivacyEn />;
 }
 
-const UPDATED_IT = '28 settembre 2026';
-const UPDATED_EN = 'September 28, 2026';
+const UPDATED_IT = '13 ottobre 2026';
+const UPDATED_EN = 'October 13, 2026';
 
 const linkClass = 'text-ember-ink hover:underline';
 
@@ -136,7 +136,11 @@ function PrivacyIt() {
           </li>
           <li>
             Pubblicità tramite Google AdSense sul sito web e Google AdMob nelle applicazioni:
-            consenso dell’interessato (art. 6, par. 1, lett. a GDPR), revocabile in qualsiasi momento.
+            per gli annunci personalizzati e per l’uso di cookie e identificatori pubblicitari,
+            consenso dell’interessato (art. 6, par. 1, lett. a GDPR), revocabile in qualsiasi
+            momento; per gli annunci non personalizzati, legittimo interesse del Titolare a
+            sostenere economicamente un Servizio offerto gratuitamente (art. 6, par. 1, lett. f
+            GDPR).
           </li>
         </List>
       </Section>
@@ -169,7 +173,7 @@ function PrivacyIt() {
           </li>
           <li>
             <strong>Google AdSense</strong> e <strong>Google AdMob</strong> — pubblicità sul sito web
-            e nelle applicazioni, attivata soltanto previo consenso. Su iOS l’utilizzo
+            e nelle applicazioni, personalizzata soltanto previo consenso. Su iOS l’utilizzo
             dell’identificativo pubblicitario richiede inoltre l’autorizzazione al tracciamento
             prevista dal sistema operativo.
           </li>
@@ -270,14 +274,35 @@ function PrivacyIt() {
       <Section title="10. Cookie e strumenti di tracciamento">
         <p>
           Il Servizio utilizza la memoria locale del browser esclusivamente per finalità tecniche
-          (sessione, lingua, tema grafico, preferenze sul consenso). La pubblicità di Google e i
-          relativi cookie sono attivati <strong>solo previo consenso</strong> espresso tramite
-          l’apposito banner: in caso di rifiuto o in assenza di scelta lo script pubblicitario non
-          viene eseguito, e pertanto non è effettuata alcuna richiesta né installato alcun cookie. Il
-          consenso può essere modificato in qualsiasi momento da{' '}
-          <strong>Impostazioni → Preferenze cookie</strong> oppure dalle{' '}
-          {extLink('https://adssettings.google.com', 'Impostazioni annunci di Google')}. Agli
-          abbonati rabar+ non è mostrata pubblicità e lo script non viene caricato.
+          (sessione, lingua, tema grafico).
+        </p>
+        <p>
+          Sul sito web il consenso alla pubblicità è raccolto tramite la piattaforma di gestione
+          del consenso di Google, certificata secondo l’IAB Transparency and Consent Framework, che
+          viene mostrata alla prima visita agli utenti che si trovano nello Spazio economico
+          europeo, nel Regno Unito e in Svizzera. Per poter mostrare tale richiesta, lo script di
+          Google AdSense è caricato all’apertura del sito, il che comporta la comunicazione a Google
+          dell’indirizzo IP e dei dati tecnici della connessione;{' '}
+          <strong>nessun annuncio è richiesto prima della scelta dell’utente</strong>, e i cookie e
+          gli identificatori pubblicitari sono utilizzati <strong>solo previo consenso</strong>. La
+          scelta è conservata in cookie tecnici di prima parte (<code>FCCDCF</code>,{' '}
+          <code>FCNEC</code>).
+        </p>
+        <p>
+          In assenza di consenso possono essere mostrati unicamente annunci non personalizzati,
+          senza profilazione dell’utente; restano i soli trattamenti tecnici necessari alla
+          sicurezza e alla prevenzione delle frodi. Il consenso può essere modificato o revocato in
+          qualsiasi momento dal link <strong>Preferenze cookie</strong> in fondo alle pagine o da{' '}
+          <strong>Impostazioni → Preferenze cookie</strong>, che riaprono la richiesta di Google,
+          oppure dalle{' '}
+          {extLink('https://adssettings.google.com', 'Impostazioni annunci di Google')}. Le modalità
+          con cui Google tratta i dati raccolti sui siti dei propri partner sono descritte alla
+          pagina{' '}
+          {extLink(
+            'https://policies.google.com/technologies/partner-sites',
+            'policies.google.com/technologies/partner-sites',
+          )}
+          . Agli abbonati rabar+ non è mostrata pubblicità e lo script non viene caricato.
         </p>
       </Section>
 
@@ -287,13 +312,14 @@ function PrivacyIt() {
           conoscere, correggere e cancellare i dati personali che li riguardano, senza subire
           discriminazioni per l’esercizio di tali diritti. Il Titolare non «vende» dati personali. La
           pubblicità personalizzata può configurare una «condivisione» (<em>sharing</em>) ai sensi
-          del CPRA: essa avviene <strong>esclusivamente previo consenso</strong>, revocabile in
-          qualsiasi momento da Impostazioni → Preferenze cookie, funzione che corrisponde al
-          meccanismo «Do Not Sell or Share My Personal Information». Il Servizio rispetta
+          del CPRA. L’utente può opporvisi in qualsiasi momento: il Servizio rispetta
           automaticamente il segnale{' '}
-          {extLink('https://globalprivacycontrol.org', 'Global Privacy Control')}: se attivo nel
-          browser, la pubblicità personalizzata resta disattivata. Per l’esercizio dei diritti è
-          possibile scrivere a {privacyMail}.
+          {extLink('https://globalprivacycontrol.org', 'Global Privacy Control')}, che corrisponde al
+          meccanismo «Do Not Sell or Share My Personal Information» — se è attivo nel browser lo
+          script pubblicitario non viene caricato affatto — e la personalizzazione può essere
+          disattivata dalle{' '}
+          {extLink('https://adssettings.google.com', 'Impostazioni annunci di Google')}. Per
+          l’esercizio dei diritti è possibile scrivere a {privacyMail}.
         </p>
       </Section>
 
@@ -381,7 +407,10 @@ function PrivacyEn() {
           <li>Tax and accounting obligations relating to sales: legal obligation (Art. 6(1)(c) GDPR).</li>
           <li>
             Advertising through Google AdSense on the website and Google AdMob in the applications:
-            consent (Art. 6(1)(a) GDPR), which may be withdrawn at any time.
+            for personalised ads and for the use of advertising cookies and identifiers, consent
+            (Art. 6(1)(a) GDPR), which may be withdrawn at any time; for non-personalised ads, the
+            Controller’s legitimate interest in funding a Service offered free of charge
+            (Art. 6(1)(f) GDPR).
           </li>
         </List>
       </Section>
@@ -412,7 +441,7 @@ function PrivacyEn() {
           </li>
           <li>
             <strong>Google AdSense</strong> and <strong>Google AdMob</strong> — advertising on the
-            website and in the applications, enabled only with consent. On iOS, use of the
+            website and in the applications, personalised only with consent. On iOS, use of the
             advertising identifier also requires the tracking authorisation provided by the
             operating system.
           </li>
@@ -507,13 +536,32 @@ function PrivacyEn() {
       <Section title="10. Cookies and tracking technologies">
         <p>
           The Service uses the browser’s local storage for technical purposes only (session,
-          language, theme, consent preferences). Google advertising and the related cookies are
-          enabled <strong>only with prior consent</strong> given through the banner: if consent is
-          refused or no choice is made, the advertising script is not executed, so no request is made
-          and no cookie is set. Consent may be changed at any time from{' '}
-          <strong>Settings → Cookie preferences</strong> or from{' '}
-          {extLink('https://adssettings.google.com', 'Google Ads Settings')}. rabar+ subscribers are
-          shown no advertising and the script is not loaded.
+          language, theme).
+        </p>
+        <p>
+          On the website, consent to advertising is collected through Google’s consent management
+          platform, certified under the IAB Transparency and Consent Framework, which is shown on
+          the first visit to users located in the European Economic Area, the United Kingdom and
+          Switzerland. To display that request, the Google AdSense script is loaded when the site
+          is opened, which involves sending Google the IP address and the technical data of the
+          connection; <strong>no ad is requested before the user has chosen</strong>, and
+          advertising cookies and identifiers are used <strong>only with prior consent</strong>.
+          The choice is stored in first-party technical cookies (<code>FCCDCF</code>,{' '}
+          <code>FCNEC</code>).
+        </p>
+        <p>
+          Without consent, only non-personalised ads may be shown, with no profiling of the user;
+          the only processing that remains is the technical processing needed for security and
+          fraud prevention. Consent may be changed or withdrawn at any time from the{' '}
+          <strong>Cookie preferences</strong> link at the bottom of the pages or from{' '}
+          <strong>Settings → Cookie preferences</strong>, which reopen Google’s request, or from{' '}
+          {extLink('https://adssettings.google.com', 'Google Ads Settings')}. How Google handles
+          the data collected on its partners’ sites is described at{' '}
+          {extLink(
+            'https://policies.google.com/technologies/partner-sites',
+            'policies.google.com/technologies/partner-sites',
+          )}
+          . rabar+ subscribers are shown no advertising and the script is not loaded.
         </p>
       </Section>
 
@@ -522,12 +570,13 @@ function PrivacyEn() {
           Users resident in California or in other states with comparable legislation have the right
           to know, correct and delete personal data concerning them, without discrimination for
           exercising these rights. The Controller does not “sell” personal data. Personalised
-          advertising may constitute “sharing” under the CPRA: it takes place{' '}
-          <strong>only with prior consent</strong>, which may be withdrawn at any time from Settings
-          → Cookie preferences, a function that serves as the “Do Not Sell or Share My Personal
-          Information” mechanism. The Service automatically honours the{' '}
-          {extLink('https://globalprivacycontrol.org', 'Global Privacy Control')} signal: when it is
-          enabled in the browser, personalised advertising remains disabled. Requests to exercise
+          advertising may constitute “sharing” under the CPRA. Users may opt out at any time: the
+          Service automatically honours the{' '}
+          {extLink('https://globalprivacycontrol.org', 'Global Privacy Control')} signal, which
+          serves as the “Do Not Sell or Share My Personal Information” mechanism — when it is
+          enabled in the browser the advertising script is not loaded at all — and personalisation
+          can be turned off from{' '}
+          {extLink('https://adssettings.google.com', 'Google Ads Settings')}. Requests to exercise
           these rights may be sent to {privacyMail}.
         </p>
       </Section>

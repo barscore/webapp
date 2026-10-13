@@ -1,9 +1,12 @@
 import { useState } from 'react';
 import { useAuth } from '../hooks/useAuth.js';
 import { useI18n } from '../i18n/index.js';
+import { rememberTermsTick } from '../services/terms.js';
 
 // "Continua con Google" — triggers Supabase OAuth redirect.
-export default function GoogleButton({ label, disabled = false, returnTo = '/' }) {
+// `termsAccepted`: la casella di Register è spuntata. Il redirect non porta
+// metadati, quindi la spunta si lascia qui e useAuth la ritrova al ritorno.
+export default function GoogleButton({ label, disabled = false, returnTo = '/', termsAccepted = false }) {
   const { t } = useI18n();
   const { loginWithGoogle } = useAuth();
   const [busy, setBusy] = useState(false);
@@ -13,6 +16,7 @@ export default function GoogleButton({ label, disabled = false, returnTo = '/' }
     setBusy(true);
     setError('');
     try {
+      if (termsAccepted) rememberTermsTick();
       await loginWithGoogle(returnTo);
     } catch (e) {
       setError(e.message || t('auth.googleError'));

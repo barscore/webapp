@@ -262,6 +262,10 @@ export default {
   'auth.accept2': ' e i ',
   'auth.accept3': '.',
   'auth.mustAccept': 'Devi accettare Privacy e Termini e confermare di avere almeno 18 anni.',
+  'terms.title': 'Prima di continuare',
+  'terms.text': 'Per usare rabar con il tuo account serve la tua conferma.',
+  'terms.continue': 'Continua',
+  'terms.failed': 'Conferma non riuscita, riprova.',
   'auth.registerFailed': 'Registrazione fallita',
   'auth.creating': 'Creazione…',
   'auth.haveAccount': 'Hai già un account?',
@@ -383,9 +387,6 @@ export default {
   'install.gotIt': 'Ho capito',
 
   // Banner cookie
-  'cookie.text': 'Usiamo solo cookie tecnici. Con il tuo consenso carichiamo la pubblicità di Google (con i relativi cookie); se rifiuti, nessun annuncio e nessun cookie pubblicitario. Puoi cambiare idea da Impostazioni. Vedi la',
-  'cookie.reject': 'Rifiuta',
-  'cookie.accept': 'Accetta',
 
   // Error boundary
   'err.updating': 'Aggiornamento in corso…',
@@ -414,9 +415,10 @@ export default {
   'settings.pushOff': 'Attiva le notifiche push',
   'settings.pushErr': 'Operazione non riuscita',
   'settings.cookie': 'Preferenze cookie',
-  'settings.cookieGranted': 'Hai accettato: la pubblicità di Google è attiva.',
-  'settings.cookieDenied': 'Hai rifiutato: nessuna pubblicità e nessun cookie pubblicitario.',
-  'settings.cookieNone': 'Nessuna scelta ancora: nessuna pubblicità caricata.',
+  'settings.cookieInfo': 'Il consenso alla pubblicità si dà nel messaggio di Google che compare alla prima visita. Da qui puoi riaprirlo per cambiare o revocare la scelta.',
+  'settings.cookiePlus': 'Con rabar+ non vedi pubblicità: lo script di Google non viene caricato.',
+  'settings.cookieGpc': 'Il tuo browser invia il segnale Global Privacy Control: la pubblicità di Google non viene caricata.',
+  'settings.cookieUnavailable': 'Il messaggio di Google non è disponibile adesso: lo script pubblicitario non è caricato (ad esempio per un blocco degli annunci) oppure nel tuo paese non è previsto un consenso.',
   'settings.cookieChange': 'Modifica scelta',
 
   'org.verifiedTitle': 'Account organizzatore',

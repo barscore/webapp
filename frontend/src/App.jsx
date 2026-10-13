@@ -6,9 +6,9 @@ import Home from './pages/Home.jsx';
 import BanBanner from './components/BanBanner.jsx';
 import TutorialSplash from './components/TutorialSplash.jsx';
 import InstallHint from './components/InstallHint.jsx';
-import CookieBanner from './components/CookieBanner.jsx';
-import { loadAdsense, adsenseLoaded } from './services/adsense.js';
-import { consentGranted, onConsentChange } from './services/consent.js';
+import { loadAdsense } from './services/adsense.js';
+import { gpcOptOut } from './services/consent.js';
+import { termsGateOpen } from './services/terms.js';
 import { enforcePlusTheme } from './hooks/useTheme.js';
 import { rememberAuthReturn } from './hooks/useAuthReturn.js';
 
@@ -37,6 +37,8 @@ const PartyEntry = lazy(() => import('./pages/PartyEntry.jsx'));
 const ContentPage = lazy(() => import('./pages/ContentPage.jsx'));
 const Cities = lazy(() => import('./pages/Cities.jsx'));
 const NotFound = lazy(() => import('./pages/NotFound.jsx'));
+// Serve a pochi account, una volta sola: fuori dal bundle iniziale.
+const TermsGate = lazy(() => import('./components/TermsGate.jsx'));
 
 // Same list as CONTENT_SLUGS in content/pages.js — not imported from there so
 // the page copy stays out of the initial bundle.
@@ -47,7 +49,7 @@ const CONTENT_SLUGS = ['come-funziona', 'faq', 'chi-siamo', 'contatti'];
 const Fallback = <div className="h-[100dvh] w-full bg-ember-bg" />;
 
 export default function App() {
-  const { isAdmin, role, isAuthenticated, loading, isPlus, user } = useAuth();
+  const { isAdmin, role, isAuthenticated, loading, isPlus, user, profileReady, termsRequired } = useAuth();
   const location = useLocation();
   const [maint, setMaint] = useState(null);
 
@@ -93,23 +95,16 @@ export default function App() {
     }
   }, [user, role]);
 
-  // The profile row (role + rabar+) lands after the session; act on it only
-  // once it's actually there, or a subscriber would get one frame of ads and a
-  // theme reset on every load.
-  const profileReady = !loading && (!isAuthenticated || role !== null);
-
-  // AdSense strictly after consent (EU ePrivacy prior-blocking): no ad script,
-  // no ad requests, no ad cookies until the user hits "Accetta". A revoke after
-  // the script is already in the page needs a reload to actually drop it.
-  // rabar+ skips the loader entirely: no script, not just no visible units.
+  // AdSense. The script carries Google's consent message and holds every ad
+  // request until the user answers it (see consent.js), so loading it is what
+  // asks for consent — there is no banner of ours in front of it.
+  // Acted on only once the profile is there (profileReady), or a subscriber
+  // would get one frame of ads and a theme reset on every load.
+  // rabar+ and a GPC signal skip the loader entirely: no script, not just no
+  // visible units.
   useEffect(() => {
-    if (!profileReady) return;
-    if (isPlus) return;
-    if (consentGranted()) loadAdsense();
-    return onConsentChange(() => {
-      if (consentGranted()) loadAdsense();
-      else if (adsenseLoaded()) window.location.reload();
-    });
+    if (!profileReady || isPlus || gpcOptOut()) return;
+    loadAdsense();
   }, [profileReady, isPlus]);
 
   // Themes beyond the default are a rabar+ perk: when the subscription lapses
@@ -188,7 +183,11 @@ export default function App() {
       {location.pathname === '/' && <TutorialSplash />}
       <ExplorerPromoModal />
       <InstallHint />
-      <CookieBanner />
+      {termsGateOpen(termsRequired, location.pathname) && (
+        <Suspense fallback={null}>
+          <TermsGate />
+        </Suspense>
+      )}
       <Suspense fallback={Fallback}>
       <Routes>
         <Route path="/" element={<Home />} />

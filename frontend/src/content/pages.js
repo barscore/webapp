@@ -176,7 +176,7 @@ export const PAGES = {
         {
           h: 'Cosa fate con i miei dati?',
           p: [
-            'Il minimo per far funzionare il servizio. La pubblicità di Google si carica solo se la accetti dal banner, e puoi cambiare idea in qualsiasi momento dalle Impostazioni. Tutti i dettagli sono nell’informativa privacy.',
+            'Il minimo per far funzionare il servizio. Alla prima visita Google ti chiede il consenso per la pubblicità: senza, niente annunci personalizzati né cookie pubblicitari, e puoi cambiare idea in qualsiasi momento dalle Impostazioni. Tutti i dettagli sono nell’informativa privacy.',
           ],
         },
       ],
@@ -244,7 +244,7 @@ export const PAGES = {
         {
           h: 'What do you do with my data?',
           p: [
-            'The minimum needed to run the service. Google advertising loads only if you accept it from the banner, and you can change your mind any time from Settings. All the details are in the privacy policy.',
+            'The minimum needed to run the service. On your first visit Google asks for your consent to advertising: without it, no personalised ads and no advertising cookies, and you can change your mind any time from Settings. All the details are in the privacy policy.',
           ],
         },
       ],
@@ -276,7 +276,7 @@ export const PAGES = {
         {
           h: 'Come ci sosteniamo',
           p: [
-            'rabar è gratuito. Lo sostengono la pubblicità (solo con il tuo consenso), l’abbonamento facoltativo rabar+ e le sponsorizzazioni dei locali, sempre dichiarate. Nessuno di questi può comprare un voto: i punteggi sono solo quelli dati dagli utenti.',
+            'rabar è gratuito. Lo sostengono la pubblicità (personalizzata solo con il tuo consenso), l’abbonamento facoltativo rabar+ e le sponsorizzazioni dei locali, sempre dichiarate. Nessuno di questi può comprare un voto: i punteggi sono solo quelli dati dagli utenti.',
           ],
         },
         {
@@ -309,7 +309,7 @@ export const PAGES = {
         {
           h: 'How we fund it',
           p: [
-            'rabar is free. It is funded by advertising (only with your consent), the optional rabar+ subscription and venue sponsorships, always disclosed. None of these can buy a rating: scores are only the ones users give.',
+            'rabar is free. It is funded by advertising (personalised only with your consent), the optional rabar+ subscription and venue sponsorships, always disclosed. None of these can buy a rating: scores are only the ones users give.',
           ],
         },
         {

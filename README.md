@@ -122,9 +122,18 @@ Installabile su mobile via "Aggiungi alla schermata Home". Service worker
 
 ## AdSense
 
-Imposta `VITE_ADSENSE_CLIENT_ID` (`ca-pub-XXXX`) in `frontend/.env` e sostituisci il
-`client=` nel tag `<script>` di `index.html`. Banner in Home (sotto la mappa) e in
-BarDetail (in fondo alla scheda). Senza client id, `AdBanner` mostra un placeholder.
+Cinque variabili, lette da Vite **al build** (in produzione stanno nelle Environment
+Variables del progetto Vercel: cambiarle richiede un redeploy):
+`VITE_ADSENSE_CLIENT_ID` (`ca-pub-XXXX`), `VITE_ADSENSE_SLOT_LIST` +
+`VITE_ADSENSE_LAYOUT_KEY_LIST` (In-feed, elenco bar), `VITE_ADSENSE_SLOT_BAR`
+(In-article, scheda bar), `VITE_ADSENSE_SLOT_BOARD` (Display, classifica). Senza client
+id non si carica nulla; uno slot vuoto non viene renderizzato.
+
+Lo script lo inietta `src/services/adsense.js`, non `index.html`. Il consenso lo
+raccoglie il messaggio «Regolamenti europei» di AdSense (Privacy e messaggi), che
+arriva con lo script: non c'è un banner cookie nostro. Per sapere se un build ha gli
+annunci: `grep -c adsbygoogle` sul bundle `assets/index-*.js` — zero vuol dire che le
+variabili erano vuote al build.
 
 ## Struttura
 

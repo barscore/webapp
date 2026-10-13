@@ -12,7 +12,7 @@ import Toast from '../components/Toast.jsx';
 import OrganizerRequestForm from '../components/OrganizerRequestForm.jsx';
 import { LanguageSection } from '../components/LanguagePicker.jsx';
 import { pushSupported, getPushSubscription, enablePush, disablePush } from '../services/push.js';
-import { getConsent, resetConsent, onConsentChange } from '../services/consent.js';
+import { gpcOptOut, openConsentMessage } from '../services/consent.js';
 import { isAndroid, getProvider, setProvider } from '../utils/directions.js';
 import { useI18n } from '../i18n/index.js';
 import PrContactSettings from '../components/PrContactSettings.jsx';
@@ -489,29 +489,30 @@ function MapsSection() {
   );
 }
 
-// Current ad-consent state + a reset that reopens the global CookieBanner so
-// the user can pick again (a revoke after ads loaded triggers a reload in App).
+// The way back to Google's consent message, to change or withdraw the choice.
+// Where no ad script runs at all (rabar+, GPC) there is nothing to reopen: the
+// section says why instead of offering a button that does nothing.
 function CookieSection() {
   const { t } = useI18n();
-  const [choice, setChoice] = useState(getConsent);
-  useEffect(() => onConsentChange(() => setChoice(getConsent())), []);
-  const label =
-    choice === 'granted'
-      ? t('settings.cookieGranted')
-      : choice === 'denied'
-        ? t('settings.cookieDenied')
-        : t('settings.cookieNone');
+  const { isPlus } = useAuth();
+  const [unavailable, setUnavailable] = useState(false);
+  const off = isPlus ? t('settings.cookiePlus') : gpcOptOut() ? t('settings.cookieGpc') : null;
   return (
     <section className="card space-y-3 p-4">
       <h3 className="font-display font-bold text-ember-cream">{t('settings.cookie')}</h3>
-      <p className="text-sm text-ember-muted">{label}</p>
-      <button
-        type="button"
-        onClick={resetConsent}
-        className="w-full rounded-lg border border-ember-line/10 py-2 font-semibold text-ember-cream"
-      >
-        {t('settings.cookieChange')}
-      </button>
+      <p className="text-sm text-ember-muted">{off || t('settings.cookieInfo')}</p>
+      {!off && (
+        <button
+          type="button"
+          onClick={() => setUnavailable(!openConsentMessage())}
+          className="w-full rounded-lg border border-ember-line/10 py-2 font-semibold text-ember-cream"
+        >
+          {t('settings.cookieChange')}
+        </button>
+      )}
+      {!off && unavailable && (
+        <p className="text-sm text-ember-muted">{t('settings.cookieUnavailable')}</p>
+      )}
     </section>
   );
 }

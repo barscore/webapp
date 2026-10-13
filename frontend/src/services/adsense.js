@@ -4,9 +4,9 @@
 //   * fixed display units — <ins data-ad-slot> rendered by AdSlot.jsx where we
 //     want an ad for sure (bar list, bar detail, leaderboard).
 // Both are skipped when no client id is configured, so an empty env var never
-// fires a broken request. Prior-blocking: App calls loadAdsense() ONLY after
-// the user grants consent (see consent.js) — the script, its ad requests and
-// its cookies simply never exist for users who declined or haven't chosen yet.
+// fires a broken request. Consent is Google's job: the same script carries the
+// certified consent message and waits for the answer before requesting any ad
+// (see consent.js). App decides who gets the script at all.
 export const CLIENT_ID = import.meta.env.VITE_ADSENSE_CLIENT_ID;
 
 // Ad unit ids from the AdSense dashboard (Annunci → Per unità pubblicitaria).
@@ -41,19 +41,17 @@ export const AD_UNITS = {
 // How many bar rows between two in-list ads.
 export const LIST_AD_EVERY = 6;
 
+// An id, not a data attribute: AdSense reads every data-* on its own tag as
+// configuration and warns about the ones it does not know.
+const SCRIPT_ID = 'rabar-adsense';
+
 export function loadAdsense() {
   if (!CLIENT_ID || typeof document === 'undefined') return;
-  if (document.querySelector('script[data-adsense]')) return;
+  if (document.getElementById(SCRIPT_ID)) return;
   const s = document.createElement('script');
+  s.id = SCRIPT_ID;
   s.async = true;
   s.crossOrigin = 'anonymous';
-  s.dataset.adsense = 'true';
   s.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${CLIENT_ID}`;
   document.head.appendChild(s);
-}
-
-// The script can't be un-executed once in the page; dropping ads after a
-// consent revoke needs a reload (App handles that).
-export function adsenseLoaded() {
-  return typeof document !== 'undefined' && !!document.querySelector('script[data-adsense]');
 }

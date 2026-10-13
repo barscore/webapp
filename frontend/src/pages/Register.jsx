@@ -106,7 +106,12 @@ export default function Register() {
           {busy ? t('auth.creating') : t('auth.register')}
         </button>
       </form>
-      <GoogleButton label={t('auth.googleRegister')} disabled={!accepted} returnTo={returnTo} />
+      <GoogleButton
+        label={t('auth.googleRegister')}
+        disabled={!accepted}
+        termsAccepted={accepted}
+        returnTo={returnTo}
+      />
       <p className="mt-4 text-center text-sm text-ember-muted">
         {t('auth.haveAccount')}{' '}
         <Link to="/login" className="text-ember-ink underline">

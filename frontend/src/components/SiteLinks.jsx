@@ -1,4 +1,6 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../hooks/useAuth.js';
+import { gpcOptOut, openConsentMessage } from '../services/consent.js';
 import { useI18n } from '../i18n/index.js';
 
 // The site's public pages as plain links. Shown under the bar list, the bar
@@ -17,6 +19,10 @@ const LINKS = [
 
 export default function SiteLinks({ className = '' }) {
   const { t } = useI18n();
+  const { isPlus } = useAuth();
+  const navigate = useNavigate();
+  // Where no ad script runs there is no consent to manage.
+  const ads = !isPlus && !gpcOptOut();
   return (
     <nav className={`flex flex-wrap justify-center gap-x-3 gap-y-1.5 text-xs text-ember-muted ${className}`}>
       {LINKS.map(([to, key]) => (
@@ -24,6 +30,21 @@ export default function SiteLinks({ className = '' }) {
           {t(key)}
         </Link>
       ))}
+      {/* Reopens Google's consent message. It lives here because Impostazioni
+          needs an account, and a visitor must be able to withdraw consent too.
+          No message to reopen (ad blocker, country without one): the privacy
+          page explains the other ways. */}
+      {ads && (
+        <button
+          type="button"
+          onClick={() => {
+            if (!openConsentMessage()) navigate('/privacy');
+          }}
+          className="hover:text-ember-ink"
+        >
+          {t('settings.cookie')}
+        </button>
+      )}
     </nav>
   );
 }

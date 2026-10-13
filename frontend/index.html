@@ -110,9 +110,10 @@
     </script>
 
     <!-- Google AdSense (Auto Ads) is injected at runtime by services/adsense.js,
-         only when VITE_ADSENSE_CLIENT_ID is set AND the user granted consent
-         (prior-blocking, see services/consent.js). Nothing to configure here —
-         leave the env var empty to disable ads. -->
+         only when VITE_ADSENSE_CLIENT_ID is set and never for rabar+ or under a
+         GPC signal. The script brings Google's consent message with it (see
+         services/consent.js). Nothing to configure here — leave the env var
+         empty to disable ads. -->
   </head>
   <body>
     <div id="root"></div>

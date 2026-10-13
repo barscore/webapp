@@ -656,3 +656,11 @@ input[type='range'].slider {
   transition-duration: 0.01ms !important;
   scroll-behavior: auto !important;
 }
+
+/* ---------------------------------------------------------------------------
+   AdSense marks an <ins> it could not fill with data-ad-status="unfilled" but
+   leaves the box in the page: without this an empty unit is a blank card in
+   the middle of the bar list. */
+ins.adsbygoogle[data-ad-status='unfilled'] {
+  display: none !important;
+}

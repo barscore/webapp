@@ -1,0 +1,11 @@
+# ~/.config/systemd/user/rabar-backup.service
+[Unit]
+Description=rabar — backup del database Supabase
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+# SUPABASE_DB_URL=... — file con permessi 600, mai nel repo.
+EnvironmentFile=%h/.config/rabar-backup.env
+ExecStart=%h/rabar-backup/backup.sh

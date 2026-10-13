@@ -1,0 +1,12 @@
+# ~/.config/systemd/user/rabar-backup.timer
+[Unit]
+Description=rabar — backup del database ogni notte a mezzanotte
+
+[Timer]
+# Mezzanotte italiana, ora legale compresa: il VPS ha l'orologio in UTC.
+OnCalendar=*-*-* 00:00:00 Europe/Rome
+# Se a mezzanotte la macchina era spenta, il backup parte appena torna su.
+Persistent=true
+
+[Install]
+WantedBy=timers.target

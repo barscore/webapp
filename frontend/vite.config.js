@@ -12,7 +12,7 @@ export default defineConfig({
         manualChunks: {
           react: ['react', 'react-dom', 'react-router-dom'],
           leaflet: ['leaflet', 'react-leaflet'],
-          supabase: ['@supabase/supabase-js'],
+          supabase: ['@supabase/auth-js', '@supabase/postgrest-js'],
         },
       },
     },

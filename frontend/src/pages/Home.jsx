@@ -14,7 +14,6 @@ import { SkeletonRows } from '../components/Skeleton.jsx';
 import Toast from '../components/Toast.jsx';
 import SuggestModal from '../components/SuggestModal.jsx';
 import ReportModal from '../components/ReportModal.jsx';
-import QrScannerModal from '../components/QrScannerModal.jsx';
 import FreeDrinkModal from '../components/FreeDrinkModal.jsx';
 import UserQrModal from '../components/UserQrModal.jsx';
 import ProposeDrinkModal from '../components/ProposeDrinkModal.jsx';
@@ -26,6 +25,9 @@ import { LIST_AD_EVERY } from '../services/adsense.js';
 
 // Lazy: loading BarSheet on first bar tap keeps the landing bundle small.
 const BarSheet = lazy(() => import('../components/BarSheet.jsx'));
+// Lazy for a bigger reason: the scanner pulls in html5-qrcode, which alone was
+// three quarters of the landing bundle — for a button only venue owners press.
+const QrScannerModal = lazy(() => import('../components/QrScannerModal.jsx'));
 import { placesApi, eventsApi, meApi, drinksApi } from '../services/api.js';
 import { barKey } from '../utils/score.js';
 import { openUntil23 } from '../utils/hours.js';
@@ -1023,7 +1025,11 @@ export default function Home() {
         />
       )}
 
-      {scannerOpen && <QrScannerModal onClose={() => setScannerOpen(false)} />}
+      {scannerOpen && (
+        <Suspense fallback={null}>
+          <QrScannerModal onClose={() => setScannerOpen(false)} />
+        </Suspense>
+      )}
       {freeDrinkOpen && <FreeDrinkModal token={user?.free_drink_token} center={center} onClose={() => setFreeDrinkOpen(false)} />}
       {userQrOpen && <UserQrModal userId={user?.id} onClose={() => setUserQrOpen(false)} />}
 

@@ -1,6 +1,7 @@
-import { memo, useEffect, useMemo, useState } from 'react';
-import { MapContainer, TileLayer, Marker, useMap, useMapEvents } from 'react-leaflet';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { MapContainer, Marker, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
+import Basemap from './Basemap.jsx';
 import { usePins } from '../utils/pins.js';
 import { scoreMeta, barKey, isDisco, DISCO_ICON_URL } from '../utils/score.js';
 
@@ -14,12 +15,34 @@ function Recenter({ center, zoom }) {
   return null;
 }
 
-// Reports the live zoom level up to Map so the marker set can thin out.
-function ZoomWatcher({ onZoom }) {
-  const map = useMapEvents({ zoomend: () => onZoom(map.getZoom()) });
+// How far past the screen edge markers are kept, as a fraction of the screen:
+// half a screen on every side, so a short pan finds them already there.
+const VIEW_PAD = 0.5;
+
+// Reports the live zoom level and the area on screen up to Map, so the marker
+// set can thin out and skip what nobody can see. It speaks up only when the
+// zoom changes or the view leaves the padded box it reported last: panning
+// around inside it re-renders nothing.
+function ViewWatcher({ onView }) {
+  const last = useRef(null);
+  const report = useCallback(
+    (map) => {
+      const zoom = map.getZoom();
+      const bounds = map.getBounds();
+      const prev = last.current;
+      if (prev && prev.zoom === zoom && prev.box.contains(bounds)) return;
+      last.current = { zoom, box: bounds.pad(VIEW_PAD) };
+      onView(last.current);
+    },
+    [onView],
+  );
+  // moveend also closes every zoom; resize covers the container settling
+  // after mount (see ResizeFix), when the first bounds were those of a
+  // zero-sized map.
+  const map = useMapEvents({ moveend: () => report(map), resize: () => report(map) });
   useEffect(() => {
-    onZoom(map.getZoom());
-  }, [map, onZoom]);
+    report(map);
+  }, [map, report]);
   return null;
 }
 
@@ -50,22 +73,28 @@ function FlyTo({ pos }) {
 // (memoized) `bars` and `onSelect` for this to pay off.
 function Map({ bars = [], center, zoom = 14, userPos, selectedKey, focus, onSelect }) {
   const pins = usePins();
-  const [zoomLevel, setZoomLevel] = useState(zoom);
+  // `box` is null until the map reports in (one effect after mount).
+  const [view, setView] = useState({ zoom, box: null });
 
-  // Zoomed out the map thins to the best-rated bars only:
+  // Only the bars on screen (plus a margin) become markers: every Marker is a
+  // DOM node Leaflet repositions on each zoom, and a 25 km radius over a big
+  // city loads a thousand of them.
+  // Zoomed out the map also thins to the best-rated bars:
   //   ≥ 14  → everything
   //   12–13 → only bars with reviews
   //   < 12  → only "verde" bars (score ≥ 7)
   // The selected bar always stays visible.
   const visibleBars = useMemo(() => {
-    if (zoomLevel >= 14) return bars;
+    const { zoom: zoomLevel, box } = view;
     return bars.filter((bar) => {
       if (barKey(bar) === selectedKey) return true;
+      if (box && !box.contains([bar.lat, bar.lng])) return false;
+      if (zoomLevel >= 14) return true;
       const meta = scoreMeta(bar);
       if (!meta.hasReviews) return false;
       return zoomLevel >= 12 || meta.variant === 'verde';
     });
-  }, [bars, zoomLevel, selectedKey]);
+  }, [bars, view, selectedKey]);
 
   // Build one Leaflet icon per pin variant from the extracted sprite data URLs.
   // Two sizes: normal, and an enlarged animated variant for the selected pin.
@@ -117,23 +146,18 @@ function Map({ bars = [], center, zoom = 14, userPos, selectedKey, focus, onSele
     <MapContainer
       center={center}
       zoom={zoom}
+      maxZoom={19}
       className="h-full w-full"
       scrollWheelZoom
       zoomControl={false}
     >
-      {/* Plain OpenStreetMap tiles: CARTO started watermarking its basemaps
-          with "API key required", and a key is not an option here. The tiles
-          are light — the .leaflet-tile-pane filter in index.css turns them
-          into the active theme's map (see --map-filter). */}
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-        url="https://tile.openstreetmap.org/{z}/{x}/{y}.png"
-        maxZoom={19}
-      />
+      {/* The basemap is light — the .leaflet-tile-pane filter in index.css
+          turns it into the active theme's map (see --map-filter). */}
+      <Basemap />
       <ResizeFix />
       <Recenter center={center} zoom={zoom} />
       <FlyTo pos={focus} />
-      <ZoomWatcher onZoom={setZoomLevel} />
+      <ViewWatcher onView={setView} />
 
       {userPos && (
         <Marker

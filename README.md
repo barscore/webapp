@@ -14,8 +14,9 @@ Mappa interattiva dei bar con valutazioni comunitarie su **prezzo**, **qualità 
 - Docker & Docker Compose
 - Account Supabase
 
-> **Nessuna API a pagamento.** Mappa, dati dei bar e geocoding usano solo
-> OpenStreetMap (tile OSM, Overpass, Nominatim) — gratuiti, senza chiave.
+> **Nessuna API a pagamento.** Mappa, dati dei bar e geocoding usano solo dati
+> OpenStreetMap (tile vettoriali di OpenFreeMap, Overpass, Nominatim) — gratuiti,
+> senza chiave.
 
 ## Avvio rapido
 

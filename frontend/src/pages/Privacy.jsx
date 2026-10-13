@@ -166,10 +166,17 @@ function PrivacyIt() {
             <strong>Apple</strong> — verifica degli acquisti effettuati nell’applicazione iOS.
           </li>
           <li>
-            <strong>OpenStreetMap</strong>, i server <strong>Overpass</strong>,{' '}
-            <strong>Nominatim</strong> e <strong>Photon (komoot)</strong> — cartografia e ricerca dei
-            luoghi. Tali servizi ricevono unicamente l’area geografica visualizzata, al fine di
-            restituire i locali in essa compresi.
+            <strong>OpenFreeMap</strong> — fornisce la mappa di sfondo. Le sue porzioni sono
+            scaricate direttamente dal dispositivo dell’utente, che comunica pertanto a tale
+            servizio l’indirizzo IP e l’area geografica visualizzata. Qualora OpenFreeMap non sia
+            raggiungibile, la mappa è richiesta con le stesse modalità ai server di{' '}
+            <strong>OpenStreetMap</strong>.
+          </li>
+          <li>
+            I server <strong>Overpass</strong>, <strong>Nominatim</strong> e{' '}
+            <strong>Photon (komoot)</strong> — ricerca dei locali e dei luoghi. Sono interrogati dai
+            server del Servizio e ricevono unicamente l’area geografica visualizzata o il testo
+            cercato, al fine di restituire i locali corrispondenti.
           </li>
           <li>
             <strong>Google AdSense</strong> e <strong>Google AdMob</strong> — pubblicità sul sito web
@@ -435,9 +442,16 @@ function PrivacyEn() {
             <strong>Apple</strong> — verification of purchases made in the iOS application.
           </li>
           <li>
-            <strong>OpenStreetMap</strong>, the <strong>Overpass</strong>, <strong>Nominatim</strong>{' '}
-            and <strong>Photon (komoot)</strong> servers — mapping and place search. These services
-            receive only the geographic area being viewed, in order to return the venues within it.
+            <strong>OpenFreeMap</strong> — provides the background map. Its tiles are downloaded
+            directly by the user’s device, which therefore discloses to that service the IP address
+            and the geographic area being viewed. If OpenFreeMap cannot be reached, the map is
+            requested in the same way from the <strong>OpenStreetMap</strong> servers.
+          </li>
+          <li>
+            The <strong>Overpass</strong>, <strong>Nominatim</strong> and{' '}
+            <strong>Photon (komoot)</strong> servers — venue and place search. They are queried by
+            the Service’s servers and receive only the geographic area being viewed or the text
+            searched, in order to return the matching venues.
           </li>
           <li>
             <strong>Google AdSense</strong> and <strong>Google AdMob</strong> — advertising on the

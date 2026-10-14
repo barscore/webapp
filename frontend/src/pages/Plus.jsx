@@ -7,6 +7,10 @@ import { plusApi } from '../services/api.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { useI18n } from '../i18n/index.js';
 
+// Gestione di un abbonamento rabar+ comprato con Google Play (app Android).
+const PLAY_SUBSCRIPTIONS_URL =
+  'https://play.google.com/store/account/subscriptions?sku=com.rabar.app.plus&package=com.rabar.app';
+
 const euros = (cents) => `€${(cents / 100).toFixed(2).replace('.', ',')}`;
 
 // Quante settimane/mesi stanno in un anno — serve solo a mostrare il risparmio
@@ -82,6 +86,12 @@ export default function Plus() {
   }
 
   async function manage() {
+    // Comprato dall'app Android: lo gestisce Google Play (Play Store →
+    // Abbonamenti), il portale Stripe non lo conosce.
+    if (status?.subscription?.provider === 'google') {
+      window.location.assign(PLAY_SUBSCRIPTIONS_URL);
+      return;
+    }
     setBusy(true);
     setError('');
     try {

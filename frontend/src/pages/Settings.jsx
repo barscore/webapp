@@ -13,6 +13,7 @@ import OrganizerRequestForm from '../components/OrganizerRequestForm.jsx';
 import { LanguageSection } from '../components/LanguagePicker.jsx';
 import { pushSupported, getPushSubscription, enablePush, disablePush } from '../services/push.js';
 import { gpcOptOut, openConsentMessage } from '../services/consent.js';
+import { useMonetization } from '../services/monetization.js';
 import { isAndroid, getProvider, setProvider } from '../utils/directions.js';
 import { useI18n } from '../i18n/index.js';
 import PrContactSettings from '../components/PrContactSettings.jsx';
@@ -337,9 +338,12 @@ export default function Settings() {
 const STRIPE_PORTAL_LOGIN_URL = 'https://billing.stripe.com/p/login/9B6cMYgEw3LH1zBe0t1ck00';
 
 // Riquadro rabar+: stato dell'abbonamento e ingresso alla pagina /plus.
+// A monetizzazione spenta resta solo per chi è già abbonato: deve poter disdire.
 function PlusSection() {
   const { t } = useI18n();
   const { isPlus } = useAuth();
+  const monetization = useMonetization();
+  if (!isPlus && !monetization) return null;
   return (
     <>
       <Link to="/plus" className="press card flex items-center gap-3 p-4">
@@ -380,12 +384,13 @@ function ThemeSection() {
   const { t } = useI18n();
   const { theme, setTheme, themes } = useTheme();
   const { isPlus } = useAuth();
+  const monetization = useMonetization();
   const navigate = useNavigate();
   return (
     <section className="card p-4">
       <h3 className="mb-3 flex items-center gap-2 font-display font-bold text-ember-cream">
         {t('settings.theme')}
-        {!isPlus && (
+        {!isPlus && monetization && (
           <span className="text-[11px] font-semibold normal-case text-ember-muted">
             {t('plus.themesLocked')}
           </span>
@@ -490,13 +495,21 @@ function MapsSection() {
 }
 
 // The way back to Google's consent message, to change or withdraw the choice.
-// Where no ad script runs at all (rabar+, GPC) there is nothing to reopen: the
-// section says why instead of offering a button that does nothing.
+// Where no ad script runs at all (rabar+, GPC, monetization switched off)
+// there is nothing to reopen: the section says why instead of offering a
+// button that does nothing.
 function CookieSection() {
   const { t } = useI18n();
   const { isPlus } = useAuth();
+  const monetization = useMonetization();
   const [unavailable, setUnavailable] = useState(false);
-  const off = isPlus ? t('settings.cookiePlus') : gpcOptOut() ? t('settings.cookieGpc') : null;
+  const off = isPlus
+    ? t('settings.cookiePlus')
+    : !monetization
+      ? t('settings.cookieOff')
+      : gpcOptOut()
+        ? t('settings.cookieGpc')
+        : null;
   return (
     <section className="card space-y-3 p-4">
       <h3 className="font-display font-bold text-ember-cream">{t('settings.cookie')}</h3>

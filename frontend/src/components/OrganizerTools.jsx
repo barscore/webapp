@@ -6,6 +6,7 @@ import Icon from './Icon.jsx';
 import EventComposer from './EventComposer.jsx';
 import BoostModal from './BoostModal.jsx';
 import { useI18n } from '../i18n/index.js';
+import { useMonetization } from '../services/monetization.js';
 
 const FMT = new Intl.DateTimeFormat('it-IT', {
   weekday: 'short',
@@ -23,6 +24,7 @@ const BANNER_KEY = 'boost-banner-dismissed:v1';
 export default function OrganizerTools({ center, bars = [], onChanged }) {
   const { t } = useI18n();
   const { role } = useAuth();
+  const monetization = useMonetization();
   const [composer, setComposer] = useState(null); // null | { event? }
   const [boost, setBoost] = useState(null); // null | { target, label }
   const [mineOpen, setMineOpen] = useState(false);
@@ -30,8 +32,10 @@ export default function OrganizerTools({ center, bars = [], onChanged }) {
   const [banner, setBanner] = useState(() => !localStorage.getItem(BANNER_KEY));
 
   // Organizer, ma anche staff: admin/moderator possono creare e gestire eventi
-  // (il backend già li autorizza). Boost/banner restano solo per gli organizer.
+  // (il backend già li autorizza). Boost/banner restano solo per gli organizer,
+  // e solo a monetizzazione accesa (pannello admin → Emergenza).
   const isOrganizer = role === 'organizer';
+  const canBoost = isOrganizer && monetization;
   const canManage = isOrganizer || role === 'admin' || role === 'moderator';
 
   useEffect(() => {
@@ -65,7 +69,7 @@ export default function OrganizerTools({ center, bars = [], onChanged }) {
   return (
     <div className="mb-3 space-y-2">
       {/* Banner promo boost — dismissibile, solo per organizer */}
-      {banner && isOrganizer && (
+      {banner && canBoost && (
         <div className="flex items-center gap-2.5 rounded-card border border-ember-primary/40 bg-ember-primary/10 p-3">
           <Icon name="euro" size={18} className="shrink-0 text-ember-ink" />
           <p className="min-w-0 flex-1 text-xs leading-snug text-ember-cream">
@@ -128,7 +132,7 @@ export default function OrganizerTools({ center, bars = [], onChanged }) {
               </Link>
               {!ev.cancelled_at && (
                 <>
-                  {isOrganizer && (
+                  {canBoost && (
                     <button
                       type="button"
                       onClick={() => setBoost({ target: { event_id: ev.id }, label: ev.title })}

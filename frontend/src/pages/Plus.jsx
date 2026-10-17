@@ -6,6 +6,7 @@ import PlusBadge from '../components/PlusBadge.jsx';
 import { plusApi } from '../services/api.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { useI18n } from '../i18n/index.js';
+import { useMonetization } from '../services/monetization.js';
 
 // Gestione di un abbonamento rabar+ comprato con Google Play (app Android).
 const PLAY_SUBSCRIPTIONS_URL =
@@ -23,6 +24,9 @@ const PER_YEAR = { week: 52, month: 12, year: 1 };
 export default function Plus() {
   const { t, dateLocale } = useI18n();
   const { isAuthenticated, isPlus, user, refreshPlus } = useAuth();
+  // Spenta dal pannello admin: niente listino né checkout. Chi è già abbonato
+  // continua a vedere stato e gestione (la disdetta deve restare possibile).
+  const monetization = useMonetization();
 
   const [plans, setPlans] = useState([]);
   const [plan, setPlan] = useState('month');
@@ -160,6 +164,8 @@ export default function Plus() {
               {t('plus.manage')}
             </button>
           </section>
+        ) : !monetization ? (
+          <p className="card p-4 text-sm text-ember-muted">{t('plus.unavailable')}</p>
         ) : (
           <section className="space-y-3">
             {justPaid && (

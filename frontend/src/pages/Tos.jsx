@@ -10,8 +10,8 @@ export default function Tos() {
   return lang === 'it' ? <TosIt /> : <TosEn />;
 }
 
-const UPDATED_IT = '28 settembre 2026';
-const UPDATED_EN = 'September 28, 2026';
+const UPDATED_IT = '17 ottobre 2026';
+const UPDATED_EN = 'October 17, 2026';
 
 const mailTo = (address) => (
   <a href={`mailto:${address}`} className="text-ember-ink hover:underline">
@@ -179,14 +179,24 @@ function TosIt() {
 
       <Section title="7. Moderazione">
         <p>
-          Le decisioni di moderazione sono assunte da <strong>persone fisiche</strong>: non sono
-          utilizzati sistemi automatizzati per la rimozione di contenuti o la limitazione degli
-          account. Il prestatore può rimuovere contenuti, nonché sospendere o disattivare account, in
-          caso di violazione dei presenti Termini o della normativa vigente.
+          La rimozione di contenuti già pubblicati e la sospensione o disattivazione degli account
+          sono decise da <strong>persone fisiche</strong>, in caso di violazione dei presenti
+          Termini o della normativa vigente.
         </p>
         <p>
-          <strong>Motivazione delle decisioni.</strong> In caso di rimozione di una valutazione o di
-          limitazione dell’account, l’utente riceve una comunicazione contenente i motivi della
+          <strong>Controllo automatico.</strong> Al momento dell’invio, i contenuti destinati alla
+          pubblicazione (valutazioni, commenti, risposte dei gestori, eventi e relative immagini,
+          nomi utente) sono esaminati da un sistema automatizzato, composto da un elenco di termini e
+          da un classificatore fornito da OpenAI, che ne impedisce la pubblicazione in presenza di
+          incitamento all’odio, molestie gravi o minacce, contenuti sessuali espliciti, istigazione
+          all’autolesionismo o violenza esplicita. Le critiche, anche severe, a un locale non sono
+          bloccate. L’utente è informato subito che il contenuto non è stato pubblicato e può
+          modificarlo; un nome utente che non supera il controllo è sostituito con un nome generico,
+          con comunicazione all’interessato.
+        </p>
+        <p>
+          <strong>Motivazione delle decisioni.</strong> In caso di rimozione di una valutazione, di
+          sostituzione del nome utente o di limitazione dell’account, l’utente riceve una comunicazione contenente i motivi della
           decisione e le modalità per contestarla (art. 17 DSA). Il reclamo può essere presentato a{' '}
           {abuseMail} ed è esaminato da una persona diversa da quella che ha assunto la decisione.
         </p>
@@ -352,13 +362,23 @@ function TosEn() {
 
       <Section title="7. Moderation">
         <p>
-          Moderation decisions are taken by <strong>human staff</strong>: no automated systems are
-          used to remove content or restrict accounts. The provider may remove content and suspend
-          or deactivate accounts in the event of a breach of these Terms or of applicable law.
+          The removal of content already published and the suspension or deactivation of accounts
+          are decided by <strong>human staff</strong>, in the event of a breach of these Terms or of
+          applicable law.
         </p>
         <p>
-          <strong>Statement of reasons.</strong> Where a rating is removed or an account is
-          restricted, the user receives a notice setting out the reasons for the decision and how to
+          <strong>Automated screening.</strong> When submitted, content intended for publication
+          (ratings, comments, owner replies, events and their images, usernames) is screened by an
+          automated system, made up of a list of terms and a classifier provided by OpenAI, which
+          prevents its publication where it contains hate speech, serious harassment or threats,
+          sexually explicit material, encouragement of self-harm or graphic violence. Criticism of a
+          venue, however harsh, is not blocked. The user is told immediately that the content was
+          not published and may edit it; a username that fails the screening is replaced with a
+          generic one and the user is notified.
+        </p>
+        <p>
+          <strong>Statement of reasons.</strong> Where a rating is removed, a username is replaced
+          or an account is restricted, the user receives a notice setting out the reasons for the decision and how to
           contest it (Art. 17 DSA). Complaints may be submitted to {abuseMail} and are reviewed by a
           person other than the one who took the decision.
         </p>

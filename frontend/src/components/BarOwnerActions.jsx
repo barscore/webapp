@@ -1,12 +1,17 @@
-import { useState } from 'react';
+import { lazy, Suspense, useState } from 'react';
 import Icon from './Icon.jsx';
 import ClaimModal from './ClaimModal.jsx';
 import BoostModal from './BoostModal.jsx';
 import { useAuth } from '../hooks/useAuth.js';
 import { useI18n } from '../i18n/index.js';
+import { useMonetization } from '../services/monetization.js';
+
+// Lazy: la apre solo chi possiede il bar, e si porta dietro la lib del QR.
+const BarStatsModal = lazy(() => import('./BarStatsModal.jsx'));
 
 // Azioni del proprietario su un bar: rivendicalo se non ha un owner, mettilo in
-// evidenza se sei tu l'owner.
+// evidenza e guardane le statistiche se sei tu l'owner. Le statistiche le apre
+// anche l'admin, su qualunque bar: è da lì che prende QR e link NFC da stampare.
 //
 // Vive in un componente suo perché il bar si apre da DUE schermate — il sheet
 // della home (`BarSheet`) e la pagina `/bar/:id` — e il pulsante deve stare su
@@ -17,19 +22,33 @@ import { useI18n } from '../i18n/index.js';
 // finiva oltre il bordo, senza scrollbar a dirlo.
 export default function BarOwnerActions({ bar, onToast }) {
   const { t } = useI18n();
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, isAdmin, user } = useAuth();
+  const monetization = useMonetization();
   const [claimOpen, setClaimOpen] = useState(false);
   const [boostOpen, setBoostOpen] = useState(false);
   const [freeDrinksOpen, setFreeDrinksOpen] = useState(false);
+  const [statsOpen, setStatsOpen] = useState(false);
 
   if (!isAuthenticated || !bar?.id) return null;
 
   const isOwner = !!user && bar.owner_id === user.id;
   const canClaim = !bar.owner_id;
-  if (!canClaim && !isOwner) return null;
+  if (!canClaim && !isOwner && !isAdmin) return null;
+  const canBoost = isOwner && !bar.sponsored && monetization;
 
   return (
     <>
+      {(isOwner || isAdmin) && (
+        <button
+          type="button"
+          onClick={() => setStatsOpen(true)}
+          className="flex w-full items-center justify-center gap-2 rounded-lg border border-ember-line/15 py-2.5 text-sm font-semibold text-ember-cream hover:border-ember-primary/60"
+        >
+          <Icon name="funnel" size={15} className="text-ember-ink" />
+          {t('stats.cta')}
+        </button>
+      )}
+
       {canClaim && (
         <button
           type="button"
@@ -41,7 +60,7 @@ export default function BarOwnerActions({ bar, onToast }) {
         </button>
       )}
 
-      {isOwner && !bar.sponsored && (
+      {canBoost && (
         <button
           type="button"
           onClick={() => setBoostOpen(true)}
@@ -69,6 +88,19 @@ export default function BarOwnerActions({ bar, onToast }) {
           onClose={() => setClaimOpen(false)}
           onSent={() => onToast?.({ msg: t('claim.sent'), icon: 'check' })}
         />
+      )}
+      {statsOpen && (
+        <Suspense fallback={null}>
+          <BarStatsModal
+            bar={bar}
+            canBoost={canBoost}
+            onBoost={() => {
+              setStatsOpen(false);
+              setBoostOpen(true);
+            }}
+            onClose={() => setStatsOpen(false)}
+          />
+        </Suspense>
       )}
       {boostOpen && (
         <BoostModal

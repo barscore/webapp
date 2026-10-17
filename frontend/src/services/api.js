@@ -241,7 +241,12 @@ export const adminApi = {
   deleteRating: (id) => api.delete(`/admin/ratings/${id}`).then((r) => r.data),
 
   // Settings + emergency
-  settings: () => api.get('/admin/settings').then((r) => r.data.settings),
+  // `renewing_subscriptions`: abbonamenti che si rinnovano da soli anche a
+  // monetizzazione spenta (li incassano Stripe / Google Play).
+  settings: () =>
+    api
+      .get('/admin/settings')
+      .then((r) => ({ ...r.data.settings, renewing_subscriptions: r.data.renewing_subscriptions })),
   updateSettings: (patch) =>
     api.put('/admin/settings', patch).then((r) => r.data.settings),
   purgeUserRatings: (id) =>
@@ -358,6 +363,12 @@ export const organizerAdminApi = {
     api.post(`/admin/organizers/claims/${id}/${action}`, { admin_note }).then((r) => r.data),
   revokeClaim: (id) =>
     api.post(`/admin/organizers/claims/${id}/revoke`).then((r) => r.data),
+};
+
+// Statistiche di un bar: solo per il proprietario e l'admin. `advanced` è
+// null finché il bar non ha un boost. La raccolta sta in services/stats.js.
+export const statsApi = {
+  bar: (barId, days) => api.get(`/stats/bars/${barId}`, { params: { days } }).then((r) => r.data.stats),
 };
 
 export const ratingsApi = {

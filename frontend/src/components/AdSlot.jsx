@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AD_UNITS, CLIENT_ID, SLOTS } from '../services/adsense.js';
 import { gpcOptOut } from '../services/consent.js';
 import { useAuth } from '../hooks/useAuth.js';
+import { useMonetization } from '../services/monetization.js';
 
 // One fixed AdSense unit. Renders nothing at all unless a client id AND that
 // slot id are configured. Consent is not checked here: Google's script asks
@@ -10,6 +11,7 @@ import { useAuth } from '../hooks/useAuth.js';
 // carries the attributes its own unit type needs (In-feed / In-article /
 // Display), because the wrong ones leave the placement empty.
 // rabar+ subscribers never see a unit — that's half of what they pay for.
+// Nobody does while monetization is switched off (admin panel → Emergenza).
 //
 // The <ins> is mounted only once its place is actually on screen. It is not
 // just lazy loading: adsbygoogle.push({}) does not take an element, it fills
@@ -23,7 +25,8 @@ export default function AdSlot({ name, className = '' }) {
   const slot = SLOTS[name];
   const unit = AD_UNITS[name];
   const { isPlus, profileReady } = useAuth();
-  const enabled = profileReady && !isPlus && !!CLIENT_ID && !!slot && !!unit && !gpcOptOut();
+  const monetization = useMonetization();
+  const enabled = profileReady && !isPlus && monetization && !!CLIENT_ID && !!slot && !!unit && !gpcOptOut();
   const holder = useRef(null);
   const ins = useRef(null);
   const pushedFor = useRef(null);

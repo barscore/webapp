@@ -6,6 +6,7 @@ import { adminApi, suggestionsApi, reportsApi, drinksApi, organizerAdminApi } fr
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import Toast from '../components/Toast.jsx';
+import DailyBars from '../components/DailyBars.jsx';
 import { copyText } from '../utils/share.js';
 
 const TABS = [
@@ -74,6 +75,8 @@ export default function Admin() {
           <Stat label="Sospesi" value={stats?.suspended} accent />
         </div>}
 
+        {isAdmin && stats && <Growth growth={stats.growth} />}
+
         {/* Tabs */}
         <div className="card flex gap-1 overflow-x-auto p-1">
           {tabs.map((t) => (
@@ -118,6 +121,38 @@ function Stat({ label, value, accent }) {
   );
 }
 
+// Nuovi iscritti e utenti attivi (admin_growth_stats in add_bar_stats.sql).
+// Attivo = ha aperto l'app da loggato (ping) o ha fatto login nel periodo.
+function Growth({ growth }) {
+  if (!growth) {
+    return (
+      <p className="card p-3 text-xs text-ember-muted">
+        Crescita e utenti attivi non disponibili: manca la migrazione <code>add_bar_stats.sql</code>.
+      </p>
+    );
+  }
+  return (
+    <div className="card space-y-3 p-4">
+      <div className="grid grid-cols-3 gap-2 sm:grid-cols-5">
+        <Stat label="Nuovi oggi" value={growth.new_today} />
+        <Stat label="Nuovi 7 gg" value={growth.new_7d} />
+        <Stat label="Nuovi 30 gg" value={growth.new_30d} />
+        <Stat label="Attivi 7 gg" value={growth.active_7d} />
+        <Stat label="Attivi 30 gg" value={growth.active_30d} />
+      </div>
+      <div>
+        <div className="mb-2 text-xs font-semibold uppercase tracking-wide text-ember-muted">
+          Nuovi iscritti, ultimi 30 giorni
+        </div>
+        <DailyBars
+          data={(growth.signups_daily ?? []).map((d) => ({ day: d.day, value: d.count }))}
+          label="Nuovi iscritti"
+        />
+      </div>
+    </div>
+  );
+}
+
 // =========================================================================
 // Audit — registro delle azioni di staff (admin_audit), sola lettura
 // =========================================================================
@@ -152,7 +187,7 @@ function AuditTab({ notify }) {
           <div key={e.id} className="card p-3 text-sm">
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-mono font-semibold text-ember-cream">{e.action}</span>
-              <span className="text-ember-muted">da {e.actor_username ?? 'account eliminato'}</span>
+              <span className="text-ember-muted">da {e.actor_username ?? (e.payload?.automated ? 'moderazione automatica' : 'account eliminato')}</span>
               <span className="ml-auto text-xs text-ember-muted">{new Date(e.created_at).toLocaleString('it-IT')}</span>
             </div>
             {(e.target_type || e.payload) && (
@@ -974,6 +1009,22 @@ function EmergencyTab({ notify, onChange }) {
     }
   }
 
+  // Monetization switch: off = no purchase can start (backend 503
+  // MONETIZATION_OFF) and no client shows a buy button or loads an ad.
+  async function toggleMonetization() {
+    try {
+      const saved = await adminApi.updateSettings({ monetization_enabled: !settings.monetization_enabled });
+      setSettings((s) => ({ ...s, ...saved }));
+      notify(
+        saved.monetization_enabled
+          ? 'Monetizzazione ATTIVA — abbonamenti, boost e pubblicità'
+          : 'Monetizzazione spenta — niente acquisti né pubblicità',
+      );
+    } catch {
+      notify('Operazione fallita', 'info');
+    }
+  }
+
   // Beta program switch: app locked for everyone except admin/moderator/
   // betatester (frontend lock screen + backend write block).
   async function toggleBeta() {
@@ -1066,6 +1117,41 @@ function EmergencyTab({ notify, onChange }) {
           } disabled:opacity-50`}
         >
           {settings?.beta_mode ? 'Termina beta test' : 'Avvia beta test'}
+        </button>
+      </div>
+
+      {/* Monetizzazione — un interruttore per tutte le fonti di incasso. */}
+      <div className={`rounded-card border p-4 ${settings && !settings.monetization_enabled ? 'border-ember-danger/60 bg-ember-danger/10' : 'border-ember-line/5 bg-ember-card'}`}>
+        <div className="flex items-center gap-2 font-display font-bold text-ember-cream">
+          <Icon name="euro" size={18} className="text-ember-ink" /> Monetizzazione
+          {settings && (
+            <span className={`ml-auto rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ${settings.monetization_enabled ? 'bg-ember-good/15 text-ember-good' : 'bg-ember-danger/15 text-ember-danger'}`}>
+              {settings.monetization_enabled ? 'Attiva' : 'Spenta'}
+            </span>
+          )}
+        </div>
+        <p className="mt-1 text-sm text-ember-muted">
+          Spenta: nessuno può comprare rabar+ o un boost (bar ed eventi) e nessun annuncio viene
+          caricato — niente AdSense sul sito, niente AdMob nelle app, neanche i rewarded. Il
+          backend rifiuta ogni pagamento nuovo. Chi è già abbonato resta rabar+ e può disdire.
+        </p>
+        {settings && !settings.monetization_enabled && settings.renewing_subscriptions > 0 && (
+          <p className="mt-2 text-sm font-semibold text-ember-danger">
+            {settings.renewing_subscriptions === 1
+              ? '1 abbonamento si rinnova ancora da solo'
+              : `${settings.renewing_subscriptions} abbonamenti si rinnovano ancora da soli`}
+            : l'interruttore non ferma i rinnovi. Annullali dalla dashboard di Stripe o dalla Play
+            Console per non incassare.
+          </p>
+        )}
+        <button
+          onClick={toggleMonetization}
+          disabled={!settings}
+          className={`mt-3 w-full rounded-lg py-2 font-semibold ${
+            settings?.monetization_enabled ? 'bg-ember-accent text-black' : 'bg-ember-primary text-ember-on-primary'
+          } disabled:opacity-50`}
+        >
+          {settings?.monetization_enabled ? 'Spegni monetizzazione' : 'Attiva monetizzazione'}
         </button>
       </div>
 

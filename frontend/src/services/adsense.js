@@ -55,3 +55,8 @@ export function loadAdsense() {
   s.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${CLIENT_ID}`;
   document.head.appendChild(s);
 }
+
+/** True once loadAdsense() has put the script on this page. */
+export function adsenseLoaded() {
+  return typeof document !== 'undefined' && !!document.getElementById(SCRIPT_ID);
+}

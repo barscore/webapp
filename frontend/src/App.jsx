@@ -6,8 +6,9 @@ import Home from './pages/Home.jsx';
 import BanBanner from './components/BanBanner.jsx';
 import TutorialSplash from './components/TutorialSplash.jsx';
 import InstallHint from './components/InstallHint.jsx';
-import { loadAdsense } from './services/adsense.js';
+import { adsenseLoaded, loadAdsense } from './services/adsense.js';
 import { gpcOptOut } from './services/consent.js';
+import { setMonetization, useMonetization } from './services/monetization.js';
 import { termsGateOpen } from './services/terms.js';
 import { enforcePlusTheme } from './hooks/useTheme.js';
 import { rememberAuthReturn } from './hooks/useAuthReturn.js';
@@ -52,6 +53,7 @@ export default function App() {
   const { isAdmin, role, isAuthenticated, loading, isPlus, user, profileReady, termsRequired } = useAuth();
   const location = useLocation();
   const [maint, setMaint] = useState(null);
+  const monetization = useMonetization();
 
   // Da dove si arriva a /login e /register: serve per riportarci l'utente a
   // login fatto. Le due pagine di auth non si memorizzano da sole.
@@ -101,11 +103,18 @@ export default function App() {
   // Acted on only once the profile is there (profileReady), or a subscriber
   // would get one frame of ads and a theme reset on every load.
   // rabar+ and a GPC signal skip the loader entirely: no script, not just no
-  // visible units.
+  // visible units. Same with monetization switched off from the admin panel,
+  // and until app_settings has said it is on (services/monetization.js).
   useEffect(() => {
-    if (!profileReady || isPlus || gpcOptOut()) return;
+    if (!profileReady || isPlus || !monetization || gpcOptOut()) return;
     loadAdsense();
-  }, [profileReady, isPlus]);
+  }, [profileReady, isPlus, monetization]);
+
+  // Switched off while this tab already runs the script: Auto Ads keep filling
+  // the page and a script can't be unloaded, so the page starts over without it.
+  useEffect(() => {
+    if (!monetization && adsenseLoaded()) window.location.reload();
+  }, [monetization]);
 
   // Themes beyond the default are a rabar+ perk: when the subscription lapses
   // (or never existed) the app falls back to the default palette.
@@ -113,30 +122,23 @@ export default function App() {
     if (profileReady) enforcePlusTheme(isPlus);
   }, [profileReady, isPlus]);
 
-  // Poll the maintenance/beta switches on every navigation so a non-admin user
-  // gets locked out (and released) without a manual reload.
+  // Poll the maintenance/beta/monetization switches on every navigation so a
+  // non-admin user gets locked out (and released) without a manual reload.
+  // `*` rather than a column list: a column whose migration hasn't run yet
+  // would fail the whole select and silently drop the lock screens with it.
   useEffect(() => {
     let active = true;
     supabase
       .from('app_settings')
-      .select('maintenance_mode, maintenance_reason, maintenance_eta, beta_mode')
+      .select('*')
       .eq('id', 1)
       .maybeSingle()
-      .then(({ data, error }) => {
-        if (!active) return;
-        if (data) return setMaint(data);
-        // Fallback: if the reason/eta columns aren't there yet, still read the
-        // switch alone so the screen isn't silently skipped.
-        if (error) {
-          supabase
-            .from('app_settings')
-            .select('maintenance_mode')
-            .eq('id', 1)
-            .maybeSingle()
-            .then(({ data: d }) => {
-              if (active && d) setMaint(d);
-            });
-        }
+      .then(({ data }) => {
+        // A failed read keeps the last answer: monetization starts off
+        // (services/monetization.js) and a network blip must not flip it.
+        if (!active || !data) return;
+        setMonetization(data.monetization_enabled);
+        setMaint(data);
       });
     return () => {
       active = false;

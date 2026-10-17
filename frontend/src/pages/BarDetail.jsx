@@ -26,6 +26,7 @@ import AdSlot from '../components/AdSlot.jsx';
 import SiteLinks from '../components/SiteLinks.jsx';
 import { usePageMeta } from '../hooks/usePageMeta.js';
 import { barIndexable, barPlace } from '../utils/seo.js';
+import { trackBar } from '../services/stats.js';
 
 const PAGE_SIZE = 10;
 import FreeDrinkModal from '../components/FreeDrinkModal.jsx';
@@ -74,6 +75,33 @@ export default function BarDetail() {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Arrivo dal QR o dal tag NFC esposto nel locale (?src=qr|nfc): è una
+  // scansione per le statistiche del proprietario. Letta una volta e tolta
+  // subito dall'indirizzo, così né un refresh né il link condiviso da qui la
+  // ricontano. replaceState diretto: un navigate() rifarebbe il caricamento.
+  const [scanSource] = useState(() => {
+    const src = new URLSearchParams(location.search).get('src');
+    return src === 'qr' || src === 'nfc' ? src : null;
+  });
+  useEffect(() => {
+    if (!scanSource) return;
+    const params = new URLSearchParams(window.location.search);
+    params.delete('src');
+    const qs = params.toString();
+    window.history.replaceState(
+      window.history.state,
+      '',
+      window.location.pathname + (qs ? `?${qs}` : '') + window.location.hash,
+    );
+  }, [scanSource]);
+
+  const barId = bar?.id;
+  useEffect(() => {
+    if (!barId) return;
+    if (scanSource) trackBar(barId, 'scan', scanSource);
+    trackBar(barId, 'view', scanSource ?? 'link');
+  }, [barId]);
 
   const myRating = ratings.find((r) => r.profiles?.username === user?.username);
 
@@ -257,12 +285,12 @@ export default function BarDetail() {
         {/* Contact actions */}
         <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
           {bar.phone && (
-            <a href={`tel:${bar.phone}`} className="chip">
+            <a href={`tel:${bar.phone}`} onClick={() => trackBar(bar.id, 'call')} className="chip">
               <Icon name="phone" size={15} className="text-ember-ink" /> {t('bar.call')}
             </a>
           )}
           {bar.website && (
-            <a href={bar.website} target="_blank" rel="noreferrer" className="chip">
+            <a href={bar.website} target="_blank" rel="noreferrer" onClick={() => trackBar(bar.id, 'website')} className="chip">
               <Icon name="link" size={15} className="text-ember-ink" /> {t('bar.website')}
             </a>
           )}

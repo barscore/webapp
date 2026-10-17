@@ -431,6 +431,8 @@ export default function Home() {
   } = useSheetDrag(SHEET_STOPS, SHEET_STOPS[0]);
   const sheetFull = sheetH >= 99;
   const [selected, setSelected] = useState(null);
+  // Da dove è stato aperto il bar selezionato, per le statistiche del locale.
+  const [selectedOrigin, setSelectedOrigin] = useState(null);
   const [focus, setFocus] = useState(null);
   const [toast, setToast] = useState(null);
 
@@ -668,10 +670,21 @@ export default function Home() {
 
   // Stable identities so the memoized Map / BarRow don't re-render (all the
   // markers with them) on every unrelated Home state change.
-  const onSelect = useCallback((bar) => {
+  const onSelect = useCallback((bar, origin) => {
     setSelected(bar);
+    setSelectedOrigin(origin);
     if (bar?.lat != null && bar?.lng != null) setFocus([bar.lat, bar.lng]);
   }, []);
+  // Due callback stabili invece di una con la provenienza fra gli argomenti:
+  // BarRow e i marker chiamano onSelect(bar). La ricerca si legge da un ref
+  // così la lista non si ridisegna tutta quando la query cambia.
+  const searchActiveRef = useRef(searchActive);
+  searchActiveRef.current = searchActive;
+  const onSelectFromMap = useCallback((bar) => onSelect(bar, 'map'), [onSelect]);
+  const onSelectFromList = useCallback(
+    (bar) => onSelect(bar, searchActiveRef.current ? 'search' : 'list'),
+    [onSelect],
+  );
 
   const closeSheet = useCallback(() => {
     setSelected(null);
@@ -705,7 +718,7 @@ export default function Home() {
     onWiden: () => setRadius((r) => Math.min(25, r + 3)),
     onExplore: () => setTab('vicini'),
     onSuggest: () => setSuggestOpen(true),
-    onSelect,
+    onSelect: onSelectFromList,
     center,
   };
 
@@ -720,7 +733,7 @@ export default function Home() {
           userPos={userPos}
           selectedKey={selected ? barKey(selected) : null}
           focus={focus}
-          onSelect={onSelect}
+          onSelect={onSelectFromMap}
         />
       </div>
 
@@ -996,6 +1009,7 @@ export default function Home() {
         <Suspense fallback={null}>
           <BarSheet
             seed={selected}
+            origin={selectedOrigin}
             onClose={closeSheet}
             onChanged={() => {
               setReloadKey((k) => k + 1);

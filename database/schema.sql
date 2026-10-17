@@ -346,6 +346,7 @@ CREATE TABLE public.app_settings (
   maintenance_reason TEXT,                            -- why the site is down (shown to users)
   maintenance_eta   TIMESTAMPTZ,                      -- estimated back-online time
   beta_mode         BOOLEAN NOT NULL DEFAULT FALSE,  -- private beta: only admin/moderator/betatester get in
+  monetization_enabled BOOLEAN NOT NULL DEFAULT TRUE, -- OFF = no purchases, no ads (add_monetization_switch.sql)
   updated_at        TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_by        UUID REFERENCES public.profiles(id) ON DELETE SET NULL
 );

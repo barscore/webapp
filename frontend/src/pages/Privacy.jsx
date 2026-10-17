@@ -10,8 +10,8 @@ export default function Privacy() {
   return lang === 'it' ? <PrivacyIt /> : <PrivacyEn />;
 }
 
-const UPDATED_IT = '13 ottobre 2026';
-const UPDATED_EN = 'October 13, 2026';
+const UPDATED_IT = '17 ottobre 2026';
+const UPDATED_EN = 'October 17, 2026';
 
 const linkClass = 'text-ember-ink hover:underline';
 
@@ -112,6 +112,13 @@ function PrivacyIt() {
             utilizzati per finalità di sicurezza, prevenzione degli abusi e limitazione del numero di
             richieste.
           </li>
+          <li>
+            <strong>Dati di utilizzo:</strong> le interazioni con le schede dei locali (apertura della
+            scheda, anche tramite il codice QR o il tag NFC esposto nel locale; uso dei pulsanti
+            Indicazioni, Chiama e Sito), con data e ora, associate a un identificativo casuale
+            generato sul dispositivo e, se l’utente ha effettuato l’accesso, al suo account; la data
+            dell’ultimo utilizzo del Servizio da parte degli utenti registrati.
+          </li>
         </List>
       </Section>
 
@@ -133,6 +140,15 @@ function PrivacyIt() {
           <li>
             Adempimenti fiscali e contabili connessi alle vendite: obbligo di legge (art. 6, par. 1,
             lett. c GDPR).
+          </li>
+          <li>
+            Statistiche sull’uso del Servizio (nuovi iscritti, utenti attivi) e statistiche fornite
+            ai gestori dei locali sulla propria scheda (aperture tramite QR e NFC, recensioni,
+            visualizzazioni, utilizzo dei pulsanti): legittimo interesse del Titolare a misurare il
+            funzionamento del Servizio e a offrire ai locali un riscontro sulla propria presenza
+            (art. 6, par. 1, lett. f GDPR). I gestori ricevono soltanto <strong>numeri aggregati</strong>,
+            mai dati che consentano di identificare i singoli utenti. È possibile opporsi scrivendo a{' '}
+            {privacyMail}.
           </li>
           <li>
             Pubblicità tramite Google AdSense sul sito web e Google AdMob nelle applicazioni:
@@ -164,6 +180,13 @@ function PrivacyIt() {
           </li>
           <li>
             <strong>Apple</strong> — verifica degli acquisti effettuati nell’applicazione iOS.
+          </li>
+          <li>
+            <strong>OpenAI</strong> — controllo automatico dei contenuti destinati alla
+            pubblicazione (testi di valutazioni, risposte ed eventi, immagini degli eventi, nomi
+            utente), al solo fine di impedire la pubblicazione di contenuti vietati dai Termini.
+            Riceve il contenuto ma non l’identità dell’autore e, secondo le condizioni del
+            fornitore, non lo utilizza per l’addestramento dei propri modelli.
           </li>
           <li>
             <strong>OpenFreeMap</strong> — fornisce la mappa di sfondo. Le sue porzioni sono
@@ -217,7 +240,7 @@ function PrivacyIt() {
 
       <Section title="6. Trasferimenti di dati verso paesi terzi">
         <p>
-          Alcuni fornitori (Google, Stripe, Vercel, Apple) hanno sede o infrastrutture negli Stati
+          Alcuni fornitori (Google, Stripe, Vercel, Apple, OpenAI) hanno sede o infrastrutture negli Stati
           Uniti. I trasferimenti avvengono sulla base della decisione di adeguatezza relativa all’
           <em>EU–U.S. Data Privacy Framework</em> per i fornitori aderenti e, in mancanza, sulla base
           delle clausole contrattuali standard adottate dalla Commissione europea, integrate dalle
@@ -246,6 +269,12 @@ function PrivacyIt() {
           una chiave segreta custodita sul server, dal quale l’indirizzo non è ricostruibile. Il
           contatore si azzera al termine della relativa finestra temporale (di norma un minuto) e il
           record è eliminato entro l’ora successiva.
+        </p>
+        <p>
+          I <strong>dati di utilizzo</strong> e il collegamento tra identificativo del dispositivo e
+          account sono cancellati dopo <strong>tredici mesi</strong>; restano soltanto conteggi
+          giornalieri per locale, privi di dati personali. Con l’eliminazione dell’account cessa il
+          collegamento con le interazioni registrate.
         </p>
       </Section>
 
@@ -281,7 +310,9 @@ function PrivacyIt() {
       <Section title="10. Cookie e strumenti di tracciamento">
         <p>
           Il Servizio utilizza la memoria locale del browser esclusivamente per finalità tecniche
-          (sessione, lingua, tema grafico).
+          (sessione, lingua, tema grafico) e per conservare l’identificativo casuale impiegato per le
+          statistiche aggregate di cui alla sezione 3, che non è comunicato a terzi né utilizzato a
+          fini pubblicitari.
         </p>
         <p>
           Sul sito web il consenso alla pubblicità è raccolto tramite la piattaforma di gestione
@@ -393,6 +424,13 @@ function PrivacyEn() {
             <strong>Technical data:</strong> request logs (IP address, user agent) used for security,
             abuse prevention and rate limiting.
           </li>
+          <li>
+            <strong>Usage data:</strong> interactions with venue pages (opening a page, including
+            through the QR code or NFC tag displayed at the venue; use of the Directions, Call and
+            Website buttons), with date and time, linked to a random identifier generated on the
+            device and, when the user is signed in, to their account; the date registered users last
+            used the Service.
+          </li>
         </List>
       </Section>
 
@@ -412,6 +450,14 @@ function PrivacyEn() {
             interest (Art. 6(1)(f) GDPR).
           </li>
           <li>Tax and accounting obligations relating to sales: legal obligation (Art. 6(1)(c) GDPR).</li>
+          <li>
+            Statistics on the use of the Service (new sign-ups, active users) and statistics given to
+            venue managers about their own page (opens through QR and NFC, reviews, views, button
+            use): the Controller’s legitimate interest in measuring how the Service works and in
+            giving venues feedback on their presence (Art. 6(1)(f) GDPR). Venue managers only receive{' '}
+            <strong>aggregate numbers</strong>, never data that identifies individual users. You may
+            object by writing to {privacyMail}.
+          </li>
           <li>
             Advertising through Google AdSense on the website and Google AdMob in the applications:
             for personalised ads and for the use of advertising cookies and identifiers, consent
@@ -440,6 +486,13 @@ function PrivacyEn() {
           </li>
           <li>
             <strong>Apple</strong> — verification of purchases made in the iOS application.
+          </li>
+          <li>
+            <strong>OpenAI</strong> — automated screening of content submitted for publication
+            (the text of ratings, replies and events, event images, usernames), solely to prevent
+            the publication of content prohibited by the Terms. It receives the content but not the
+            identity of its author and, under the provider’s terms, does not use it to train its
+            models.
           </li>
           <li>
             <strong>OpenFreeMap</strong> — provides the background map. Its tiles are downloaded
@@ -491,7 +544,7 @@ function PrivacyEn() {
 
       <Section title="6. Transfers to third countries">
         <p>
-          Some providers (Google, Stripe, Vercel, Apple) are based in, or operate infrastructure in,
+          Some providers (Google, Stripe, Vercel, Apple, OpenAI) are based in, or operate infrastructure in,
           the United States. Transfers take place on the basis of the adequacy decision for the{' '}
           <em>EU–U.S. Data Privacy Framework</em> for participating providers and, otherwise, on the
           basis of the standard contractual clauses adopted by the European Commission, together with
@@ -517,6 +570,11 @@ function PrivacyEn() {
           contain the IP address but a code derived from it using a secret key held on the server,
           from which the address cannot be reconstructed. The counter resets at the end of its time
           window (usually one minute) and the record is deleted within the following hour.
+        </p>
+        <p>
+          <strong>Usage data</strong> and the link between device identifier and account are deleted
+          after <strong>thirteen months</strong>; only daily per-venue counts, containing no personal
+          data, are kept. Deleting the account ends the link with the recorded interactions.
         </p>
       </Section>
 
@@ -550,7 +608,8 @@ function PrivacyEn() {
       <Section title="10. Cookies and tracking technologies">
         <p>
           The Service uses the browser’s local storage for technical purposes only (session,
-          language, theme).
+          language, theme) and to keep the random identifier used for the aggregate statistics
+          described in section 3, which is not shared with third parties or used for advertising.
         </p>
         <p>
           On the website, consent to advertising is collected through Google’s consent management

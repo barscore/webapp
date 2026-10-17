@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
 import { gpcOptOut, openConsentMessage } from '../services/consent.js';
 import { useI18n } from '../i18n/index.js';
+import { useMonetization } from '../services/monetization.js';
 
 // The site's public pages as plain links. Shown under the bar list, the bar
 // page, the leaderboard and every text page: without it the only way to
@@ -21,8 +22,9 @@ export default function SiteLinks({ className = '' }) {
   const { t } = useI18n();
   const { isPlus } = useAuth();
   const navigate = useNavigate();
+  const monetization = useMonetization();
   // Where no ad script runs there is no consent to manage.
-  const ads = !isPlus && !gpcOptOut();
+  const ads = !isPlus && monetization && !gpcOptOut();
   return (
     <nav className={`flex flex-wrap justify-center gap-x-3 gap-y-1.5 text-xs text-ember-muted ${className}`}>
       {LINKS.map(([to, key]) => (

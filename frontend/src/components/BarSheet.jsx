@@ -22,6 +22,7 @@ import { shareBar } from '../utils/share.js';
 import { barKey, parseOsmToken } from '../utils/score.js';
 import { useI18n } from '../i18n/index.js';
 import FreeDrinkModal from './FreeDrinkModal.jsx';
+import { trackBar } from '../services/stats.js';
 
 const PAGE_SIZE = 10;
 
@@ -31,7 +32,9 @@ const BAR_STOPS = [88, 100];
 // Same detail data flow as the /bar/:id page, rendered as a bottom sheet that
 // slides up over the Home menu. `seed` is the bar from the list/map (may be an
 // OSM-only place); it's resolved to a persisted row so ratings can attach.
-export default function BarSheet({ seed, onClose, onChanged }) {
+// `origin` — da dove l'ha aperto l'utente ('map' | 'list' | 'search'), per le
+// statistiche del proprietario.
+export default function BarSheet({ seed, origin, onClose, onChanged }) {
   const { t } = useI18n();
   const { isAuthenticated, isAdmin, user } = useAuth();
   const { has, toggle } = useBookmarks();
@@ -73,6 +76,12 @@ export default function BarSheet({ seed, onClose, onChanged }) {
   useEffect(() => {
     load();
   }, [load]);
+
+  // Una visualizzazione per bar aperto, non per pagina di recensioni.
+  const barId = bar?.id;
+  useEffect(() => {
+    trackBar(barId, 'view', origin);
+  }, [barId]);
 
   // Reset paging when a different bar is opened in the same sheet.
   useEffect(() => {
@@ -228,12 +237,12 @@ export default function BarSheet({ seed, onClose, onChanged }) {
               {/* Contact / info actions — pills, not slabs. */}
               <div className="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4">
                 {bar.phone && (
-                  <a href={`tel:${bar.phone}`} className="chip">
+                  <a href={`tel:${bar.phone}`} onClick={() => trackBar(bar.id, 'call')} className="chip">
                     <Icon name="phone" size={15} className="text-ember-ink" /> {t('bar.call')}
                   </a>
                 )}
                 {bar.website && (
-                  <a href={bar.website} target="_blank" rel="noreferrer" className="chip">
+                  <a href={bar.website} target="_blank" rel="noreferrer" onClick={() => trackBar(bar.id, 'website')} className="chip">
                     <Icon name="link" size={15} className="text-ember-ink" /> {t('bar.site')}
                   </a>
                 )}

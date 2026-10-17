@@ -8,6 +8,7 @@ import BoostModal from '../components/BoostModal.jsx';
 import { eventsApi, meApi } from '../services/api.js';
 import { useAuth } from '../hooks/useAuth.js';
 import { useI18n } from '../i18n/index.js';
+import { useMonetization } from '../services/monetization.js';
 
 const FMT_OPTS = { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
 function formatWhen(iso, locale) {
@@ -21,6 +22,7 @@ export default function EventDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user, isAuthenticated, freeDrinkToken } = useAuth();
+  const monetization = useMonetization();
 
   const [event, setEvent] = useState(null);
   const [prs, setPrs] = useState([]);
@@ -284,9 +286,11 @@ export default function EventDetail() {
               <button onClick={() => setShowEdit(true)} className="btn-ghost w-full py-2.5">
                 Modifica evento
               </button>
-              <button onClick={() => setShowBoost(true)} className="btn-primary w-full py-2.5">
-                Boost evento
-              </button>
+              {monetization && (
+                <button onClick={() => setShowBoost(true)} className="btn-primary w-full py-2.5">
+                  Boost evento
+                </button>
+              )}
               <button 
                 onClick={async () => {
                   if (window.confirm('Sicuro di voler eliminare questo evento?')) {

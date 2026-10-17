@@ -2,6 +2,7 @@ import { createContext, createElement, useContext, useEffect, useState } from 'r
 import { supabase } from '../services/supabase.js';
 import { api } from '../services/api.js';
 import { hasTermsTick, clearTermsTick } from '../services/terms.js';
+import { pingActive } from '../services/stats.js';
 
 const AuthContext = createContext(null);
 
@@ -147,6 +148,12 @@ export function AuthProvider({ children }) {
       .catch((err) => console.error('[rabar] accettazione dei termini non salvata', err))
       .finally(() => setSavingTick(false));
   }, [userId, termsAcceptedAt]);
+
+  // Utenti attivi del pannello admin: un ping all'avvio e a ogni login
+  // (diradato in services/stats.js).
+  useEffect(() => {
+    pingActive(userId);
+  }, [userId]);
 
   // Google OAuth — redirects to Google, returns to the app.
   // `returnTo` è già normalizzato da useAuthReturn (solo path interni).

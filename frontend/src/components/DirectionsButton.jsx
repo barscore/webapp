@@ -2,6 +2,7 @@ import { useState } from 'react';
 import Icon from './Icon.jsx';
 import { useI18n } from '../i18n/index.js';
 import { isAndroid, getProvider, setProvider, mapsUrl, hasDestination } from '../utils/directions.js';
+import { trackBar } from '../services/stats.js';
 
 // "Indicazioni" chip shared by BarDetail and BarSheet. First tap (non-Android)
 // asks which maps app to use, remembers it, then opens; later taps open the
@@ -13,7 +14,9 @@ export default function DirectionsButton({ bar }) {
 
   function open(provider) {
     const url = mapsUrl(provider, bar);
-    if (url) window.open(url, '_blank', 'noopener');
+    if (!url) return;
+    trackBar(bar.id, 'directions');
+    window.open(url, '_blank', 'noopener');
   }
 
   function onClick() {

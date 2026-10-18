@@ -33,9 +33,9 @@ export default function LegalLayout({ title, description, noindex, updated, intr
 }
 
 // Small helpers so the text pages stay tidy.
-export function Section({ title, children }) {
+export function Section({ id, title, children }) {
   return (
-    <section className="space-y-2">
+    <section id={id} className="scroll-mt-20 space-y-2">
       <h2 className="font-display text-base font-bold text-ember-cream">{title}</h2>
       {children}
     </section>

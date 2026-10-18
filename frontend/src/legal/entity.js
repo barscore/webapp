@@ -22,8 +22,9 @@
 export const DA_COMPILARE = '[DA COMPILARE]';
 
 export const entity = {
-  /** Denominazione o nome e cognome del titolare. */
-  denominazione: 'Rabar',
+  /** Denominazione o nome e cognome del titolare. Persona fisica finché non
+   *  c'è una ditta: «Rabar» è il nome del servizio, non un soggetto. */
+  denominazione: 'Martino Parisi',
   /** Via e numero civico. */
   indirizzo: 'Via Ergisto Bezzi',
   /** CAP, città e provincia. */

@@ -2,7 +2,7 @@ import { createContext, createElement, useContext, useEffect, useState } from 'r
 import { supabase } from '../services/supabase.js';
 import { api } from '../services/api.js';
 import { hasTermsTick, clearTermsTick } from '../services/terms.js';
-import { pingActive } from '../services/stats.js';
+import { pingActive, trackSignup } from '../services/stats.js';
 
 const AuthContext = createContext(null);
 
@@ -120,6 +120,7 @@ export function AuthProvider({ children }) {
       options: { data: { username, terms_accepted_at: new Date().toISOString() } },
     });
     if (error) throw error;
+    trackSignup();
     return toUser(data.user);
   }
 
@@ -131,6 +132,9 @@ export function AuthProvider({ children }) {
       data: { terms_accepted_at: new Date().toISOString() },
     });
     if (error) throw error;
+    // Primo accesso con Google: l'account è appena nato. Gli account vecchi che
+    // accettano adesso i termini non sono una registrazione.
+    if (Date.now() - Date.parse(data.user.created_at) < 24 * 60 * 60 * 1000) trackSignup();
     setUser(toUser(data.user));
   }
 

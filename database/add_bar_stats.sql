@@ -15,65 +15,74 @@
 --                            directions «Indicazioni»
 --                            call       «Chiama»
 --                            website    «Sito»
---   visitor_users          quale account sta dietro a un dispositivo. Il
---                          visitor_id è un UUID casuale che il client genera e
---                          tiene in locale; si lega all'account quando chi è
---                          loggato manda un evento o il ping di attività. È il
---                          ponte che fa contare «ha scansionato da anonimo, poi
---                          si è registrato, poi ha recensito».
+--                            review     dal sito, appena il dispositivo pubblica
+--                                       una recensione nuova a quel bar
+--                            signup     dal sito, quando dal dispositivo nasce un
+--                                       account (senza bar)
 --   bar_impressions_daily  quante volte un bar è uscito in /places/nearby, per
 --                          giorno: un contatore, nessun dato personale.
 --   profiles.last_seen_at  ultimo ping di attività (POST /stats/ping), per gli
 --                          utenti attivi del pannello admin.
 --
+-- Il dispositivo è un UUID casuale che il client tiene in locale e che NON
+-- viene mai legato all'account: il backend su /stats/events non legge il
+-- token, ne guarda solo la presenza (signed_in), e il ping non manda il
+-- dispositivo. Così l'identificativo resta uno strumento di statistica
+-- aggregata, assimilabile ai cookie tecnici secondo le linee guida del Garante
+-- del 10 giugno 2021, e non chiede consenso. Il percorso «ha scansionato da
+-- anonimo, poi si è registrato, poi ha recensito» si conta per dispositivo,
+-- con gli eventi review e signup. La prima versione di questo file legava il
+-- dispositivo all'account (visitor_users): mai eseguita in produzione, e
+-- dove è passata la parte qui sotto la smonta.
+--
 -- Il proprietario vede SOLO numeri aggregati, mai chi. Le tabelle hanno RLS
 -- attiva e nessuna policy, le funzioni sono revocate a anon e authenticated:
 -- le tocca solo il backend con la service-role key.
 --
--- Conservazione: gli eventi e i legami dispositivo-account si cancellano dopo
--- 13 mesi (prune_bar_stats, chiamata dal cron dei promemoria). I contatori
--- giornalieri restano.
+-- Conservazione: gli eventi si cancellano dopo 13 mesi (prune_bar_stats,
+-- chiamata dal cron dei promemoria). I contatori giornalieri restano.
 -- =============================================
 
 -- --- Tabelle -----------------------------------------------------------------
 
 CREATE TABLE IF NOT EXISTS public.bar_events (
   id         BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
-  bar_id     UUID NOT NULL REFERENCES public.bars(id) ON DELETE CASCADE,
-  kind       TEXT NOT NULL CHECK (kind IN ('scan', 'view', 'directions', 'call', 'website')),
+  -- NULL solo per signup, che non riguarda un bar.
+  bar_id     UUID REFERENCES public.bars(id) ON DELETE CASCADE,
+  kind       TEXT NOT NULL,
   source     TEXT CHECK (source IN ('qr', 'nfc', 'map', 'list', 'search', 'link')),
   visitor_id UUID NOT NULL,
-  -- SET NULL e non CASCADE: chi cancella l'account esce dalle statistiche come
-  -- persona (il legame in visitor_users va via con lui), ma il conteggio del bar
-  -- non cambia all'indietro.
-  user_id    UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  -- Se la richiesta portava un token: «da loggato», mai chi.
+  signed_in  BOOLEAN NOT NULL DEFAULT FALSE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+-- Smontaggio della prima versione, dove è passata (vedi in testa).
+DROP TABLE IF EXISTS public.visitor_users;
+DROP FUNCTION IF EXISTS public.touch_visitor(UUID, UUID);
+DROP FUNCTION IF EXISTS public.record_bar_events(UUID, UUID, JSONB);
+ALTER TABLE public.bar_events DROP COLUMN IF EXISTS user_id;
+ALTER TABLE public.bar_events ADD COLUMN IF NOT EXISTS signed_in BOOLEAN NOT NULL DEFAULT FALSE;
+ALTER TABLE public.bar_events ALTER COLUMN bar_id DROP NOT NULL;
+
+ALTER TABLE public.bar_events DROP CONSTRAINT IF EXISTS bar_events_kind_check;
+ALTER TABLE public.bar_events ADD CONSTRAINT bar_events_kind_check
+  CHECK (kind IN ('scan', 'view', 'directions', 'call', 'website', 'review', 'signup'));
+ALTER TABLE public.bar_events DROP CONSTRAINT IF EXISTS bar_events_bar_kind_check;
+ALTER TABLE public.bar_events ADD CONSTRAINT bar_events_bar_kind_check
+  CHECK ((kind = 'signup') = (bar_id IS NULL));
+
 CREATE INDEX IF NOT EXISTS idx_bar_events_bar_kind_time
   ON public.bar_events (bar_id, kind, created_at);
--- Dedup in record_bar_events: «questo dispositivo ha già mandato lo stesso
--- evento da poco?».
+-- Dedup in record_bar_events («questo dispositivo ha già mandato lo stesso
+-- evento da poco?») e il percorso per dispositivo in bar_stats.
 CREATE INDEX IF NOT EXISTS idx_bar_events_visitor_time
   ON public.bar_events (visitor_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_bar_events_user
-  ON public.bar_events (user_id) WHERE user_id IS NOT NULL;
 -- Pulizia per data (prune_bar_stats).
 CREATE INDEX IF NOT EXISTS idx_bar_events_time
   ON public.bar_events (created_at);
 
 ALTER TABLE public.bar_events ENABLE ROW LEVEL SECURITY;
-
-CREATE TABLE IF NOT EXISTS public.visitor_users (
-  visitor_id UUID NOT NULL,
-  user_id    UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
-  linked_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  PRIMARY KEY (visitor_id, user_id)
-);
-
-CREATE INDEX IF NOT EXISTS idx_visitor_users_user ON public.visitor_users (user_id);
-
-ALTER TABLE public.visitor_users ENABLE ROW LEVEL SECURITY;
 
 CREATE TABLE IF NOT EXISTS public.bar_impressions_daily (
   bar_id      UUID NOT NULL REFERENCES public.bars(id) ON DELETE CASCADE,
@@ -92,11 +101,12 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS last_seen_at TIMESTAMPTZ;
 -- esistono e i doppioni recenti dello stesso dispositivo (stesso bar, stesso
 -- tipo): un refresh della pagina o un secondo tocco sul tag non gonfiano i
 -- numeri. Le finestre: 30 minuti per una scansione (è una visita), 10 per una
--- visualizzazione, 1 per i pulsanti.
+-- visualizzazione, un giorno per recensione e registrazione, 1 minuto per i
+-- pulsanti.
 CREATE OR REPLACE FUNCTION public.record_bar_events(
-  p_visitor UUID,
-  p_user    UUID,
-  p_events  JSONB
+  p_visitor   UUID,
+  p_signed_in BOOLEAN,
+  p_events    JSONB
 )
 RETURNS INTEGER
 LANGUAGE plpgsql
@@ -106,55 +116,50 @@ AS $$
 DECLARE
   inserted INTEGER;
 BEGIN
-  IF p_user IS NOT NULL THEN
-    INSERT INTO public.visitor_users (visitor_id, user_id)
-    VALUES (p_visitor, p_user)
-    ON CONFLICT DO NOTHING;
-  END IF;
-
   WITH incoming AS (
     SELECT DISTINCT ON (bar_id, kind) bar_id, kind, source
     FROM (
-      SELECT (e->>'bar_id')::uuid AS bar_id,
+      SELECT NULLIF(e->>'bar_id', '')::uuid AS bar_id,
              e->>'kind' AS kind,
              NULLIF(e->>'source', '') AS source
       FROM jsonb_array_elements(p_events) AS e
     ) raw
     ORDER BY bar_id, kind
   )
-  INSERT INTO public.bar_events (bar_id, kind, source, visitor_id, user_id)
-  SELECT i.bar_id, i.kind, i.source, p_visitor, p_user
+  INSERT INTO public.bar_events (bar_id, kind, source, visitor_id, signed_in)
+  SELECT i.bar_id, i.kind, i.source, p_visitor, COALESCE(p_signed_in, FALSE)
   FROM incoming i
-  JOIN public.bars b ON b.id = i.bar_id
-  WHERE NOT EXISTS (
-    SELECT 1 FROM public.bar_events x
-    WHERE x.visitor_id = p_visitor
-      AND x.bar_id = i.bar_id
-      AND x.kind = i.kind
-      AND x.created_at > NOW() - CASE i.kind
-        WHEN 'scan' THEN INTERVAL '30 minutes'
-        WHEN 'view' THEN INTERVAL '10 minutes'
-        ELSE INTERVAL '1 minute'
-      END
-  );
+  WHERE (
+      (i.kind = 'signup' AND i.bar_id IS NULL)
+      OR (i.kind <> 'signup' AND EXISTS (SELECT 1 FROM public.bars b WHERE b.id = i.bar_id))
+    )
+    AND NOT EXISTS (
+      SELECT 1 FROM public.bar_events x
+      WHERE x.visitor_id = p_visitor
+        AND x.bar_id IS NOT DISTINCT FROM i.bar_id
+        AND x.kind = i.kind
+        AND x.created_at > NOW() - CASE i.kind
+          WHEN 'scan' THEN INTERVAL '30 minutes'
+          WHEN 'view' THEN INTERVAL '10 minutes'
+          WHEN 'review' THEN INTERVAL '1 day'
+          WHEN 'signup' THEN INTERVAL '1 day'
+          ELSE INTERVAL '1 minute'
+        END
+    );
 
   GET DIAGNOSTICS inserted = ROW_COUNT;
   RETURN inserted;
 END;
 $$;
 
--- Ping di attività di chi è loggato: lega il dispositivo all'account e segna
--- l'ultimo accesso. Scrive al massimo ogni 10 minuti per utente.
-CREATE OR REPLACE FUNCTION public.touch_visitor(p_visitor UUID, p_user UUID)
+-- Ping di attività di chi è loggato: segna l'ultimo accesso dell'account, e
+-- nient'altro. Scrive al massimo ogni 10 minuti per utente.
+CREATE OR REPLACE FUNCTION public.touch_user(p_user UUID)
 RETURNS VOID
 LANGUAGE sql
 SECURITY DEFINER
 SET search_path = public, pg_temp
 AS $$
-  INSERT INTO public.visitor_users (visitor_id, user_id)
-  VALUES (p_visitor, p_user)
-  ON CONFLICT DO NOTHING;
-
   UPDATE public.profiles
      SET last_seen_at = NOW()
    WHERE id = p_user
@@ -185,11 +190,8 @@ AS $$
   WITH ev AS (
     DELETE FROM public.bar_events WHERE created_at < NOW() - INTERVAL '13 months'
     RETURNING 1
-  ), links AS (
-    DELETE FROM public.visitor_users WHERE linked_at < NOW() - INTERVAL '13 months'
-    RETURNING 1
   )
-  SELECT (SELECT COUNT(*) FROM ev) + (SELECT COUNT(*) FROM links);
+  SELECT COUNT(*) FROM ev;
 $$;
 
 -- --- Lettura: statistiche di un bar -------------------------------------------
@@ -198,8 +200,9 @@ $$;
 -- (giorni di calendario italiani, oggi compreso). Restituisce sempre tutto:
 -- quali parti mostrare (base o complete col boost) lo decide il backend.
 --
--- «Persona» = l'account quando si conosce (loggato all'evento, o dispositivo
--- legato dopo), altrimenti il dispositivo.
+-- «Persona» negli eventi = il dispositivo. Recensioni e free drink sono dati
+-- dell'account (tabelle del servizio, non statistiche): nei ritorni del
+-- weekend contano come persone a sé, senza unirli ai dispositivi.
 --
 -- Weekend = da venerdì alle 6 a lunedì alle 6, ora italiana: la sera di
 -- domenica che sfora dopo mezzanotte resta nello stesso weekend. «Torna» chi
@@ -218,65 +221,59 @@ WITH params AS (
   FROM (SELECT (NOW() AT TIME ZONE 'Europe/Rome')::date AS today) t
 ),
 ev AS (
-  SELECT e.kind, e.source, e.visitor_id, e.created_at,
-         e.user_id IS NULL AS anonymous,
-         COALESCE(e.user_id, l.user_id) AS uid
-  FROM public.bar_events e
-  CROSS JOIN params
-  LEFT JOIN LATERAL (
-    SELECT vu.user_id
-    FROM public.visitor_users vu
-    WHERE e.user_id IS NULL AND vu.visitor_id = e.visitor_id
-    ORDER BY vu.linked_at
-    LIMIT 1
-  ) l ON TRUE
+  SELECT e.kind, e.source, e.visitor_id, e.signed_in, e.created_at,
+         'v:' || e.visitor_id::text AS person
+  FROM public.bar_events e CROSS JOIN params
   WHERE e.bar_id = p_bar AND e.created_at >= params.since
 ),
-ev_p AS (
-  SELECT ev.*, COALESCE(uid::text, 'v:' || visitor_id::text) AS person FROM ev
-),
-scans AS (SELECT * FROM ev_p WHERE kind = 'scan'),
-views AS (SELECT * FROM ev_p WHERE kind = 'view'),
+scans AS (SELECT * FROM ev WHERE kind = 'scan'),
+views AS (SELECT * FROM ev WHERE kind = 'view'),
 rev AS (
   SELECT r.user_id, r.created_at
   FROM public.ratings r CROSS JOIN params
   WHERE r.bar_id = p_bar AND r.created_at >= params.since
 ),
--- Chi ha aperto la scheda dal QR/NFC e poi ha recensito questo bar.
+first_scan AS (
+  SELECT visitor_id, MIN(created_at) AS at FROM scans GROUP BY visitor_id
+),
+-- Dispositivi che hanno aperto la scheda dal QR/NFC e poi hanno pubblicato una
+-- recensione a questo bar.
 scan_reviewers AS (
-  SELECT s.uid
-  FROM (SELECT uid, MIN(created_at) AS at FROM scans WHERE uid IS NOT NULL GROUP BY uid) s
+  SELECT s.visitor_id
+  FROM first_scan s
   WHERE EXISTS (
-    SELECT 1 FROM public.ratings r
-    WHERE r.bar_id = p_bar AND r.user_id = s.uid AND r.created_at >= s.at
+    SELECT 1 FROM public.bar_events r
+    WHERE r.bar_id = p_bar AND r.kind = 'review'
+      AND r.visitor_id = s.visitor_id AND r.created_at >= s.at
   )
 ),
--- Dispositivi che hanno scansionato senza essere loggati, e gli account nati
--- da lì: il profilo è stato creato dopo la prima scansione anonima.
+-- Dispositivi che hanno scansionato senza essere loggati, quelli da cui poi è
+-- nato un account, e quelli che dopo hanno anche recensito.
 anon_scanners AS (
-  SELECT visitor_id, MIN(created_at) AS at FROM scans WHERE anonymous GROUP BY visitor_id
+  SELECT visitor_id, MIN(created_at) AS at FROM scans WHERE NOT signed_in GROUP BY visitor_id
 ),
 signups AS (
-  SELECT DISTINCT p.id AS user_id, p.created_at
+  SELECT a.visitor_id, MIN(su.created_at) AS at
   FROM anon_scanners a
-  JOIN public.visitor_users vu ON vu.visitor_id = a.visitor_id
-  JOIN public.profiles p ON p.id = vu.user_id
-  WHERE p.created_at >= a.at
+  JOIN public.bar_events su
+    ON su.kind = 'signup' AND su.visitor_id = a.visitor_id AND su.created_at >= a.at
+  GROUP BY a.visitor_id
 ),
 signup_reviewers AS (
-  SELECT su.user_id
+  SELECT su.visitor_id
   FROM signups su
   WHERE EXISTS (
-    SELECT 1 FROM public.ratings r
-    WHERE r.bar_id = p_bar AND r.user_id = su.user_id AND r.created_at >= su.created_at
+    SELECT 1 FROM public.bar_events r
+    WHERE r.bar_id = p_bar AND r.kind = 'review'
+      AND r.visitor_id = su.visitor_id AND r.created_at >= su.at
   )
 ),
 visits AS (
   SELECT person, created_at FROM scans
   UNION ALL
-  SELECT user_id::text, created_at FROM rev
+  SELECT 'u:' || user_id::text, created_at FROM rev
   UNION ALL
-  SELECT f.user_id::text, f.redeemed_at
+  SELECT 'u:' || f.user_id::text, f.redeemed_at
   FROM public.free_drink_redemptions f CROSS JOIN params
   WHERE f.bar_id = p_bar AND f.user_id IS NOT NULL AND f.redeemed_at >= params.since
 ),
@@ -335,9 +332,9 @@ SELECT jsonb_build_object(
     WHERE bar_id = p_bar AND day >= params.today - (p_days - 1)
   ),
   'actions', jsonb_build_object(
-    'directions', (SELECT COUNT(*) FROM ev_p WHERE kind = 'directions'),
-    'call',       (SELECT COUNT(*) FROM ev_p WHERE kind = 'call'),
-    'website',    (SELECT COUNT(*) FROM ev_p WHERE kind = 'website')
+    'directions', (SELECT COUNT(*) FROM ev WHERE kind = 'directions'),
+    'call',       (SELECT COUNT(*) FROM ev WHERE kind = 'call'),
+    'website',    (SELECT COUNT(*) FROM ev WHERE kind = 'website')
   ),
   'daily', (
     SELECT jsonb_agg(jsonb_build_object('day', day, 'scans', scans, 'views', views, 'reviews', reviews) ORDER BY day)
@@ -387,15 +384,15 @@ $$;
 -- SECURITY DEFINER senza REVOKE vorrebbe dire: chiunque abbia la anon key
 -- legge le statistiche di qualunque bar o scrive eventi a nome di un altro.
 
-REVOKE ALL ON FUNCTION public.record_bar_events(UUID, UUID, JSONB) FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION public.touch_visitor(UUID, UUID) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.record_bar_events(UUID, BOOLEAN, JSONB) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.touch_user(UUID) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.bump_bar_impressions(UUID[]) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.prune_bar_stats() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.bar_stats(UUID, INTEGER) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.admin_growth_stats() FROM PUBLIC, anon, authenticated;
 
-GRANT EXECUTE ON FUNCTION public.record_bar_events(UUID, UUID, JSONB) TO service_role;
-GRANT EXECUTE ON FUNCTION public.touch_visitor(UUID, UUID) TO service_role;
+GRANT EXECUTE ON FUNCTION public.record_bar_events(UUID, BOOLEAN, JSONB) TO service_role;
+GRANT EXECUTE ON FUNCTION public.touch_user(UUID) TO service_role;
 GRANT EXECUTE ON FUNCTION public.bump_bar_impressions(UUID[]) TO service_role;
 GRANT EXECUTE ON FUNCTION public.prune_bar_stats() TO service_role;
 GRANT EXECUTE ON FUNCTION public.bar_stats(UUID, INTEGER) TO service_role;

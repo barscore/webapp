@@ -277,7 +277,7 @@ export default {
   'settings.pwUpdated': '密码已更新',
   'settings.updatePw': '更新密码',
   'settings.deleteTitle': '删除账户',
-  'settings.deleteWarning': '永久删除你的账户及所有关联数据（评分、投票、收藏的酒吧）。此操作不可撤销。',
+  'settings.deleteWarning': '永久删除你的账户及所有关联数据（评分、投票、收藏的酒吧）。此操作不可撤销。在网站上订阅的 rabar+ 会立即取消；在 Google Play 购买的订阅需在 Google Play 中取消。',
   'settings.deleteFailed': '删除失败',
   'settings.exportTitle': '导出我的数据',
   'settings.exportHint': '以 JSON 文件下载 rabar 保存的关于你的全部内容：个人资料、评价、投票、收藏、通知。',

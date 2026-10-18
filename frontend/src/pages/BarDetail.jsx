@@ -107,7 +107,10 @@ export default function BarDetail() {
 
   async function submitRating(payload) {
     if (myRating) await ratingsApi.update(bar.id, myRating.id, payload);
-    else await ratingsApi.create(bar.id, payload);
+    else {
+      await ratingsApi.create(bar.id, payload);
+      trackBar(bar.id, 'review');
+    }
     setShowForm(false);
     setPage(1);
     if (window.__refreshAuth) window.__refreshAuth();

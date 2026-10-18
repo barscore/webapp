@@ -278,7 +278,7 @@ export default {
   'settings.pwUpdated': 'Contraseña actualizada',
   'settings.updatePw': 'Actualizar contraseña',
   'settings.deleteTitle': 'Eliminar cuenta',
-  'settings.deleteWarning': 'Borra definitivamente tu cuenta y todos los datos vinculados (valoraciones, votos, bares guardados). Operación irreversible.',
+  'settings.deleteWarning': 'Borra definitivamente tu cuenta y todos los datos vinculados (valoraciones, votos, bares guardados). Operación irreversible. Una suscripción rabar+ contratada en la web se cancela de inmediato; la comprada en Google Play debe cancelarse desde Google Play.',
   'settings.deleteFailed': 'Eliminación fallida',
   'settings.exportTitle': 'Exportar mis datos',
   'settings.exportHint': 'Descarga en un archivo JSON todo lo que rabar tiene sobre ti: perfil, valoraciones, votos, guardados, notificaciones.',

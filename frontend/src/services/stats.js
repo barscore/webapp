@@ -5,8 +5,11 @@ import { api } from './api.js';
 // «Indicazioni» / «Chiama» / «Sito». Il proprietario vede solo totali.
 //
 // Il dispositivo si riconosce da un UUID casuale tenuto in localStorage, mai
-// da altro: serve a non contare due volte lo stesso refresh e a capire, quando
-// chi ha scansionato da anonimo si registra, che è la stessa persona.
+// da altro, e non viene mai legato all'account (il backend non apre il token
+// su /stats/events e il ping non lo riceve): serve a non contare due volte lo
+// stesso refresh e a seguire, per dispositivo, il percorso scansione →
+// registrazione → recensione. Statistica aggregata assimilabile ai cookie
+// tecnici, senza consenso: tenerla così.
 // Best-effort in tutto: niente di qui deve mai far fallire la pagina.
 
 const VISITOR_KEY = 'rabar:visitor-id';
@@ -59,9 +62,10 @@ function flush() {
 /**
  * Registra un'interazione con un bar del nostro DB (serve l'uuid: un posto
  * OSM non ancora salvato non ha un proprietario a cui mostrarla).
- *   kind   'scan' | 'view' | 'directions' | 'call' | 'website'
+ *   kind   'scan' | 'view' | 'directions' | 'call' | 'website' | 'review'
  *   source per 'scan': 'qr' | 'nfc'; per 'view': 'map' | 'list' | 'search' |
- *          'link' | 'qr' | 'nfc'; niente per i pulsanti.
+ *          'link' | 'qr' | 'nfc'; niente per i pulsanti e per 'review' (una
+ *          recensione nuova appena pubblicata da qui: solo il fatto).
  * Le scansioni partono subito: chi apre il tag spesso chiude la pagina dopo
  * pochi secondi.
  */
@@ -72,9 +76,15 @@ export function trackBar(barId, kind, source) {
   else timer ??= setTimeout(flush, FLUSH_DELAY_MS);
 }
 
+/** Da questo dispositivo è appena nato un account (non si dice quale). */
+export function trackSignup() {
+  queue.push({ kind: 'signup' });
+  flush();
+}
+
 /**
  * Da chi è loggato, al massimo ogni qualche ora: fa contare l'utente tra gli
- * attivi del pannello admin e lega il dispositivo all'account.
+ * attivi del pannello admin. Non manda il dispositivo.
  */
 export function pingActive(userId) {
   if (!userId) return;
@@ -86,7 +96,7 @@ export function pingActive(userId) {
     // Senza storage si pinga a ogni avvio: il backend scrive comunque al
     // massimo ogni 10 minuti.
   }
-  api.post('/stats/ping', { visitor_id: visitorId() }).catch(() => {});
+  api.post('/stats/ping', {}).catch(() => {});
 }
 
 if (typeof document !== 'undefined') {

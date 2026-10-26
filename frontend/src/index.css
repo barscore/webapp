@@ -380,6 +380,28 @@ input[type='range'].slider {
   border: 3px solid rgb(var(--ember-primary));
   box-shadow: 0 2px 10px rgb(var(--ember-primary) / 0.5);
 }
+/* The slim radius row over the tab bar. */
+input[type='range'].slider.slider-sm {
+  height: 24px;
+}
+.slider.slider-sm::-webkit-slider-runnable-track {
+  height: 6px;
+}
+.slider.slider-sm::-webkit-slider-thumb {
+  margin-top: -7px;
+  height: 20px;
+  width: 20px;
+}
+.slider.slider-sm::-moz-range-track {
+  height: 6px;
+}
+.slider.slider-sm::-moz-range-progress {
+  height: 6px;
+}
+.slider.slider-sm::-moz-range-thumb {
+  height: 20px;
+  width: 20px;
+}
 .slider:focus-visible {
   outline: none;
 }

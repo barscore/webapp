@@ -2,156 +2,145 @@ import { memo } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import Icon from './Icon.jsx';
 import { useFollows } from '../hooks/useFollows.js';
+import { useAuth } from '../hooks/useAuth.js';
 import { useI18n } from '../i18n/index.js';
+import { eventParts, shortWhen, distanceLabel } from '../utils/eventDate.js';
 
-// Italian date/time for an event start, e.g. "ven 4 lug · 22:30".
-const FMT_OPTS = { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' };
-function formatWhen(iso, locale) {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  return new Intl.DateTimeFormat(locale, FMT_OPTS).format(d).replace(',', '');
-}
-
-function FollowChip({ active, children, onClick, label }) {
+// The cover an event without a photo gets: the theme's own primary and accent
+// as two soft glows on the card colour, so it reads as a poster on every theme
+// instead of a grey hole.
+export function PosterFallback({ className = '', iconSize = 88 }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      aria-label={label}
-      className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold transition ${
-        active
-          ? 'border-ember-primary/60 bg-ember-primary/10 text-ember-ink'
-          : 'border-ember-line/10 text-ember-muted hover:text-ember-cream'
-      }`}
+    <div
+      aria-hidden="true"
+      className={`absolute inset-0 overflow-hidden ${className}`}
+      style={{
+        background:
+          'radial-gradient(120% 90% at 88% 0%, rgb(var(--ember-accent) / 0.5), transparent 62%),' +
+          'radial-gradient(110% 120% at 0% 100%, rgb(var(--ember-primary) / 0.6), transparent 66%),' +
+          'rgb(var(--ember-card))',
+      }}
     >
-      <Icon name={active ? 'check' : 'bell'} size={11} /> {children}
-    </button>
+      <Icon name="event" size={iconSize} className="absolute -bottom-4 right-4 rotate-[-12deg] text-white/15" />
+    </div>
   );
 }
 
-// Zone-events list row: bell chip · title + venue/date · distance. Sponsored
-// events carry the "Sponsorizzato" tag (and sort first server-side). Signed-in
-// users can follow the event (promemoria + modifiche) or its organizer
-// (notifica a ogni nuovo evento).
+// "30 / OTT" block over the cover. Dark glass on purpose: it sits on a photo,
+// whatever the theme, so it never follows the light palettes.
+export function DateStamp({ iso, className = '' }) {
+  const { dateLocale } = useI18n();
+  const parts = eventParts(iso, dateLocale);
+  if (!parts) return null;
+  return (
+    <span
+      className={`flex w-[52px] flex-col items-center rounded-[14px] border border-white/15 bg-black/45 py-1.5 leading-none text-white backdrop-blur-md ${className}`}
+    >
+      <span className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/80">{parts.month}</span>
+      <span className="mt-1 font-display text-[22px] font-extrabold tabular-nums">{parts.day}</span>
+    </span>
+  );
+}
+
+// Small tinted badge on a card or on the event page: Prevendite, Free drink.
+export function EventBadge({ icon, children }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-ember-primary/30 bg-ember-primary/10 px-2.5 py-1 text-[11px] font-bold text-ember-ink">
+      <Icon name={icon} size={12} />
+      {children}
+    </span>
+  );
+}
+
+// Zone-events card: cover with the date stamp, then title, when and where, the
+// badges and a bell to follow the event. The whole card opens the event page
+// (a stretched link under the bell, so no button sits inside an <a>). Sponsored
+// events carry the tag and sort first server-side.
 function EventRow({ event }) {
   const { t, dateLocale } = useI18n();
   const navigate = useNavigate();
+  const { freeDrinkToken } = useAuth();
   const { isFollowing, toggle, isAuthenticated } = useFollows();
-  const when = formatWhen(event.starts_at, dateLocale);
-  const place = event.bar_name;
-  
-  let distStr = null;
-  if (event.distance_km != null) {
-    if (event.distance_km < 1) {
-      distStr = `${Math.round(event.distance_km * 1000)} m`;
-    } else {
-      distStr = `${Number(event.distance_km.toFixed(1))} km`;
-    }
-  }
-  const dist = distStr;
+  const following = isFollowing('events', event.id);
+  const dist = distanceLabel(event.distance_km);
+  const when = shortWhen(event.starts_at, dateLocale, t);
+  const showFreeDrink = event.free_drink && !!freeDrinkToken;
 
-  const guard = (fn) => (e) => {
+  const onBell = (e) => {
     e.preventDefault();
     e.stopPropagation();
-    return isAuthenticated ? fn() : navigate('/login');
+    if (!isAuthenticated) return navigate('/login');
+    toggle('events', event.id);
   };
-  const followsEvent = isFollowing('events', event.id);
-  const followsOrganizer = event.organizer_id && isFollowing('organizers', event.organizer_id);
-
-  if (event.photo_url) {
-    return (
-      <Link to={`/event/${event.id}`} className="relative flex h-56 w-full flex-col justify-end overflow-hidden rounded-xl group my-2">
-        <img src={event.photo_url} alt={event.title} className="absolute inset-0 h-full w-full object-cover transition duration-500 group-hover:scale-105" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/10" />
-        <div className="relative z-10 flex w-full items-end gap-3.5 px-4 py-4">
-          <div className="min-w-0 flex-1">
-            <h3 className="truncate font-display text-[18px] font-bold leading-tight text-white shadow-black drop-shadow-md">
-              {event.sponsored && (
-                <span className="mr-1.5 inline-block rounded-full bg-ember-primary px-1.5 py-0.5 align-middle text-[9px] font-bold uppercase tracking-wide text-ember-ink">
-                  {t('ev.sponsored')}
-                </span>
-              )}
-              {event.title}
-            </h3>
-            <p className="mt-1 truncate text-[12px] font-semibold uppercase tracking-[0.05em] text-white/90 drop-shadow-md">
-              {[when, place].filter(Boolean).join(' · ')}
-            </p>
-            <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-              <FollowChip
-                active={followsEvent}
-                label={followsEvent ? t('ev.unfollowEvent') : t('ev.followEvent')}
-                onClick={guard(() => toggle('events', event.id))}
-              >
-                {followsEvent ? t('ev.following') : t('ev.follow')}
-              </FollowChip>
-              {event.organizer_id && (
-                <FollowChip
-                  active={followsOrganizer}
-                  label={t(followsOrganizer ? 'ev.unfollowUser' : 'ev.followUser', {
-                    user: event.organizer_username,
-                  })}
-                  onClick={guard(() => toggle('organizers', event.organizer_id))}
-                >
-                  @{event.organizer_username}
-                </FollowChip>
-              )}
-            </div>
-          </div>
-          {dist && (
-            <span className="shrink-0 rounded-card border border-white/10 bg-black/30 px-2.5 py-1.5 text-xs font-bold tabular-nums text-white backdrop-blur-md">
-              {dist}
-            </span>
-          )}
-        </div>
-      </Link>
-    );
-  }
 
   return (
-    <Link to={`/event/${event.id}`} className="row flex w-full items-center gap-3.5 px-3.5 py-3.5 text-left hover:bg-ember-line/5 transition">
-      <span className="grid h-[52px] w-[52px] shrink-0 place-items-center rounded-card bg-ember-primary/10 text-ember-ink">
-        <Icon name="event" size={22} />
-      </span>
-      <div className="min-w-0 flex-1">
-        <h3 className="truncate font-display text-[16px] font-bold leading-tight text-ember-cream group-hover:text-ember-primary transition">
-          {event.sponsored && (
-            <span className="mr-1.5 inline-block rounded-full bg-ember-primary/15 px-1.5 py-0.5 align-middle text-[9px] font-bold uppercase tracking-wide text-ember-ink">
-              {t('ev.sponsored')}
-            </span>
-          )}
-          {event.title}
-        </h3>
-        <p className="mt-1.5 truncate text-[11px] font-semibold uppercase tracking-[0.07em] text-ember-muted">
-          {[when, place].filter(Boolean).join(' · ')}
-        </p>
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          <FollowChip
-            active={followsEvent}
-            label={followsEvent ? t('ev.unfollowEvent') : t('ev.followEvent')}
-            onClick={guard(() => toggle('events', event.id))}
-          >
-            {followsEvent ? t('ev.following') : t('ev.follow')}
-          </FollowChip>
-          {event.organizer_id && (
-            <FollowChip
-              active={followsOrganizer}
-              label={t(followsOrganizer ? 'ev.unfollowUser' : 'ev.followUser', {
-                user: event.organizer_username,
-              })}
-              onClick={guard(() => toggle('organizers', event.organizer_id))}
-            >
-              @{event.organizer_username}
-            </FollowChip>
+    <article className="card group relative overflow-hidden transition-transform duration-1 ease-out active:scale-[0.99]">
+      <div className={`relative overflow-hidden ${event.photo_url ? 'aspect-video' : 'aspect-[16/7]'}`}>
+        {event.photo_url ? (
+          <img
+            src={event.photo_url}
+            alt=""
+            loading="lazy"
+            className="absolute inset-0 h-full w-full object-cover transition-transform duration-3 ease-out group-hover:scale-[1.03]"
+          />
+        ) : (
+          <PosterFallback />
+        )}
+        <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-black/45 to-transparent" />
+        <DateStamp iso={event.starts_at} className="absolute left-3 top-3" />
+        {dist && (
+          <span className="absolute right-3 top-3 rounded-full border border-white/15 bg-black/45 px-2.5 py-1 text-[11px] font-bold tabular-nums text-white backdrop-blur-md">
+            {dist}
+          </span>
+        )}
+        {event.sponsored && (
+          <span className="absolute bottom-3 left-3 rounded-full bg-ember-primary px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-ember-on-primary">
+            {t('ev.sponsored')}
+          </span>
+        )}
+      </div>
+
+      <div className="flex items-end gap-3 px-4 pb-4 pt-3.5">
+        <div className="min-w-0 flex-1">
+          <h3 className="line-clamp-2 font-display text-[18px] font-bold leading-tight text-ember-cream">
+            <Link to={`/event/${event.id}`} className="outline-none after:absolute after:inset-0 after:content-['']">
+              {event.title}
+            </Link>
+          </h3>
+          <p className="mt-1.5 flex min-w-0 items-center gap-1.5 text-[13px] text-ember-muted">
+            <span className="shrink-0 font-semibold capitalize text-ember-ink">{when}</span>
+            {event.bar_name && (
+              <>
+                <span aria-hidden="true">·</span>
+                <span className="truncate">{event.bar_name}</span>
+              </>
+            )}
+          </p>
+          {(event.has_presales || showFreeDrink || event.organizer_username) && (
+            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+              {event.has_presales && <EventBadge icon="euro">{t('ev.presales')}</EventBadge>}
+              {showFreeDrink && <EventBadge icon="cocktail">{t('ev.freeDrink')}</EventBadge>}
+              {event.organizer_username && (
+                <span className="truncate text-[12px] font-semibold text-ember-muted">@{event.organizer_username}</span>
+              )}
+            </div>
           )}
         </div>
+        <button
+          type="button"
+          onClick={onBell}
+          aria-pressed={following}
+          aria-label={following ? t('ev.unfollowEvent') : t('ev.followEvent')}
+          className={`press relative z-10 grid h-10 w-10 shrink-0 place-items-center rounded-full border transition-colors duration-2 ${
+            following
+              ? 'border-ember-primary bg-ember-primary text-ember-on-primary'
+              : 'border-ember-line/10 bg-ember-line/[0.06] text-ember-cream hover:bg-ember-line/10'
+          }`}
+        >
+          <Icon name={following ? 'check' : 'bell'} size={17} />
+        </button>
       </div>
-      {dist && (
-        <span className="shrink-0 rounded-card border border-ember-line/10 bg-ember-line/5 px-2.5 py-1.5 text-xs font-bold tabular-nums text-ember-muted">
-          {dist}
-        </span>
-      )}
-    </Link>
+    </article>
   );
 }
 

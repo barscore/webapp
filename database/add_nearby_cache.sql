@@ -16,8 +16,10 @@
 -- =============================================
 
 CREATE TABLE IF NOT EXISTS public.nearby_cache (
-  -- v<schema>:<lat arrotondata>,<lng arrotondata>,<raggio km> — vedi cacheKey()
-  -- in backend/src/routes/places.js.
+  -- t<versione>:<riga>:<colonna> di un tassello da 0,05° (backend/src/lib/
+  -- nearbyTiles.js), oppure lock:<riquadro> per una query a Overpass in corso.
+  -- Fino al 26/10/2026 era v<schema>:<lat>,<lng>,<raggio>: la pulizia del cron
+  -- toglie quelle righe.
   key        TEXT PRIMARY KEY,
   places     JSONB NOT NULL,
   fetched_at TIMESTAMPTZ NOT NULL DEFAULT NOW()

@@ -67,7 +67,9 @@ function writeNearbyCache(lat, lng, r, data) {
 }
 
 // Seconds before each new attempt when /places/nearby answers `stale`.
-const NEARBY_RETRY_S = [6, 15, 30];
+// Short at first: the backend itself waits up to 10 s on OpenStreetMap, and a
+// cold area is usually ready on the second or third try.
+const NEARBY_RETRY_S = [2, 3, 4, 6, 8, 10, 15, 20];
 
 // Nominatim place types we treat as a "city" for the travel jump: typing a
 // place name surfaces a "Vedi bar a <città>" row that recenters the nearby
@@ -115,21 +117,17 @@ function SearchPanel({ query, setQuery, autoFocus = false, placeholder }) {
   );
 }
 
-// Radius slider — only in the "Vicino a me" section. Capped at 25 km; --fill
+// Search radius: one slim row, whatever the tab — over the tab bar on mobile,
+// on top of the list panel on desktop. It drives the nearby list, the pins on
+// the map and the events, not just "Vicino a me". Capped at 25 km; --fill
 // drives the track's primary→accent gradient (see .slider in index.css).
 const RADIUS_MAX = 25;
-function RadiusControl({ radius, setRadius }) {
+function RadiusBar({ radius, setRadius, className = '' }) {
   const { t } = useI18n();
   const pct = ((radius - 1) / (RADIUS_MAX - 1)) * 100;
   return (
-    <div className="rounded-lg border border-ember-line/10 bg-ember-line/[0.04] px-3.5 pb-1.5 pt-2.5">
-      <div className="flex items-center gap-2 text-xs text-ember-muted">
-        <Icon name="funnel" size={14} className="text-ember-ink" />
-        <span className="font-semibold uppercase tracking-[0.08em]">{t('home.radiusTitle')}</span>
-        <span className="ml-auto rounded-full bg-ember-primary/15 px-2.5 py-0.5 font-display text-[12px] font-bold tabular-nums text-ember-ink">
-          {radius} km
-        </span>
-      </div>
+    <div className={`flex items-center gap-2.5 ${className}`}>
+      <Icon name="locate" size={14} className="text-ember-muted" />
       <input
         type="range"
         min="1"
@@ -138,9 +136,16 @@ function RadiusControl({ radius, setRadius }) {
         value={radius}
         onChange={(e) => setRadius(Number(e.target.value))}
         aria-label={t('home.radiusAria')}
-        className="slider mt-1 w-full"
+        className="slider slider-sm min-w-0 flex-1"
         style={{ '--fill': `${pct}%` }}
       />
+      {/* Fixed width: the track must not resize between 9 and 10 km. */}
+      <span
+        aria-hidden="true"
+        className="w-[52px] shrink-0 rounded-full bg-ember-primary/15 py-0.5 text-center font-display text-[12px] font-bold tabular-nums text-ember-ink"
+      >
+        {radius} km
+      </span>
     </div>
   );
 }
@@ -166,7 +171,7 @@ function RatedFilter({ ratedOnly, setRatedOnly }) {
 
 // Inner content of the sheet / desktop panel. Module-level so the search input
 // keeps focus across re-renders.
-function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, radius, setRadius, ratedOnly, setRatedOnly, placeResults, refining, onGoToCity, onReload, onWiden, onExplore, onSelect, onSuggest, events, eventsLoading, eventsError, drinks, drinksLoading, drinksError, drinkQuery, setDrinkQuery, onProposeDrink, center }) {
+function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, ratedOnly, setRatedOnly, placeResults, refining, onGoToCity, onReload, onWiden, onExplore, onSelect, onSuggest, events, eventsLoading, eventsError, drinks, drinksLoading, drinksError, drinkQuery, setDrinkQuery, onProposeDrink, center }) {
   const { t } = useI18n();
   // Eventi tab: zone events, soonest first. Separate data path (no map pins,
   // no bar rows) so it doesn't share the bars list flow below.
@@ -296,12 +301,9 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
             </span>
           </div>
           {tab === 'vicini' && !searchActive && (
-            <>
-              <RadiusControl radius={radius} setRadius={setRadius} />
-              <div className="px-1">
-                <RatedFilter ratedOnly={ratedOnly} setRatedOnly={setRatedOnly} />
-              </div>
-            </>
+            <div className="px-1">
+              <RatedFilter ratedOnly={ratedOnly} setRatedOnly={setRatedOnly} />
+            </div>
           )}
         </div>
       )}
@@ -512,6 +514,9 @@ export default function Home() {
             retryTimer = setTimeout(() => fetchNearby(attempt + 1), NEARBY_RETRY_S[attempt] * 1000);
           } else if (!stale) {
             writeNearbyCache(center[0], center[1], radius, data);
+          } else if (!data.length && !cached?.length) {
+            // Every retry spent and still nothing: OpenStreetMap is down, not the area empty.
+            setError(t('home.errBars'));
           }
         })
         .catch((err) => {
@@ -761,8 +766,6 @@ export default function Home() {
     onProposeDrink: () => setProposeDrinkOpen(true),
     query,
     setQuery,
-    radius,
-    setRadius,
     ratedOnly,
     setRatedOnly,
     placeResults: searchActive ? placeResults : [],
@@ -1043,6 +1046,7 @@ export default function Home() {
         {/* Desktop only: the map never pans behind this while it's being
             resized, so a real blur is affordable here. */}
         <div className="glass pointer-events-auto flex min-h-0 flex-1 flex-col overflow-hidden rounded-sheet">
+          <RadiusBar radius={radius} setRadius={setRadius} className="border-b border-ember-line/5 px-4 py-2" />
           <div className="no-scrollbar flex-1 overflow-y-auto px-4 py-4">
             <SheetBody {...sheetProps} />
             <SiteLinks className="mt-6 pb-2" />
@@ -1084,6 +1088,7 @@ export default function Home() {
           <SiteLinks className="mt-6 pb-2" />
         </div>
         <div className="border-t border-ember-line/5 px-3 pb-3 pt-2">
+          <RadiusBar radius={radius} setRadius={setRadius} className="mb-1.5 px-1.5" />
           <NavTabs variant="bar" tab={tab} onTab={onTab} savedCount={count} />
         </div>
       </section>

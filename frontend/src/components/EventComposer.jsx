@@ -322,14 +322,17 @@ export default function EventComposer({ event = null, center, onClose, onSaved }
         )}
 
         <div className="mt-4 flex flex-col gap-2">
-          <label className="flex items-center gap-2 text-sm text-ember-cream cursor-pointer">
+          <label className="flex items-start gap-2 text-sm text-ember-cream cursor-pointer">
             <input
               type="checkbox"
               checked={hasPresales}
               onChange={(e) => setHasPresales(e.target.checked)}
-              className="h-4 w-4 rounded border-ember-line/20 bg-ember-ink text-ember-primary focus:ring-ember-primary focus:ring-offset-ember-card"
+              className="mt-0.5 h-4 w-4 shrink-0 rounded border-ember-line/20 bg-ember-ink text-ember-primary focus:ring-ember-primary focus:ring-offset-ember-card"
             />
-            Attiva Prevendite
+            <span>
+              {t('ec.presales')}
+              <span className="block text-xs text-ember-muted">{t('ec.presalesHint')}</span>
+            </span>
           </label>
           <label className="flex items-center gap-2 text-sm text-ember-cream cursor-pointer">
             <input
@@ -338,7 +341,7 @@ export default function EventComposer({ event = null, center, onClose, onSaved }
               onChange={(e) => setFreeDrink(e.target.checked)}
               className="h-4 w-4 rounded border-ember-line/20 bg-ember-ink text-ember-primary focus:ring-ember-primary focus:ring-offset-ember-card"
             />
-            Free Drink
+            {t('ec.freeDrink')}
           </label>
         </div>
 

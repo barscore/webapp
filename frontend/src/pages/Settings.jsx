@@ -4,7 +4,8 @@ import { useAuth } from '../hooks/useAuth.js';
 import { useTheme } from '../hooks/useTheme.js';
 import { useGraphics } from '../hooks/useGraphics.js';
 import { supabase } from '../services/supabase.js';
-import { meApi, organizerApi } from '../services/api.js';
+import { avatarApi, meApi, organizerApi } from '../services/api.js';
+import Avatar from '../components/Avatar.jsx';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
 import PlusBadge from '../components/PlusBadge.jsx';
@@ -188,6 +189,7 @@ export default function Settings() {
         {/* ---- Profilo ---- */}
         <GroupLabel icon="user">{t('settings.groupProfile')}</GroupLabel>
         <section className="card p-4">
+          <AvatarPicker profile={profile} onChange={setProfile} onToast={setToast} />
           <dl className="space-y-2.5 text-sm">
             <Detail icon="user" label={t('settings.username')} value={profile ? `@${profile.username}` : '…'} />
             <Detail icon="link" label={t('settings.email')} value={profile?.email || '…'} />
@@ -659,6 +661,66 @@ function Detail({ icon, label, value }) {
         {label}
       </dt>
       <dd className="truncate text-ember-cream">{value}</dd>
+    </div>
+  );
+}
+
+// Foto profilo: scegli, ridimensiona nel browser, carica. Passa dalla
+// moderazione lato server prima di diventare pubblica.
+function AvatarPicker({ profile, onChange, onToast }) {
+  const { t } = useI18n();
+  const [busy, setBusy] = useState(false);
+
+  async function pick(e) {
+    const file = e.target.files?.[0];
+    e.target.value = '';
+    if (!file) return;
+    setBusy(true);
+    try {
+      const updated = await avatarApi.set(file);
+      onChange((p) => ({ ...p, avatar_url: updated.avatar_url }));
+      onToast({ msg: t('avatar.saved'), icon: 'check' });
+    } catch (err) {
+      onToast({ msg: err.response?.data?.error || t('avatar.error'), icon: 'info' });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function remove() {
+    setBusy(true);
+    try {
+      await avatarApi.remove();
+      onChange((p) => ({ ...p, avatar_url: null }));
+    } catch {
+      onToast({ msg: t('avatar.error'), icon: 'info' });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mb-4 flex items-center gap-4 border-b border-ember-line/5 pb-4">
+      <div className="relative">
+        <Avatar url={profile?.avatar_url} size={64} className="ring-2 ring-ember-primary/60" />
+        {busy && (
+          <span className="absolute inset-0 grid place-items-center rounded-full bg-black/40">
+            <span className="h-5 w-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+          </span>
+        )}
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <label className={`btn-primary cursor-pointer px-3 py-2 text-sm ${busy ? 'pointer-events-none opacity-50' : ''}`}>
+          <Icon name="camera" size={15} />
+          {profile?.avatar_url ? t('avatar.change') : t('avatar.add')}
+          <input type="file" accept="image/*" className="hidden" onChange={pick} disabled={busy} />
+        </label>
+        {profile?.avatar_url && (
+          <button type="button" onClick={remove} disabled={busy} className="btn-ghost px-3 py-2 text-sm">
+            {t('avatar.remove')}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

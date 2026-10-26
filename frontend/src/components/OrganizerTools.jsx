@@ -21,7 +21,7 @@ const BANNER_KEY = 'boost-banner-dismissed:v1';
 // Barra strumenti del tab Eventi per account organizer: banner promo boost,
 // "Crea evento" e gestione dei propri eventi (modifica/annulla/boost).
 // Per tutti gli altri ruoli non renderizza nulla.
-export default function OrganizerTools({ center, bars = [], onChanged }) {
+export default function OrganizerTools({ center, onChanged }) {
   const { t } = useI18n();
   const { role } = useAuth();
   const monetization = useMonetization();
@@ -168,7 +168,6 @@ export default function OrganizerTools({ center, bars = [], onChanged }) {
       {composer && (
         <EventComposer
           event={composer.event}
-          bars={bars}
           center={center}
           onClose={() => setComposer(null)}
           onSaved={onChanged}

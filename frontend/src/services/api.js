@@ -79,9 +79,19 @@ export const barsApi = {
 
 // Free OSM-backed discovery (Overpass + Nominatim, proxied by the backend).
 export const placesApi = {
+  // `stale`: the backend answered with what it had (our own table, or nothing)
+  // while OpenStreetMap is still loading the area — ask again shortly.
   nearby: (params, config) =>
-    api.get('/places/nearby', { params, ...config }).then((r) => expectArray(r.data.places, 'nearby')),
-  search: (q) => api.get('/places/search', { params: { q } }).then((r) => expectArray(r.data.results, 'search')),
+    api.get('/places/nearby', { params, ...config }).then((r) => ({
+      places: expectArray(r.data.places, 'nearby'),
+      stale: r.data.stale === true,
+    })),
+  // Places and addresses as you type (`kind`: area | address | place).
+  // lat/lng only rank nearer hits first.
+  search: (q, near) =>
+    api
+      .get('/places/search', { params: { q, lat: near?.[0], lng: near?.[1] } })
+      .then((r) => expectArray(r.data.results, 'search')),
   // Global bar search (whole planet), enriched with ratings. Optional lat/lng
   // only sets distance_km on the results.
   searchBars: (params) => api.get('/places/bars', { params }).then((r) => expectArray(r.data.places, 'searchBars')),
@@ -135,6 +145,41 @@ export const meApi = {
     a.remove();
     URL.revokeObjectURL(url);
   },
+};
+
+// Immagini pubbliche: foto profilo e copertine degli eventi. Il browser
+// ridimensiona e converte in JPEG (lato lungo `maxSide`), il backend firma
+// l'upload URL, qui si fa il PUT. Restituisce path e URL pubblico.
+export async function uploadImage(file, kind, maxSide) {
+  const blob = await resizeImage(file, maxSide);
+  const { data } = await api.post('/me/uploads/image', { kind, ext: 'jpg' });
+  const u = data.upload;
+  const res = await fetch(u.url, { method: 'PUT', headers: { 'content-type': u.content_type }, body: blob });
+  if (!res.ok) throw new Error(`upload ${res.status}`);
+  return { path: u.path, url: u.public_url };
+}
+
+/** Un'immagine qualsiasi (anche HEIC dove il browser la sa leggere) → JPEG ridotto. */
+async function resizeImage(file, maxSide) {
+  const bitmap = await createImageBitmap(file);
+  const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bitmap.width * scale);
+  canvas.height = Math.round(bitmap.height * scale);
+  canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+  bitmap.close?.();
+  return new Promise((resolve, reject) =>
+    canvas.toBlob((b) => (b ? resolve(b) : reject(new Error('resize'))), 'image/jpeg', 0.85),
+  );
+}
+
+export const avatarApi = {
+  // Carica e conferma: la foto passa dalla moderazione prima di diventare pubblica.
+  set: async (file) => {
+    const { path } = await uploadImage(file, 'avatar', 512);
+    return api.put('/me/avatar', { path }).then((r) => r.data.profile);
+  },
+  remove: () => api.delete('/me/avatar').then((r) => r.data),
 };
 
 // Allegati di verifica (rivendicazione bar, richiesta PR/organizzatore).

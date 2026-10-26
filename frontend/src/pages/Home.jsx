@@ -8,6 +8,7 @@ import NotificationsBell from '../components/NotificationsBell.jsx';
 import OrganizerTools from '../components/OrganizerTools.jsx';
 import Logo from '../components/Logo.jsx';
 import Icon from '../components/Icon.jsx';
+import Avatar from '../components/Avatar.jsx';
 import NavTabs from '../components/NavTabs.jsx';
 import EmptyState from '../components/EmptyState.jsx';
 import { SkeletonRows } from '../components/Skeleton.jsx';
@@ -64,6 +65,9 @@ function writeNearbyCache(lat, lng, r, data) {
     /* quota/full — ignore */
   }
 }
+
+// Seconds before each new attempt when /places/nearby answers `stale`.
+const NEARBY_RETRY_S = [6, 15, 30];
 
 // Nominatim place types we treat as a "city" for the travel jump: typing a
 // place name surfaces a "Vedi bar a <città>" row that recenters the nearby
@@ -162,7 +166,7 @@ function RatedFilter({ ratedOnly, setRatedOnly }) {
 
 // Inner content of the sheet / desktop panel. Module-level so the search input
 // keeps focus across re-renders.
-function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, radius, setRadius, ratedOnly, setRatedOnly, cityResult, onGoToCity, onReload, onWiden, onExplore, onSelect, onSuggest, events, eventsLoading, eventsError, drinks, drinksLoading, drinksError, drinkQuery, setDrinkQuery, onProposeDrink, center }) {
+function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, radius, setRadius, ratedOnly, setRatedOnly, placeResults, refining, onGoToCity, onReload, onWiden, onExplore, onSelect, onSuggest, events, eventsLoading, eventsError, drinks, drinksLoading, drinksError, drinkQuery, setDrinkQuery, onProposeDrink, center }) {
   const { t } = useI18n();
   // Eventi tab: zone events, soonest first. Separate data path (no map pins,
   // no bar rows) so it doesn't share the bars list flow below.
@@ -180,7 +184,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
         </div>
 
         {/* Strumenti organizer: crea evento, i miei eventi, banner boost */}
-        <OrganizerTools center={center} bars={list} onChanged={onReload} />
+        <OrganizerTools center={center} onChanged={onReload} />
 
         {eventsLoading && <SkeletonRows n={3} label={t('common.loading')} />}
 
@@ -303,16 +307,28 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
       )}
 
       {/* Travel jump: recenter the nearby search on the matched place. */}
-      {searchActive && cityResult && (
+      {searchActive && placeResults.map((place) => (
         <button
+          key={`${place.lat},${place.lng}`}
           type="button"
-          onClick={() => onGoToCity(cityResult)}
+          onClick={() => onGoToCity(place)}
           className="press mb-2.5 flex w-full items-center gap-2 rounded-card border border-ember-primary/30 bg-ember-primary/[0.06] px-3 py-3 text-left text-sm text-ember-cream transition-colors hover:border-ember-primary/60"
         >
-          <Icon name="pin" size={16} className="text-ember-ink" />
-          <span className="truncate">{t('home.viewBarsIn', { city: cityResult.display_name })}</span>
+          <Icon name="pin" size={16} className="shrink-0 text-ember-ink" />
+          <span className="min-w-0">
+            <span className="block truncate">{t('home.viewBarsIn', { city: place.name ?? place.display_name })}</span>
+            {place.subtitle && <span className="block truncate text-xs text-ember-muted">{place.subtitle}</span>}
+          </span>
           <Icon name="arrow-right" size={14} className="ml-auto shrink-0 text-ember-muted" />
         </button>
+      ))}
+
+      {/* A partial list while OpenStreetMap loads the area: say so. */}
+      {refining && !loading && (
+        <div className="mb-2.5 flex items-center gap-2 px-1 text-xs text-ember-muted">
+          <span className="h-3 w-3 animate-spin rounded-full border-2 border-ember-primary/30 border-t-ember-primary" />
+          {t('home.loadingMore')}
+        </div>
       )}
 
       {/* `loading` is already false on a warm start (the localStorage cache
@@ -392,6 +408,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
+  // The list is partial and a fuller one is on its way (see NEARBY_RETRY_S).
+  const [refining, setRefining] = useState(false);
 
   const [events, setEvents] = useState([]);
   const [eventsLoading, setEventsLoading] = useState(false);
@@ -408,8 +426,8 @@ export default function Home() {
   const [searchResults, setSearchResults] = useState([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [searchError, setSearchError] = useState('');
-  // Top geocoded place for the current query (travel jump), or null.
-  const [cityResult, setCityResult] = useState(null);
+  // Places matching the query (cities, districts) for the travel jump.
+  const [placeResults, setPlaceResults] = useState([]);
   // ?tab=eventi (dai link delle notifiche) apre direttamente quella scheda.
   const [tab, setTab] = useState(() => {
     const wanted = new URLSearchParams(window.location.search).get('tab');
@@ -472,7 +490,12 @@ export default function Home() {
     // Overpass query — public mirrors rate-limit (429) heavy concurrent calls,
     // self-inflicting the "Impossibile caricare i bar" error. Wait for the value
     // to settle, then fire ONE request and abort it if superseded.
-    const timer = setTimeout(() => {
+    // A cold area (a city you just jumped to, a wider radius) comes back
+    // `stale`: only the bars already in our table, while the backend finishes
+    // loading OpenStreetMap. Ask again a few times — the full list is usually
+    // there on the second try — and don't keep the partial one in the cache.
+    let retryTimer = null;
+    const fetchNearby = (attempt) => {
       // All bars come straight from OpenStreetMap (Overpass), enriched server-side
       // with community ratings (avg_overall/total_ratings) and distance.
       placesApi
@@ -480,23 +503,33 @@ export default function Home() {
           { lat: center[0], lng: center[1], radius_km: radius },
           { signal: controller.signal },
         )
-        .then((data) => {
+        .then(({ places: data, stale }) => {
           if (cancelled) return;
-          setBars(data);
-          writeNearbyCache(center[0], center[1], radius, data);
+          if (data.length || !cached?.length) setBars(data);
+          const again = stale && attempt < NEARBY_RETRY_S.length;
+          setRefining(again);
+          if (again) {
+            retryTimer = setTimeout(() => fetchNearby(attempt + 1), NEARBY_RETRY_S[attempt] * 1000);
+          } else if (!stale) {
+            writeNearbyCache(center[0], center[1], radius, data);
+          }
         })
         .catch((err) => {
           // Ignore aborts (superseded request); keep stale cache on real failure,
           // only surface an error when we have nothing to show.
           if (cancelled || err.code === 'ERR_CANCELED') return;
+          setRefining(false);
           if (!cached?.length) setError(t('home.errBars'));
         })
         .finally(() => !cancelled && setLoading(false));
-    }, 350);
+    };
+    const timer = setTimeout(() => fetchNearby(0), 350);
     return () => {
       cancelled = true;
       controller.abort();
       clearTimeout(timer);
+      clearTimeout(retryTimer);
+      setRefining(false);
     };
   }, [center, radius, reloadKey]);
 
@@ -554,6 +587,23 @@ export default function Home() {
     };
   }, [isAuthenticated, reloadKey]);
 
+  // The venues this account owns, managed straight from the account menu.
+  const [myBars, setMyBars] = useState([]);
+  useEffect(() => {
+    if (!isAuthenticated) {
+      setMyBars([]);
+      return;
+    }
+    let cancelled = false;
+    meApi
+      .bars()
+      .then((b) => !cancelled && setMyBars(b))
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthenticated, reloadKey]);
+
   // Close the account menu on outside click.
   useEffect(() => {
     if (!menuOpen) return;
@@ -570,9 +620,8 @@ export default function Home() {
 
   const visible = useMemo(() => {
     // Global search: show the server-side worldwide results, not the nearby set.
-    if (searchActive) {
-      return [...searchResults].sort((a, b) => (a.distance_km ?? 1e9) - (b.distance_km ?? 1e9));
-    }
+    // Server order: it ranks by how well the name matches, then distance.
+    if (searchActive) return searchResults;
     let list = bars;
     // Saved bars come from the account (all of them, even outside the radius);
     // signed-out users fall back to filtering the nearby set by local ids.
@@ -596,7 +645,7 @@ export default function Home() {
       setSearchResults([]);
       setSearchLoading(false);
       setSearchError('');
-      setCityResult(null);
+      setPlaceResults([]);
       return;
     }
     const q = query.trim();
@@ -604,12 +653,16 @@ export default function Home() {
     setSearchLoading(true);
     setSearchError('');
     const timer = setTimeout(() => {
-      // Geocode the query in parallel: if the top hit is a place (city/town/…),
-      // offer a "Vedi bar a <città>" jump. Failures just hide the row.
+      // Places in parallel: the areas among them become "Vedi i bar a <posto>"
+      // jumps. Failures just hide the rows.
       placesApi
-        .search(q)
-        .then((r) => !cancelled && setCityResult(r.find((x) => PLACE_TYPES.has(x.type)) || null))
-        .catch(() => !cancelled && setCityResult(null));
+        .search(q, center)
+        .then((r) => {
+          if (cancelled) return;
+          const areas = r.filter((x) => x.kind === 'area' || (!x.kind && PLACE_TYPES.has(x.type)));
+          setPlaceResults(areas.slice(0, 3));
+        })
+        .catch(() => !cancelled && setPlaceResults([]));
       placesApi
         .searchBars({ q, lat: center[0], lng: center[1] })
         .then((data) => {
@@ -712,7 +765,8 @@ export default function Home() {
     setRadius,
     ratedOnly,
     setRatedOnly,
-    cityResult: searchActive ? cityResult : null,
+    placeResults: searchActive ? placeResults : [],
+    refining: !searchActive && refining,
     onGoToCity,
     onReload: () => setReloadKey((k) => k + 1),
     onWiden: () => setRadius((r) => Math.min(25, r + 3)),
@@ -765,14 +819,18 @@ export default function Home() {
             label={isAuthenticated ? t('menu.account') : t('common.login')}
             onClick={() => (isAuthenticated ? setMenuOpen((o) => !o) : navigate('/login'))}
           >
-            <Icon name="user" size={22} />
+            {isAuthenticated && (profile?.avatar_url || user?.avatar_url) ? (
+              <Avatar url={profile?.avatar_url || user?.avatar_url} size={36} />
+            ) : (
+              <Icon name="user" size={22} />
+            )}
           </GlassButton>
           {menuOpen && isAuthenticated && (
             <div className="glass-flat fade-in absolute right-0 z-[1400] mt-2 w-64 overflow-hidden rounded-lg2">
               {/* Own profile card — no need to open Impostazioni to see this. */}
               <div className="border-b border-ember-line/5 px-3 py-3">
                 <div className="flex items-center gap-2 text-sm font-semibold text-ember-cream">
-                  <Icon name="user" size={16} className="text-ember-ink" />@{user.username}
+                  <Avatar url={profile?.avatar_url || user?.avatar_url} size={28} />@{user.username}
                   <PlusBadge plus={isPlus} /> <ExplorerBadge explorer={user?.is_explorer} />
                   <button onClick={() => { setMenuOpen(false); setUserQrOpen(true); }} className="ml-auto flex items-center justify-center w-7 h-7 bg-ember-primary/20 text-ember-primary rounded-md hover:bg-ember-primary/30 transition-colors" title="Mostra il tuo QR">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect><rect x="6" y="6" width="1" height="1"></rect><rect x="17" y="6" width="1" height="1"></rect><rect x="17" y="17" width="1" height="1"></rect><rect x="6" y="17" width="1" height="1"></rect></svg>
@@ -867,6 +925,31 @@ export default function Home() {
                   <Icon name="arrow-left" size={13} className="ml-auto rotate-180 text-ember-muted" />
                 </button>
               </div>
+              {myBars.length > 0 && (
+                <div className="border-b border-ember-line/5 py-1.5">
+                  <div className="px-3 pb-1 pt-1 text-[11px] font-semibold uppercase tracking-[0.08em] text-ember-muted">
+                    {t('menu.myBars')}
+                  </div>
+                  {myBars.map((bar) => (
+                    <button
+                      key={bar.id}
+                      type="button"
+                      onClick={() => {
+                        setMenuOpen(false);
+                        onSelect(bar, 'link');
+                      }}
+                      className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-ember-cream hover:bg-ember-line/5"
+                    >
+                      <Icon name="pin" size={16} className="shrink-0 text-ember-ink" />
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate font-semibold">{bar.name}</span>
+                        {bar.city && <span className="block truncate text-xs text-ember-muted">{bar.city}</span>}
+                      </span>
+                      <span className="shrink-0 text-xs font-semibold text-ember-ink">{t('menu.manage')}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
               {(role === 'organizer' || isAdmin) && (
                 <button
                   type="button"

@@ -8,6 +8,7 @@ import RatingForm from '../components/RatingForm.jsx';
 import BarDrinksSection from '../components/BarDrinksSection.jsx';
 import DirectionsButton from '../components/DirectionsButton.jsx';
 import Icon from '../components/Icon.jsx';
+import Avatar from '../components/Avatar.jsx';
 import PlusBadge from '../components/PlusBadge.jsx';
 import ExplorerBadge from '../components/ExplorerBadge.jsx';
 import Toast from '../components/Toast.jsx';
@@ -409,7 +410,7 @@ export default function BarDetail() {
                   <div key={r.id} className="card p-3 text-sm">
                     <div className="flex items-center justify-between">
                       <span className="flex items-center gap-1.5 font-medium text-ember-cream">
-                        <Icon name="user" size={14} className="text-ember-muted" />
+                        <Avatar url={r.profiles?.avatar_url} size={22} />
                         @{r.profiles?.username || t('common.user')}
                         <PlusBadge plus={r.profiles?.plus} /> <ExplorerBadge explorer={r.profiles?.is_explorer} />
                       </span>

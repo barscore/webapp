@@ -80,28 +80,30 @@ BEGIN
     target_bar_id := NEW.bar_id;
   END IF;
 
-  INSERT INTO public.drink_bar_summary (
-    drink_id, bar_id, avg_rating, total_ratings, last_updated
-  )
-  SELECT
-    target_drink_id,
-    target_bar_id,
-    ROUND(AVG(rating)::NUMERIC, 2),
-    COUNT(*),
-    NOW()
-  FROM public.drink_ratings
-  WHERE drink_id = target_drink_id AND bar_id = target_bar_id
-  ON CONFLICT (drink_id, bar_id) DO UPDATE SET
-    avg_rating    = EXCLUDED.avg_rating,
-    total_ratings = EXCLUDED.total_ratings,
-    last_updated  = EXCLUDED.last_updated;
-
-  IF TG_OP = 'DELETE' AND NOT EXISTS (
-    SELECT 1 FROM public.drink_ratings 
+  -- Stessa logica di add_drinks.sql: tolto l'ultimo voto la riga si cancella.
+  -- Un INSERT ... SELECT AVG() senza voti scrive NULL in avg_rating (NOT NULL)
+  -- e fa fallire ogni DELETE in cascata, compresa l'eliminazione dell'account.
+  IF EXISTS (
+    SELECT 1 FROM public.drink_ratings
     WHERE drink_id = target_drink_id AND bar_id = target_bar_id
   ) THEN
-    UPDATE public.drink_bar_summary
-    SET avg_rating = 0, total_ratings = 0, last_updated = NOW()
+    INSERT INTO public.drink_bar_summary (
+      drink_id, bar_id, avg_rating, total_ratings, last_updated
+    )
+    SELECT
+      target_drink_id,
+      target_bar_id,
+      ROUND(AVG(rating)::NUMERIC, 2),
+      COUNT(*),
+      NOW()
+    FROM public.drink_ratings
+    WHERE drink_id = target_drink_id AND bar_id = target_bar_id
+    ON CONFLICT (drink_id, bar_id) DO UPDATE SET
+      avg_rating    = EXCLUDED.avg_rating,
+      total_ratings = EXCLUDED.total_ratings,
+      last_updated  = EXCLUDED.last_updated;
+  ELSE
+    DELETE FROM public.drink_bar_summary
     WHERE drink_id = target_drink_id AND bar_id = target_bar_id;
   END IF;
 

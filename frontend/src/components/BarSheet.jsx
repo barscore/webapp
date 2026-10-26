@@ -8,6 +8,7 @@ import RatingForm from './RatingForm.jsx';
 import BarDrinksSection from './BarDrinksSection.jsx';
 import DirectionsButton from './DirectionsButton.jsx';
 import Icon from './Icon.jsx';
+import Avatar from './Avatar.jsx';
 import OwnerReply from './OwnerReply.jsx';
 import PlusBadge from './PlusBadge.jsx';
 import ExplorerBadge from './ExplorerBadge.jsx';
@@ -363,7 +364,7 @@ export default function BarSheet({ seed, origin, onClose, onChanged }) {
                       <div key={r.id} className="card p-3 text-sm">
                         <div className="flex items-center justify-between">
                           <span className="flex items-center gap-1.5 font-medium text-ember-cream">
-                            <Icon name="user" size={14} className="text-ember-muted" />
+                            <Avatar url={r.profiles?.avatar_url} size={22} />
                             @{r.profiles?.username || t('common.user')}
                             <PlusBadge plus={r.profiles?.plus} /> <ExplorerBadge explorer={r.profiles?.is_explorer} />
                           </span>

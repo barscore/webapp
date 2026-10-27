@@ -26,7 +26,6 @@ const Register = lazy(() => import('./pages/Register.jsx'));
 const Settings = lazy(() => import('./pages/Settings.jsx'));
 const MyRatings = lazy(() => import('./pages/MyRatings.jsx'));
 const Leaderboard = lazy(() => import('./pages/Leaderboard.jsx'));
-const Admin = lazy(() => import('./pages/Admin.jsx'));
 const Privacy = lazy(() => import('./pages/Privacy.jsx'));
 const Tos = lazy(() => import('./pages/Tos.jsx'));
 const Credits = lazy(() => import('./pages/Credits.jsx'));
@@ -154,7 +153,7 @@ export default function App() {
   const canBeta = isAdmin || role === 'moderator' || role === 'betatester';
   const alwaysOpen = ['/login', '/privacy', '/tos', '/contatti'].includes(location.pathname);
   if (!loading && roleReady && !alwaysOpen) {
-    // Maintenance: only admins pass (incl. /admin to flip it back off).
+    // Maintenance: only admins pass (the switch lives in the separate staff panel).
     if (maint?.maintenance_mode && !isAdmin) {
       return (
         <Suspense fallback={Fallback}>
@@ -201,7 +200,6 @@ export default function App() {
         <Route path="/impostazioni" element={<Settings />} />
         <Route path="/le-tue-valutazioni" element={<MyRatings />} />
         <Route path="/classifica" element={<Leaderboard />} />
-        <Route path="/admin" element={<Admin />} />
         <Route path="/boost/esito" element={<BoostResult />} />
         <Route path="/plus" element={<Plus />} />
         <Route path="/redeem" element={<Redeem />} />

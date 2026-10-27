@@ -90,7 +90,6 @@ export default {
   'menu.ratings': 'valoraciones',
   'menu.since': 'desde {date}',
   'menu.iceCubes': 'ice cubes',
-  'menu.admin': 'Panel de admin',
   'menu.settings': 'Ajustes',
   'menu.myRatings': 'Tus valoraciones',
   'menu.report': 'Reportar',

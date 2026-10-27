@@ -8,7 +8,6 @@
     { "source": "/citta/:slug", "destination": "/app.html" },
     { "source": "/impostazioni", "destination": "/app.html" },
     { "source": "/le-tue-valutazioni", "destination": "/app.html" },
-    { "source": "/admin", "destination": "/app.html" },
     { "source": "/boost/esito", "destination": "/app.html" },
     { "source": "/plus", "destination": "/app.html" },
     { "source": "/redeem", "destination": "/app.html" },

@@ -97,7 +97,6 @@ export default {
   'menu.ratings': 'valutazioni',
   'menu.since': 'dal {date}',
   'menu.iceCubes': 'ice cubes',
-  'menu.admin': 'Pannello admin',
   'menu.settings': 'Impostazioni',
   'menu.myRatings': 'Le tue valutazioni',
   'menu.report': 'Segnala',

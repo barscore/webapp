@@ -192,7 +192,7 @@ export function AuthProvider({ children }) {
     profileReady: !loading && (!user || role !== null),
     isAuthenticated: !!user,
     isAdmin: role === 'admin',
-    // Staff = chi entra nel pannello: i moderatori vedono solo i tab di moderazione.
+    // Staff = admin o moderatore (il pannello sta nel repo separato `admin/`).
     isStaff: role === 'admin' || role === 'moderator',
     isPlus,
     plusUntil,

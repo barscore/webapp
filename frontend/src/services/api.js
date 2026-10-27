@@ -225,82 +225,19 @@ export const usersApi = {
   credits: () => api.get('/users/credits').then((r) => r.data),
 };
 
-// "Segnala il tuo bar" — create is public (works signed-out); list/moderation
-// are staff-only (backend enforces requireRole).
+// "Segnala il tuo bar" — public (works signed-out). La moderazione è nel
+// pannello staff (repo `admin/`).
 export const suggestionsApi = {
   create: (payload) => api.post('/suggestions', payload).then((r) => r.data.suggestion),
-  list: (params) =>
-    api.get('/suggestions', { params }).then((r) => ({
-      ...r.data,
-      suggestions: expectArray(r.data.suggestions, 'suggestions'),
-    })),
-  setStatus: (id, status, admin_note) =>
-    api.patch(`/suggestions/${id}`, { status, admin_note }).then((r) => r.data.suggestion),
-  remove: (id) => api.delete(`/suggestions/${id}`).then((r) => r.data),
 };
 
-// Generic "segnala" reports from the account menu — create requires auth;
-// list/moderation are staff-only (backend enforces requireRole).
+// Generic "segnala" reports from the account menu — create requires auth.
 export const reportsApi = {
   create: (payload) => api.post('/reports', payload).then((r) => r.data.report),
-  list: (params) =>
-    api.get('/reports', { params }).then((r) => ({
-      ...r.data,
-      reports: expectArray(r.data.reports, 'reports'),
-    })),
-  setStatus: (id, status, admin_note) =>
-    api.patch(`/reports/${id}`, { status, admin_note }).then((r) => r.data.report),
-  remove: (id) => api.delete(`/reports/${id}`).then((r) => r.data),
 };
 
-// Admin panel. Every call is admin-only (backend enforces requireRole('admin')).
-export const adminApi = {
-  stats: () => api.get('/admin/stats').then((r) => r.data.stats),
-  audit: (params) =>
-    api.get('/admin/audit', { params }).then((r) => ({
-      ...r.data,
-      entries: expectArray(r.data.entries, 'adminAudit'),
-    })),
-
-  // Users
-  users: (params) =>
-    api.get('/admin/users', { params }).then((r) => ({
-      ...r.data,
-      users: expectArray(r.data.users, 'adminUsers'),
-    })),
-  banUser: (id, reason) =>
-    api.post(`/admin/users/${id}/ban`, { reason }).then((r) => r.data),
-  suspendUser: (id, hours, reason) =>
-    api.post(`/admin/users/${id}/suspend`, { hours, reason }).then((r) => r.data),
-  unbanUser: (id) => api.post(`/admin/users/${id}/unban`).then((r) => r.data),
-  setRole: (id, role, organizer_type) =>
-    api.put(`/admin/users/${id}/role`, { role, organizer_type }).then((r) => r.data),
-  deleteUser: (id) => api.delete(`/admin/users/${id}`).then((r) => r.data),
-
-  // Ratings
-  ratings: (params) =>
-    api.get('/admin/ratings', { params }).then((r) => ({
-      ...r.data,
-      ratings: expectArray(r.data.ratings, 'adminRatings'),
-    })),
-  deleteRating: (id) => api.delete(`/admin/ratings/${id}`).then((r) => r.data),
-
-  // Settings + emergency
-  // `renewing_subscriptions`: abbonamenti che si rinnovano da soli anche a
-  // monetizzazione spenta (li incassano Stripe / Google Play).
-  settings: () =>
-    api
-      .get('/admin/settings')
-      .then((r) => ({ ...r.data.settings, renewing_subscriptions: r.data.renewing_subscriptions })),
-  updateSettings: (patch) =>
-    api.put('/admin/settings', patch).then((r) => r.data.settings),
-  purgeUserRatings: (id) =>
-    api.post(`/admin/emergency/purge-user-ratings/${id}`).then((r) => r.data),
-};
-
-// Drinks catalog + per-bar votes + moderated proposals. Catalog/rankings are
-// public; voting requires auth; suggest works signed-out (like suggestions);
-// suggestions list/moderation are staff-only (backend enforces requireRole).
+// Drinks catalog + per-bar votes + proposals. Catalog/rankings are public;
+// voting requires auth; suggest works signed-out (like suggestions).
 export const drinksApi = {
   list: (params) =>
     api.get('/drinks', { params }).then((r) => ({
@@ -326,14 +263,6 @@ export const drinksApi = {
   myVotes: (params) =>
     api.get('/me/drink-votes', { params }).then((r) => expectArray(r.data.votes, 'myDrinkVotes')),
   suggest: (payload) => api.post('/drinks/suggestions', payload).then((r) => r.data.suggestion),
-  suggestions: (params) =>
-    api.get('/drinks/suggestions', { params }).then((r) => ({
-      ...r.data,
-      suggestions: expectArray(r.data.suggestions, 'drinkSuggestions'),
-    })),
-  setSuggestionStatus: (id, status, admin_note) =>
-    api.patch(`/drinks/suggestions/${id}`, { status, admin_note }).then((r) => r.data),
-  removeSuggestion: (id) => api.delete(`/drinks/suggestions/${id}`).then((r) => r.data),
 };
 
 // Account organizzatore: richiesta upgrade (form 3 domande), claim bar,
@@ -390,24 +319,6 @@ export const plusApi = {
   status: () => api.get('/plus/status').then((r) => r.data),
   checkout: (plan) => api.post('/plus/checkout', { plan }).then((r) => r.data.url),
   portal: () => api.post('/plus/portal').then((r) => r.data.url),
-};
-
-// Moderazione organizzatori (staff): richieste ruolo + rivendicazioni bar.
-export const organizerAdminApi = {
-  requests: (params) =>
-    api.get('/admin/organizers/requests', { params }).then((r) =>
-      expectArray(r.data.requests, 'orgRequests'),
-    ),
-  reviewRequest: (id, action, admin_note) =>
-    api.post(`/admin/organizers/requests/${id}/${action}`, { admin_note }).then((r) => r.data),
-  claims: (params) =>
-    api.get('/admin/organizers/claims', { params }).then((r) =>
-      expectArray(r.data.claims, 'orgClaims'),
-    ),
-  reviewClaim: (id, action, admin_note) =>
-    api.post(`/admin/organizers/claims/${id}/${action}`, { admin_note }).then((r) => r.data),
-  revokeClaim: (id) =>
-    api.post(`/admin/organizers/claims/${id}/revoke`).then((r) => r.data),
 };
 
 // Statistiche di un bar: solo per il proprietario e l'admin. `advanced` è

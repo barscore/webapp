@@ -397,7 +397,7 @@ function SheetBody({ tab, list, loading, searchActive, error, query, setQuery, r
 export default function Home() {
   const navigate = useNavigate();
   const { t, dateLocale } = useI18n();
-  const { isAuthenticated, isAdmin, isStaff, user, role, logout, isPlus } = useAuth();
+  const { isAuthenticated, isAdmin, user, role, logout, isPlus } = useAuth();
   const { has, count, savedBars } = useBookmarks();
   const isMobile = useIsMobile();
 
@@ -964,15 +964,6 @@ export default function Home() {
                 >
                   <Icon name="camera" size={16} className="text-ember-primary" /> Scanner (Drink e Pass)
                 </button>
-              )}
-              {isStaff && (
-                <Link
-                  to="/admin"
-                  onClick={() => setMenuOpen(false)}
-                  className="flex w-full items-center gap-2 border-b border-ember-line/5 px-3 py-2.5 text-left text-sm font-semibold text-ember-ink hover:bg-ember-line/5"
-                >
-                  <Icon name="filters" size={16} className="text-ember-ink" /> {t('menu.admin')}
-                </Link>
               )}
               <Link
                 to="/impostazioni"

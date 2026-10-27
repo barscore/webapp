@@ -89,7 +89,6 @@ export default {
   'menu.ratings': '条评分',
   'menu.since': '{date} 加入',
   'menu.iceCubes': 'ice cubes',
-  'menu.admin': '管理面板',
   'menu.settings': '设置',
   'menu.myRatings': '你的评分',
   'menu.report': '反馈',

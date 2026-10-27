@@ -89,7 +89,6 @@ export default {
   'menu.ratings': 'ratings',
   'menu.since': 'since {date}',
   'menu.iceCubes': 'ice cubes',
-  'menu.admin': 'Admin panel',
   'menu.settings': 'Settings',
   'menu.myRatings': 'Your ratings',
   'menu.report': 'Report',

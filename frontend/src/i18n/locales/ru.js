@@ -89,7 +89,6 @@ export default {
   'menu.ratings': 'оценок',
   'menu.since': 'с {date}',
   'menu.iceCubes': 'ice cubes',
-  'menu.admin': 'Панель админа',
   'menu.settings': 'Настройки',
   'menu.myRatings': 'Ваши оценки',
   'menu.report': 'Сообщить о проблеме',

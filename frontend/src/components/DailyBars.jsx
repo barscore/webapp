@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { useI18n } from '../i18n/index.js';
 
-// Barre giornaliere di una sola serie (statistiche del bar, iscritti
-// nell'admin). Una serie = nessuna legenda: la nomina il titolo sopra.
+// Barre giornaliere di una sola serie (statistiche del bar; il pannello staff
+// in `admin/` ne ha una copia per gli iscritti). Una serie = nessuna legenda: la nomina il titolo sopra.
 // Barre sottili ancorate alla base con l'estremo arrotondato, 2px di aria fra
 // una e l'altra, il valore nel tooltip al passaggio e una tabella nascosta per
 // chi usa uno screen reader.

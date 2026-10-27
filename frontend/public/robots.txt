@@ -1,7 +1,6 @@
-# rabar — allow indexing of public pages, keep the admin panel out.
+# rabar — allow indexing of public pages, keep the private ones out.
 User-agent: *
 Allow: /
-Disallow: /admin
 Disallow: /impostazioni
 Disallow: /le-tue-valutazioni
 

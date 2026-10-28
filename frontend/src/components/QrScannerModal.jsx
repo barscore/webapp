@@ -4,6 +4,25 @@ import Icon from './Icon.jsx';
 import { useNavigate } from 'react-router-dom';
 import Toast from './Toast.jsx';
 
+// I QR che lo scanner apre: free drink da riscattare e ingresso alle feste
+// (pass firmato `pass`, o il vecchio `user_id`). Si naviga solo sul loro path
+// interno: il testo di un QR lo decide chi lo stampa, e un navigate() con un
+// URL qualunque può uscire dal sito (vedi hooks/useAuthReturn.js#safePath).
+const SCANNABLE = {
+  '/redeem': ['token'],
+  '/party-entry': ['pass', 'user_id'],
+};
+
+function scannedPath(text) {
+  try {
+    const url = new URL(text, window.location.origin);
+    const params = SCANNABLE[url.pathname];
+    return params?.some((k) => url.searchParams.has(k)) ? url.pathname + url.search : null;
+  } catch {
+    return null;
+  }
+}
+
 export default function QrScannerModal({ onClose }) {
   const navigate = useNavigate();
   const [toast, setToast] = useState(null);
@@ -20,20 +39,14 @@ export default function QrScannerModal({ onClose }) {
         let text = decodedText;
         try { text = decodeURIComponent(text); } catch(e) {}
         
-        if (text.includes('/redeem?token=') || text.includes('/party-entry?user_id=')) {
+        const path = scannedPath(text);
+        if (path) {
           isScanning = false;
-          html5QrCode.stop().then(() => {
+          const open = () => {
             onClose();
-            try {
-              const url = new URL(text);
-              navigate(url.pathname + url.search);
-            } catch(e) {
-              navigate(text);
-            }
-          }).catch(() => {
-            onClose();
-            navigate(text);
-          });
+            navigate(path);
+          };
+          html5QrCode.stop().then(open).catch(open);
         } else {
           setToast({ msg: 'QR code non riconosciuto.', icon: 'info' });
         }

@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.rabar.app",
+      "sha256_cert_fingerprints": [
+        "0E:DA:6A:AB:5B:E1:77:75:D9:2B:0C:85:FA:B1:5B:85:38:93:C6:4A:1D:86:BE:3B:34:77:7B:3F:4D:C9:30:80",
+        "52:AE:AB:AF:1F:6F:ED:7F:10:A8:22:98:A5:6F:3F:06:E5:19:B9:38:98:79:78:48:F7:48:B8:59:15:B4:F9:69"
+      ]
+    }
+  }
+]

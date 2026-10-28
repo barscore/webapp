@@ -398,7 +398,7 @@ export default function Home() {
   const navigate = useNavigate();
   const { t, dateLocale } = useI18n();
   const { isAuthenticated, isAdmin, user, role, logout, isPlus } = useAuth();
-  const { has, count, savedBars } = useBookmarks();
+  const { has, savedBars } = useBookmarks();
   const isMobile = useIsMobile();
 
   const [center, setCenter] = useState([DEFAULT_LAT, DEFAULT_LNG]);
@@ -450,6 +450,12 @@ export default function Home() {
     contentProps,
   } = useSheetDrag(SHEET_STOPS, SHEET_STOPS[0]);
   const sheetFull = sheetH >= 99;
+  // Pulled back down to its low stop with the keyboard up, the sheet would
+  // sink under it: the keyboard goes (iOS). See the sheet's onFocus.
+  useEffect(() => {
+    const el = document.activeElement;
+    if (sheetH <= SHEET_STOPS[0] && el && sheetRef.current?.contains(el)) el.blur();
+  }, [sheetH, sheetRef]);
   const [selected, setSelected] = useState(null);
   // Da dove è stato aperto il bar selezionato, per le statistiche del locale.
   const [selectedOrigin, setSelectedOrigin] = useState(null);
@@ -1031,7 +1037,6 @@ export default function Home() {
           variant="rail"
           tab={tab}
           onTab={onTab}
-          savedCount={count}
           exclude={['cerca']}
         />
         {/* Desktop only: the map never pans behind this while it's being
@@ -1065,6 +1070,11 @@ export default function Home() {
           // overshoot would dip the sheet below its min and flash the map.
           transition: dragging ? 'none' : 'height 280ms cubic-bezier(0.22, 1, 0.36, 1)',
         }}
+        // A field focused with the sheet low (the drinks search, Cerca): the
+        // keyboard would cover the very list it filters, so the sheet goes up.
+        onFocus={(e) => {
+          if (e.target.matches('input:not([type=range]), textarea')) setSheetH((h) => (h < 84 ? 84 : h));
+        }}
       >
         <div
           {...grabberProps}
@@ -1080,7 +1090,7 @@ export default function Home() {
         </div>
         <div className="border-t border-ember-line/5 px-3 pb-3 pt-2">
           <RadiusBar radius={radius} setRadius={setRadius} className="mb-1.5 px-1.5" />
-          <NavTabs variant="bar" tab={tab} onTab={onTab} savedCount={count} />
+          <NavTabs variant="bar" tab={tab} onTab={onTab} />
         </div>
       </section>
 

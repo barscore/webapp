@@ -3,6 +3,7 @@ import { supabase } from '../services/supabase.js';
 import { api } from '../services/api.js';
 import { hasTermsTick, clearTermsTick } from '../services/terms.js';
 import { pingActive, trackSignup } from '../services/stats.js';
+import { rememberPendingAuthReturn } from './useAuthReturn.js';
 
 const AuthContext = createContext(null);
 
@@ -162,6 +163,7 @@ export function AuthProvider({ children }) {
   // Google OAuth — redirects to Google, returns to the app.
   // `returnTo` è già normalizzato da useAuthReturn (solo path interni).
   async function loginWithGoogle(returnTo = '/') {
+    rememberPendingAuthReturn(returnTo);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin + returnTo },

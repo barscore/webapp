@@ -15,11 +15,17 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 //    any empty area resizes the sheet, while the inner list still scrolls once
 //    it's past its top edge. The body must have `touch-action: none` (Tailwind
 //    `touch-none`) so we can drive both gestures ourselves.
-export function useSheetDrag(stops, initial) {
+//
+// With `onDismiss` the sheet can be pulled down past its lowest stop to close
+// it, like a system sheet: far enough, or with a flick, it slides away and
+// `onDismiss` runs; otherwise it springs back.
+export function useSheetDrag(stops, initial, { onDismiss } = {}) {
   const [height, setHeight] = useState(initial);
   const [dragging, setDragging] = useState(false);
   const sheetRef = useRef(null); // attach to the sheet element for direct writes
   const drag = useRef(null);
+  const dismissRef = useRef(onDismiss);
+  dismissRef.current = onDismiss;
   const min = stops[0];
   const max = stops[stops.length - 1];
 
@@ -84,8 +90,13 @@ export function useSheetDrag(stops, initial) {
       }
 
       if (d.mode === 'resize') {
-        const h = Math.min(max, Math.max(min, d.h - dy / d.vh));
+        const floor = dismissRef.current ? 0 : min;
+        const h = Math.min(max, Math.max(floor, d.h - dy / d.vh));
         d.cur = h;
+        // Downward speed (px/ms) of the last move: a flick closes a dismissible sheet.
+        d.v = d.t != null ? (e.clientY - d.lastY) / Math.max(1, e.timeStamp - d.t) : 0;
+        d.lastY = e.clientY;
+        d.t = e.timeStamp;
         const el = sheetRef.current;
         if (el) el.style.height = `${h}dvh`;
         else setHeight(h); // no ref attached — fall back to state-driven resize
@@ -101,6 +112,16 @@ export function useSheetDrag(stops, initial) {
     if (!d) return;
     drag.current = null;
     setDragging(false);
+    const dismiss = dismissRef.current;
+    if (dismiss && d.mode === 'resize' && d.cur < min && (d.cur < min - 15 || d.v > 0.5)) {
+      const el = sheetRef.current;
+      if (el) {
+        el.style.transition = 'height 0.2s ease';
+        el.style.height = '0dvh';
+      }
+      setTimeout(dismiss, 200);
+      return;
+    }
     if (d.mode !== 'scroll') {
       const snapped = nearest(d.cur ?? d.h);
       // Animate to the stop imperatively as well: when the snapped value equals

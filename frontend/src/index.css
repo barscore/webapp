@@ -512,8 +512,10 @@ input[type='range'].slider.slider-sm {
   }
 
   /* Pill action / filter. Replaces the flat `bg-ember-card px-3 py-2` slabs. */
+  /* One height for every chip in a row, with or without text (iOS `ChipStyle`:
+     minHeight 38): an icon alone came out shorter. */
   .chip {
-    @apply inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-full bg-ember-line/[0.06] px-3.5 py-2 text-sm font-semibold text-ember-cream;
+    @apply inline-flex min-h-[38px] shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-full bg-ember-line/[0.06] px-3.5 py-2 text-sm font-semibold text-ember-cream;
     border: 1px solid rgb(var(--glass-edge) / var(--glass-edge-a));
     transition:
       background-color var(--dur-2) var(--ease-out),

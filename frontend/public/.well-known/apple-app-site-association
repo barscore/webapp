@@ -1,0 +1,12 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["D8CW4C45NK.com.rabar.app"],
+        "components": [
+          { "/": "/bar/*", "comment": "Scheda di un bar: QR e tag NFC del locale, link condivisi" }
+        ]
+      }
+    ]
+  }
+}

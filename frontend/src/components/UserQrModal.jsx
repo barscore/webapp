@@ -1,7 +1,38 @@
+import { useEffect, useState } from 'react';
 import Icon from './Icon.jsx';
 import QrCode from './QrCode.jsx';
+import { meApi } from '../services/api.js';
 
-export default function UserQrModal({ userId, onClose }) {
+// Il pass scade dopo un paio di minuti (backend lib/entryPass.js): finché il QR
+// è a schermo se ne chiede uno nuovo ben prima, così all'ingresso è sempre valido
+// e uno screenshot passato a un altro smette presto di funzionare.
+const REFRESH_MS = 45_000;
+
+export default function UserQrModal({ onClose }) {
+  const [pass, setPass] = useState(null);
+  const [error, setError] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    let timer;
+    const load = async () => {
+      try {
+        const res = await meApi.entryPass();
+        if (!alive) return;
+        setPass(res.pass);
+        setError(false);
+      } catch {
+        // Un pass ancora valido resta a schermo; senza pass si dice di riprovare.
+        if (alive) setError(true);
+      }
+      if (alive) timer = setTimeout(load, REFRESH_MS);
+    };
+    load();
+    return () => {
+      alive = false;
+      clearTimeout(timer);
+    };
+  }, []);
 
   return (
     <div className="fixed inset-0 z-[2000] flex items-end justify-center bg-black/80 sm:items-center">
@@ -17,13 +48,24 @@ export default function UserQrModal({ userId, onClose }) {
             <Icon name="close" size={20} />
           </button>
         </div>
-        
-        <div className="mb-6 flex justify-center bg-white p-4 rounded-xl">
-          <QrCode value={`https://rabar.it/party-entry?user_id=${userId}`} alt="User QR Code" className="w-64 h-64 object-contain" />
+
+        <div className="mb-6 flex h-72 items-center justify-center rounded-xl bg-white p-4">
+          {pass ? (
+            <QrCode
+              value={`https://rabar.it/party-entry?pass=${encodeURIComponent(pass)}`}
+              alt="User QR Code"
+              className="w-64 h-64 object-contain"
+            />
+          ) : (
+            <p className="text-center text-sm text-neutral-600">
+              {error ? 'Impossibile generare il QR: controlla la connessione.' : 'Generazione del QR...'}
+            </p>
+          )}
         </div>
-        
+
         <p className="text-center text-xs text-ember-muted">
-          Questo QR code è associato al tuo account in modo permanente. Non ha limiti di utilizzo ma non è valido in caso di sospensione.
+          Il QR code si rinnova da solo mentre è aperto e vale solo per pochi minuti: mostralo dal telefono, non come
+          screenshot. Non è valido in caso di sospensione.
         </p>
       </div>
     </div>

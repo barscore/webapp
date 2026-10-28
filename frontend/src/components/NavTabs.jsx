@@ -13,7 +13,7 @@ const TABS = [
   { id: 'cerca', icon: 'search' },
 ];
 
-export default function NavTabs({ tab, onTab, savedCount = 0, variant = 'bar', exclude = [], className = '' }) {
+export default function NavTabs({ tab, onTab, variant = 'bar', exclude = [], className = '' }) {
   const { t: tr } = useI18n();
   const rail = variant === 'rail';
   const tabs = TABS.filter((t) => !exclude.includes(t.id));
@@ -41,17 +41,8 @@ export default function NavTabs({ tab, onTab, savedCount = 0, variant = 'bar', e
                 : 'text-ember-muted hover:text-ember-cream'
             }`}
           >
-            <span className="relative">
-              <Icon name={t.icon} size={20} />
-              {/* Badge label is black: every theme's accent is a bright warm
-                  hue, where white text lands at 2–3:1 and black at 7:1+.
-                  Desktop rail only — the mobile bottom bar stays clean. */}
-              {rail && t.id === 'salvati' && savedCount > 0 && (
-                <span className="absolute -right-2 -top-2 min-w-[15px] rounded-full bg-ember-accent px-1 text-[10px] font-bold leading-[15px] text-black">
-                  {savedCount}
-                </span>
-              )}
-            </span>
+            {/* No count badge on Salvati: it read as an unread notification. */}
+            <Icon name={t.icon} size={20} />
             {/* Bottom bar is icon-only; the rail keeps text labels. */}
             {rail && <span className="truncate">{label}</span>}
           </button>

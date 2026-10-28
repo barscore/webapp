@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { supabase } from './supabase.js';
+import { assertSafeApiPath } from './apiPath.js';
 
 let baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
 // A bare host ("rabarbackend.vercel.app", no scheme) would be treated by
@@ -28,6 +29,8 @@ function expectArray(v, what) {
 // Attach the current Supabase access token to every request. supabase-js
 // handles persistence + transparent refresh, so we just read the live session.
 api.interceptors.request.use(async (config) => {
+  // Prima del token: un path manipolato non deve partire, tanto meno firmato.
+  assertSafeApiPath(config.url);
   const {
     data: { session },
   } = await supabase.auth.getSession();
@@ -127,6 +130,8 @@ export const meApi = {
   profile: () => api.get('/me').then((r) => r.data.profile),
   updateProfile: (data) => api.patch('/me', data).then((r) => r.data.profile),
   applyPromo: (promo) => api.post('/me/promo', { promo }).then((r) => r.data),
+  /** Pass d'ingresso firmato e a scadenza: `{ pass, expires_at, ttl_s }`. */
+  entryPass: () => api.get('/me/entry-pass').then((r) => r.data),
   bars: () => api.get('/me/bars').then((r) => expectArray(r.data.bars, 'meBars')),
   ratings: () => api.get('/me/ratings').then((r) => expectArray(r.data.ratings, 'meRatings')),
   deleteAccount: () => api.delete('/me').then((r) => r.data),
@@ -277,7 +282,7 @@ export const organizerApi = {
     api.post(`/bars/${barId}/claim`, payload).then((r) => r.data.claim),
   redeemDrink: (token, barId) =>
     api.post('/bars/redeem-drink', { token, bar_id: barId }).then((r) => r.data),
-  verifyPartyEntry: (user_id) => api.post('/events/verify-entry', { user_id }).then((r) => r.data),
+  verifyPartyEntry: (pass) => api.post('/events/verify-entry', { pass }).then((r) => r.data),
 };
 
 // Follow di eventi/organizzatori. PUT/DELETE idempotenti (toggle ottimistico).

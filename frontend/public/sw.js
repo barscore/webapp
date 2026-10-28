@@ -40,9 +40,20 @@ self.addEventListener('push', (event) => {
   );
 });
 
+// Solo link interni: il payload arriva dal push service, e openWindow/navigate
+// con un URL di un'altra origine aprirebbero un sito qualunque.
+function internalLink(link) {
+  try {
+    const url = new URL(link || '/', self.location.origin);
+    return url.origin === self.location.origin ? url.pathname + url.search + url.hash : '/';
+  } catch {
+    return '/';
+  }
+}
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const link = event.notification.data?.link || '/';
+  const link = internalLink(event.notification.data?.link);
   event.waitUntil(
     clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
       const win = wins.find((w) => new URL(w.url).origin === self.location.origin);

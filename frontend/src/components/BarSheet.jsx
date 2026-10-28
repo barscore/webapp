@@ -24,6 +24,8 @@ import { barKey, parseOsmToken } from '../utils/score.js';
 import { useI18n } from '../i18n/index.js';
 import FreeDrinkModal from './FreeDrinkModal.jsx';
 import { trackBar } from '../services/stats.js';
+import { rememberAuthReturn } from '../hooks/useAuthReturn.js';
+import { httpHref } from '../utils/url.js';
 
 const PAGE_SIZE = 10;
 
@@ -40,7 +42,10 @@ export default function BarSheet({ seed, origin, onClose, onChanged }) {
   const { isAuthenticated, isAdmin, user } = useAuth();
   const { has, toggle } = useBookmarks();
   const isMobile = useIsMobile();
-  const { height, dragging, sheetRef, grabberProps, contentProps } = useSheetDrag(BAR_STOPS, BAR_STOPS[0]);
+  // Pulled down past its stop, it closes (the iOS sheet does it on its own).
+  const { height, dragging, sheetRef, grabberProps, contentProps } = useSheetDrag(BAR_STOPS, BAR_STOPS[0], {
+    onDismiss: onClose,
+  });
   const full = isMobile && height >= 99;
 
   const [bar, setBar] = useState(null);
@@ -245,8 +250,8 @@ export default function BarSheet({ seed, origin, onClose, onChanged }) {
                     <Icon name="phone" size={15} className="text-ember-ink" /> {t('bar.call')}
                   </a>
                 )}
-                {bar.website && (
-                  <a href={bar.website} target="_blank" rel="noreferrer" onClick={() => trackBar(bar.id, 'website')} className="chip">
+                {httpHref(bar.website) && (
+                  <a href={httpHref(bar.website)} target="_blank" rel="noreferrer" onClick={() => trackBar(bar.id, 'website')} className="chip">
                     <Icon name="link" size={15} className="text-ember-ink" /> {t('bar.site')}
                   </a>
                 )}
@@ -340,7 +345,13 @@ export default function BarSheet({ seed, origin, onClose, onChanged }) {
                   </button>
                 )
               ) : (
-                <Link to="/login" className="flex items-center justify-center gap-2 rounded-lg bg-ember-card py-3 text-center text-ember-cream">
+                // La scheda sta sopra la Home e l'indirizzo resta «/»: senza questo, a
+                // login fatto si tornerebbe alla mappa invece che a questo bar.
+                <Link
+                  to="/login"
+                  onClick={() => rememberAuthReturn(`/bar/${bar?.id ?? key}`)}
+                  className="flex items-center justify-center gap-2 rounded-lg bg-ember-card py-3 text-center text-ember-cream"
+                >
                   <Icon name="user" size={18} className="text-ember-ink" />
                   {t('bar.loginToRate')}
                 </Link>

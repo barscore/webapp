@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth.js';
+import { safePath } from '../hooks/useAuthReturn.js';
 import { notificationsApi } from '../services/api.js';
 import Icon from './Icon.jsx';
 import { useI18n } from '../i18n/index.js';
@@ -61,7 +62,8 @@ export default function NotificationsBell() {
 
   function go(n) {
     setOpen(false);
-    if (n.link) navigate(n.link);
+    // Il link lo scrive il backend, ma resta un dato in tabella: solo path interni.
+    if (n.link) navigate(safePath(n.link));
   }
 
   return (

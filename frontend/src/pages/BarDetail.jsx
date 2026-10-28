@@ -31,6 +31,7 @@ import { trackBar } from '../services/stats.js';
 
 const PAGE_SIZE = 10;
 import FreeDrinkModal from '../components/FreeDrinkModal.jsx';
+import { httpHref } from '../utils/url.js';
 
 export default function BarDetail() {
   const { t } = useI18n();
@@ -293,8 +294,8 @@ export default function BarDetail() {
               <Icon name="phone" size={15} className="text-ember-ink" /> {t('bar.call')}
             </a>
           )}
-          {bar.website && (
-            <a href={bar.website} target="_blank" rel="noreferrer" onClick={() => trackBar(bar.id, 'website')} className="chip">
+          {httpHref(bar.website) && (
+            <a href={httpHref(bar.website)} target="_blank" rel="noreferrer" onClick={() => trackBar(bar.id, 'website')} className="chip">
               <Icon name="link" size={15} className="text-ember-ink" /> {t('bar.website')}
             </a>
           )}

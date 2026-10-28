@@ -4,6 +4,7 @@ import QrCode from './QrCode.jsx';
 import DailyBars from './DailyBars.jsx';
 import { statsApi } from '../services/api.js';
 import { copyText } from '../utils/share.js';
+import { SITE_URL } from '../utils/seo.js';
 import { useI18n } from '../i18n/index.js';
 
 const PERIODS = [7, 30, 90];
@@ -34,12 +35,39 @@ export default function BarStatsModal({ bar, canBoost, onBoost, onClose }) {
     };
   }, [bar.id, days]);
 
-  const qrUrl = `${window.location.origin}/bar/${bar.id}?src=qr`;
-  const nfcUrl = `${window.location.origin}/bar/${bar.id}?src=nfc`;
+  // Sempre il dominio di produzione, come Android e iOS: è quello che apre
+  // l'app installata (App Links / Universal Links), e ciò che si stampa resta.
+  const qrUrl = `${SITE_URL}/bar/${bar.id}?src=qr`;
+  const nfcUrl = `${SITE_URL}/bar/${bar.id}?src=nfc`;
+
+  // La locandina da stampare (utils/qrPoster.js), non il QR nudo: la stessa
+  // immagine fa da anteprima e da download. `false` = disegno fallito, resta il
+  // QR semplice.
+  const [poster, setPoster] = useState(null);
+  useEffect(() => {
+    let alive = true;
+    let href = null;
+    import('../utils/qrPoster.js')
+      .then(({ renderQrPoster }) => renderQrPoster(qrUrl))
+      .then((blob) => {
+        href = URL.createObjectURL(blob);
+        if (alive) setPoster(href);
+        else URL.revokeObjectURL(href);
+      })
+      .catch(() => alive && setPoster(false));
+    return () => {
+      alive = false;
+      if (href) URL.revokeObjectURL(href);
+    };
+  }, [qrUrl]);
 
   async function downloadQr() {
-    const { default: QRCode } = await import('qrcode');
-    const href = await QRCode.toDataURL(qrUrl, { width: 1024, margin: 2 });
+    let href = poster;
+    if (poster === false) {
+      const { default: QRCode } = await import('qrcode');
+      href = await QRCode.toDataURL(qrUrl, { width: 1024, margin: 2 });
+    }
+    if (!href) return;
     const a = document.createElement('a');
     a.href = href;
     a.download = `rabar-qr-${bar.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'bar'}.png`;
@@ -204,10 +232,16 @@ export default function BarStatsModal({ bar, canBoost, onBoost, onClose }) {
 
         <SectionTitle>{t('stats.linksTitle')}</SectionTitle>
         <div className="flex gap-3">
-          <QrCode value={qrUrl} alt={t('stats.qrAlt', { name: bar.name })} className="h-28 w-28 shrink-0 rounded-lg bg-white p-1" />
+          {poster === false ? (
+            <QrCode value={qrUrl} alt={t('stats.qrAlt', { name: bar.name })} className="h-28 w-28 shrink-0 rounded-lg bg-white p-1" />
+          ) : poster ? (
+            <img src={poster} alt={t('stats.qrAlt', { name: bar.name })} className="w-28 shrink-0 self-start rounded-lg" />
+          ) : (
+            <div className="aspect-[1600/2270] w-28 shrink-0 self-start rounded-lg bg-white/80" />
+          )}
           <div className="min-w-0 space-y-2">
             <p className="text-xs text-ember-muted">{t('stats.linksBody')}</p>
-            <button type="button" onClick={downloadQr} className="chip">
+            <button type="button" onClick={downloadQr} disabled={poster === null} className="chip disabled:opacity-50">
               <Icon name="arrow-right" size={14} className="rotate-90 text-ember-ink" /> {t('stats.downloadQr')}
             </button>
             <button type="button" onClick={copyNfc} className="chip">

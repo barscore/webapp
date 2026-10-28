@@ -1,5 +1,5 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
-import { Routes, Route, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth.js';
 import { supabase } from './services/supabase.js';
 import Home from './pages/Home.jsx';
@@ -11,7 +11,7 @@ import { gpcOptOut } from './services/consent.js';
 import { setMonetization, useMonetization } from './services/monetization.js';
 import { termsGateOpen } from './services/terms.js';
 import { enforcePlusTheme } from './hooks/useTheme.js';
-import { rememberAuthReturn } from './hooks/useAuthReturn.js';
+import { rememberAuthReturn, takePendingAuthReturn } from './hooks/useAuthReturn.js';
 
 import ExplorerPromoModal from './components/ExplorerPromoModal.jsx';
 
@@ -51,6 +51,7 @@ const Fallback = <div className="h-[100dvh] w-full bg-ember-bg" />;
 export default function App() {
   const { isAdmin, role, isAuthenticated, loading, isPlus, user, profileReady, termsRequired } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [maint, setMaint] = useState(null);
   const monetization = useMonetization();
 
@@ -59,6 +60,16 @@ export default function App() {
   useEffect(() => {
     rememberAuthReturn(location.pathname + location.search);
   }, [location.pathname, location.search]);
+
+  // Rientro da Google: se Supabase ha scartato il redirectTo e ci ha lasciati
+  // in home, si va dove si era partiti (vedi useAuthReturn.js).
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    const pending = takePendingAuthReturn();
+    if (pending && pending !== location.pathname + location.search) navigate(pending, { replace: true });
+    // Solo all'arrivo della sessione, non a ogni navigazione.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);

@@ -1,5 +1,5 @@
 // rabar service worker — static asset caching + offline fallback.
-const CACHE = 'rabar-v6';
+const CACHE = 'rabar-v7';
 const OFFLINE_URL = '/offline.html';
 const PRECACHE = ['/', '/index.html', '/offline.html', '/manifest.json'];
 
@@ -34,7 +34,7 @@ self.addEventListener('push', (event) => {
     self.registration.showNotification(data.title || 'rabar', {
       body: data.body || '',
       icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
+      badge: '/icons/badge-96.png',
       data: { link: data.link || '/' },
     }),
   );
